@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WorkHive Dev Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.10.0/dist/tabler-icons.min.css">
+<style>
+:root {
+  --bg:#0A0C10;--bg2:#10141C;--bg3:#161C28;--bg4:#1E2535;
+  --border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.10);--border3:rgba(255,255,255,0.16);
+  --text:#E8EBF5;--text2:#8892AA;--text3:#4A5470;
+  --green:#22C55E;--green2:#16A34A;--green-bg:rgba(34,197,94,0.1);--green-border:rgba(34,197,94,0.2);
+  --blue:#3B82F6;--blue-bg:rgba(59,130,246,0.1);--blue-border:rgba(59,130,246,0.2);
+  --amber:#F59E0B;--amber-bg:rgba(245,158,11,0.1);--amber-border:rgba(245,158,11,0.2);
+  --red:#EF4444;--red-bg:rgba(239,68,68,0.1);--red-border:rgba(239,68,68,0.2);
+  --purple:#A855F7;--purple-bg:rgba(168,85,247,0.1);--purple-border:rgba(168,85,247,0.2);
+  --teal:#14B8A6;--teal-bg:rgba(20,184,166,0.1);--teal-border:rgba(20,184,166,0.2);
+  --radius:10px;--r-lg:16px;--r-xl:22px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:14px}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg4);border-radius:4px}
+a{color:inherit;text-decoration:none}
+
+#loginScreen{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;z-index:9999;background-image:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(168,85,247,0.08),transparent);overflow-y:auto;padding:24px 0}
+.login-card{width:100%;max-width:400px;padding:40px;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r-xl);box-shadow:0 32px 64px rgba(0,0,0,0.6)}
+.login-brand{display:flex;align-items:center;gap:12px;margin-bottom:28px;justify-content:center}
+.brand-icon{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--purple),var(--blue));display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 8px 20px rgba(168,85,247,0.3)}
+.brand-name{font-size:20px;font-weight:800;color:var(--purple);letter-spacing:-0.5px}
+.brand-label{font-size:10px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.login-title{font-size:22px;font-weight:800;text-align:center;margin-bottom:4px}
+.login-sub{font-size:12px;color:var(--text3);text-align:center;margin-bottom:26px}
+.lf{margin-bottom:14px}
+.lf label{display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.lf input{width:100%;padding:11px 14px;border-radius:var(--radius);background:rgba(255,255,255,0.04);border:1px solid var(--border2);color:var(--text);font-family:inherit;font-size:13px;font-weight:600;outline:none;transition:.2s}
+.lf input:focus{border-color:rgba(168,85,247,0.5);background:rgba(168,85,247,0.03)}
+.lf-hint{font-size:10.5px;color:var(--text3);margin-top:5px;line-height:1.5}
+.pw-wrap{position:relative}
+.pw-wrap input{padding-right:42px}
+.pw-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--text3);font-size:16px;display:flex}
+.btn-login{width:100%;padding:13px;border-radius:var(--radius);background:var(--purple);color:#fff;font-weight:800;font-size:14px;cursor:pointer;border:none;font-family:inherit;box-shadow:0 4px 16px rgba(168,85,247,0.3);transition:.15s;margin-top:4px}
+.btn-login:hover{background:#9333ea}
+.login-err{color:var(--red);font-size:12px;font-weight:600;text-align:center;min-height:16px;margin-bottom:6px}
+
+#shell{display:none;height:100vh;flex-direction:column;overflow:hidden}
+.topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 20px;display:flex;align-items:center;justify-content:space-between;height:56px;flex-shrink:0}
+.tb-brand{display:flex;align-items:center;gap:9px}
+.tb-brand-icon{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--purple),var(--blue));display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.tb-brand-name{font-size:14px;font-weight:800;color:var(--purple)}
+.tb-nav{display:flex;gap:4px}
+.tb-nav-item{padding:8px 14px;border-radius:9px;font-size:12.5px;font-weight:700;color:var(--text2);cursor:pointer;transition:.15s;display:flex;align-items:center;gap:6px}
+.tb-nav-item:hover{background:var(--bg3);color:var(--text)}
+.tb-nav-item.active{background:var(--purple-bg);color:var(--purple)}
+.tb-right{display:flex;align-items:center;gap:8px}
+.conn-pill{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:800;padding:5px 10px;border-radius:20px}
+.conn-pill.ok{background:var(--green-bg);color:var(--green);border:1px solid var(--green-border)}
+.conn-pill.off{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.conn-dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+
+.content-area{flex:1;overflow-y:auto;padding:22px 24px}
+.screen{display:none}
+.screen.active{display:block;animation:fadeUp .2s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px;margin-bottom:16px}
+.card-title{font-size:13.5px;font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:8px;color:var(--text)}
+.card-title i{font-size:16px;color:var(--text2)}
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.sec-hd h2{font-size:17px;font-weight:800;display:flex;align-items:center;gap:8px}
+.sec-hd h2 i{font-size:19px;color:var(--text2)}
+
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-weight:700;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+.field input,.field select,.field textarea{width:100%;padding:10px 13px;border-radius:var(--radius);background:rgba(255,255,255,0.04);border:1px solid var(--border2);color:var(--text);font-family:inherit;font-size:13px;font-weight:600;outline:none;transition:.15s}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:rgba(168,85,247,0.5);background:rgba(168,85,247,0.02)}
+.field textarea{resize:vertical;min-height:110px;font-family:'Inter',sans-serif}
+.field select option{background:var(--bg3)}
+.lf-hint2{font-size:10.5px;color:var(--text3);margin-top:5px;line-height:1.5}
+
+.btn{padding:9px 16px;border-radius:var(--radius);border:none;font-weight:700;font-size:12.5px;cursor:pointer;font-family:inherit;transition:.15s;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:active{transform:scale(.96)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-sm{padding:6px 12px;font-size:11.5px;border-radius:8px}
+.btn-xs{padding:4px 9px;font-size:11px;border-radius:7px}
+.btn-primary{background:var(--purple);color:#fff;font-weight:800}
+.btn-primary:hover:not(:disabled){background:#9333ea}
+.btn-green{background:var(--green);color:#000;font-weight:800}
+.btn-green:hover:not(:disabled){background:var(--green2)}
+.btn-ghost{background:var(--bg3);color:var(--text2);border:1px solid var(--border2)}
+.btn-ghost:hover:not(:disabled){border-color:var(--border3);color:var(--text)}
+.btn-danger{background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.btn-danger:hover:not(:disabled){background:var(--red);color:#fff}
+.btn-info{background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border)}
+.btn-info:hover:not(:disabled){background:var(--blue);color:#fff}
+
+.provider-toggle{display:flex;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:3px;gap:3px}
+.provider-opt{flex:1;text-align:center;padding:9px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;color:var(--text3);transition:.15s}
+.provider-opt.active{background:var(--purple);color:#fff}
+
+.file-pill-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.file-pill{padding:9px 15px;border-radius:20px;background:var(--bg2);border:1px solid var(--border);cursor:pointer;font-size:12.5px;font-weight:700;color:var(--text2);transition:.15s;display:flex;align-items:center;gap:7px}
+.file-pill:hover{border-color:var(--border3);color:var(--text)}
+.file-pill.active{background:var(--purple-bg);border-color:var(--purple-border);color:var(--purple)}
+
+.upload-box{border:1.5px dashed var(--border2);border-radius:var(--radius);padding:16px;text-align:center;cursor:pointer;transition:.15s;background:rgba(255,255,255,.02)}
+.upload-box:hover{border-color:var(--purple-border);background:rgba(168,85,247,.03)}
+.upload-box.has-img{padding:10px}
+.upload-preview{max-width:100%;max-height:160px;border-radius:8px;display:block;margin:0 auto 8px}
+
+.alert{display:flex;gap:10px;padding:11px 14px;border-radius:var(--radius);margin-bottom:14px;font-size:12.5px;font-weight:600;align-items:flex-start;line-height:1.5}
+.alert i{font-size:16px;margin-top:1px;flex-shrink:0}
+.alert.info{background:var(--blue-bg);border:1px solid var(--blue-border);color:var(--blue)}
+.alert.warn{background:var(--amber-bg);border:1px solid var(--amber-border);color:var(--amber)}
+.alert.success{background:var(--green-bg);border:1px solid var(--green-border);color:var(--green)}
+.alert.danger{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red)}
+
+.patch-item{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px}
+.patch-hd{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.patch-status{font-size:9.5px;font-weight:800;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.3px}
+.patch-status.applied{background:var(--green-bg);color:var(--green)}
+.patch-status.not_found{background:var(--red-bg);color:var(--red)}
+.patch-status.ambiguous{background:var(--amber-bg);color:var(--amber)}
+.patch-desc{font-size:12.5px;color:var(--text2);flex:1}
+.patch-diff{font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:10.5px;line-height:1.6;background:#0B0E14;border-radius:8px;padding:8px 10px;overflow-x:auto;white-space:pre-wrap;word-break:break-word;max-height:140px;overflow-y:auto}
+.patch-diff .old{color:var(--red);display:block}
+.patch-diff .new{color:var(--green);display:block}
+
+.preview-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:16px}
+.preview-hd{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--bg3)}
+.preview-hd-title{font-size:12px;font-weight:700;color:var(--text2);display:flex;align-items:center;gap:7px}
+#previewFrame{width:100%;height:640px;border:none;background:#fff}
+
+.commit-item{display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--border)}
+.commit-item:last-child{border-bottom:none}
+.commit-icon{width:34px;height:34px;border-radius:9px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;color:var(--text2)}
+.commit-body{flex:1;min-width:0}
+.commit-msg{font-size:12.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.commit-meta{font-size:10.5px;color:var(--text3);margin-top:2px}
+.commit-sha{font-family:monospace;font-size:10.5px;color:var(--text3);background:var(--bg3);padding:2px 7px;border-radius:6px}
+
+.log-item{display:flex;gap:12px;padding:11px 0;border-bottom:1px solid var(--border)}
+.log-item:last-child{border-bottom:none}
+.log-dot{width:7px;height:7px;border-radius:50%;margin-top:5px;flex-shrink:0;background:var(--purple)}
+.log-text{font-size:12.5px;color:var(--text2);flex:1;line-height:1.5}
+.log-text strong{color:var(--text);font-weight:700}
+.log-time{font-size:10.5px;color:var(--text3);white-space:nowrap;margin-left:6px}
+
+.toast{position:fixed;top:20px;right:20px;padding:12px 18px;border-radius:var(--r-lg);font-size:13px;font-weight:700;z-index:9999;min-width:260px;max-width:420px;transform:translateX(120%);transition:transform .3s cubic-bezier(.34,1.56,.64,1);display:flex;align-items:center;gap:9px;backdrop-filter:blur(12px)}
+.toast.show{transform:none}
+.toast.success{background:rgba(34,197,94,0.12);border:1px solid var(--green-border);color:var(--green)}
+.toast.error{background:rgba(239,68,68,0.12);border:1px solid var(--red-border);color:var(--red)}
+.toast.info{background:rgba(59,130,246,0.12);border:1px solid var(--blue-border);color:var(--blue)}
+.toast.warn{background:rgba(245,158,11,0.12);border:1px solid var(--amber-border);color:var(--amber)}
+
+.file-manage-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border)}
+.file-manage-row:last-child{border-bottom:none}
+.file-manage-row input{flex:1}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.spin-ico{animation:spin 1s linear infinite;display:inline-block}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+@media(max-width:900px){.two-col{grid-template-columns:1fr}.tb-nav-item span{display:none}}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- ===== LOGIN ===== -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="brand-icon">🧬</div>
+      <div>
+        <div class="brand-name">WorkHive Dev Studio</div>
+        <div class="brand-label">AI Code Control Panel</div>
+      </div>
+    </div>
+    <div class="login-title">Sign In</div>
+    <div class="login-sub">এই প্যানেল আপনার লাইভ সাইটের কোড edit করতে পারে — সাবধানে অ্যাক্সেস দিন</div>
+    <div class="login-err" id="loginErr"></div>
+    <div class="lf">
+      <label>Panel Password</label>
+      <div class="pw-wrap">
+        <input type="password" id="loginPass" placeholder="••••••••">
+        <span class="pw-eye" onclick="togglePwView('loginPass')"><i class="ti ti-eye"></i></span>
+      </div>
+      <div class="lf-hint">প্রথমবার এখানে যেকোনো পাসওয়ার্ড দিলেই সেটা সেভ হয়ে যাবে — পরের বার সেটাই লাগবে। (Settings থেকে পরে পরিবর্তনযোগ্য)</div>
+    </div>
+    <button class="btn-login" onclick="doDevLogin()"><i class="ti ti-lock"></i> Enter Dev Studio</button>
+  </div>
+</div>
+
+<!-- ===== SHELL ===== -->
+<div id="shell">
+  <div class="topbar">
+    <div class="tb-brand">
+      <div class="tb-brand-icon">🧬</div>
+      <div class="tb-brand-name">Dev Studio</div>
+    </div>
+    <div class="tb-nav">
+      <div class="tb-nav-item active" data-scr="studio" onclick="goScreen('studio')"><i class="ti ti-sparkles"></i><span>AI Studio</span></div>
+      <div class="tb-nav-item" data-scr="history" onclick="goScreen('history')"><i class="ti ti-history"></i><span>History &amp; Rollback</span></div>
+      <div class="tb-nav-item" data-scr="activity" onclick="goScreen('activity')"><i class="ti ti-list-details"></i><span>Activity Log</span></div>
+      <div class="tb-nav-item" data-scr="settings" onclick="goScreen('settings')"><i class="ti ti-settings"></i><span>Settings</span></div>
+    </div>
+    <div class="tb-right">
+      <div class="conn-pill off" id="connPill"><span class="conn-dot"></span><span id="connText">Not configured</span></div>
+      <button class="btn btn-ghost btn-sm" onclick="doDevLogout()"><i class="ti ti-logout"></i></button>
+    </div>
+  </div>
+
+  <div class="content-area">
+
+    <!-- ===== AI STUDIO ===== -->
+    <div class="screen active" id="screen-studio">
+      <div class="sec-hd"><h2><i class="ti ti-sparkles"></i> AI Studio</h2></div>
+
+      <div class="alert info" id="noFilesAlert" style="display:none"><i class="ti ti-info-circle"></i> এখনো কোনো ফাইল যোগ করা হয়নি। আগে <b>Settings</b>-এ গিয়ে আপনার User Site ও Admin Panel-এর GitHub path যোগ করুন।</div>
+
+      <div id="filePillsWrap">
+        <div class="lf-hint2" style="margin-bottom:8px">কোন ফাইলে পরিবর্তন করতে চান?</div>
+        <div class="file-pill-row" id="filePills"></div>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <div class="card">
+            <div class="card-title"><i class="ti ti-robot"></i> AI Provider</div>
+            <div class="provider-toggle">
+              <div class="provider-opt active" id="provGemini" onclick="setProvider('gemini')">✨ Gemini <span style="font-weight:500;opacity:.7">(টেক্সট + ছবি)</span></div>
+              <div class="provider-opt" id="provGroq" onclick="setProvider('groq')">⚡ Groq <span style="font-weight:500;opacity:.7">(দ্রুত, শুধু টেক্সট)</span></div>
+            </div>
+            <div class="lf-hint2" style="margin-top:8px">ছবি (ডিজাইন/ওয়্যারফ্রেম) আপলোড করলে স্বয়ংক্রিয়ভাবে Gemini ব্যবহার হবে, প্রোভাইডার যাই সিলেক্ট থাকুক না কেন।</div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><i class="ti ti-message-2"></i> Change Request</div>
+            <div class="field">
+              <label>কী পরিবর্তন করতে চান? (বাংলা বা English)</label>
+              <textarea id="studioPrompt" placeholder="উদাহরণ: হোম স্ক্রিনের Wallet কার্ডের রঙ সবুজের বদলে নীল করে দাও। অথবা: Support স্ক্রিনে একটা নতুন FAQ যোগ করো যেখানে লেখা থাকবে..."></textarea>
+            </div>
+            <div class="field">
+              <label>ডিজাইন/মকআপ ছবি (ঐচ্ছিক)</label>
+              <div class="upload-box" id="imgUploadBox" onclick="document.getElementById('studioImgInput').click()">
+                <div id="imgUploadInner">
+                  <div style="font-size:26px;margin-bottom:6px">🖼️</div>
+                  <div style="font-size:12px;color:var(--text3);font-weight:600">ছবি বেছে নিতে ক্লিক করুন (PNG/JPG)</div>
+                </div>
+              </div>
+              <input type="file" id="studioImgInput" accept="image/*" style="display:none" onchange="handleStudioImage(this)">
+            </div>
+            <button class="btn btn-primary" id="genBtn" style="width:100%" onclick="generateChanges()"><i class="ti ti-wand"></i> Generate Changes</button>
+          </div>
+        </div>
+
+        <div>
+          <div class="card" id="patchSummaryCard" style="display:none">
+            <div class="card-title"><i class="ti ti-git-commit"></i> AI-এর প্রস্তাবিত পরিবর্তন</div>
+            <div id="patchSummaryText" style="font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.6"></div>
+            <div id="patchList"></div>
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <button class="btn btn-ghost" style="flex:1" onclick="discardChanges()"><i class="ti ti-x"></i> Discard</button>
+              <button class="btn btn-info" style="flex:1" onclick="buildPreview()"><i class="ti ti-eye"></i> Build Preview</button>
+            </div>
+          </div>
+          <div class="card" id="rawAiCard" style="display:none">
+            <div class="card-title"><i class="ti ti-alert-triangle"></i> AI বৈধ JSON দেয়নি — Raw আউটপুট</div>
+            <div class="patch-diff" id="rawAiText"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="preview-wrap" id="previewWrap" style="display:none">
+        <div class="preview-hd">
+          <div class="preview-hd-title"><i class="ti ti-device-desktop"></i> Live Preview (এখনো GitHub-এ প্রকাশিত হয়নি)</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="openPreviewNewTab()"><i class="ti ti-external-link"></i> নতুন ট্যাবে খুলুন</button>
+            <button class="btn btn-green btn-sm" onclick="publishChanges()" id="publishBtn"><i class="ti ti-rocket"></i> Publish (Live করুন)</button>
+          </div>
+        </div>
+        <iframe id="previewFrame" sandbox="allow-scripts allow-forms allow-modals allow-popups"></iframe>
+      </div>
+    </div>
+
+    <!-- ===== HISTORY & ROLLBACK ===== -->
+    <div class="screen" id="screen-history">
+      <div class="sec-hd"><h2><i class="ti ti-history"></i> History &amp; Rollback</h2></div>
+      <div class="alert warn"><i class="ti ti-alert-triangle"></i> Rollback করলে সেটাও একটা নতুন commit হিসেবে যোগ হবে (পুরনো ভার্সনের কনটেন্ট দিয়ে) — তাই GitHub-এর ইতিহাস সবসময় অক্ষত থাকবে, কিছু হারাবে না।</div>
+      <div class="lf-hint2" style="margin-bottom:10px">কোন ফাইলের হিস্ট্রি দেখতে চান?</div>
+      <div class="file-pill-row" id="historyFilePills"></div>
+      <div class="card" style="padding:0">
+        <div id="commitsList"></div>
+      </div>
+    </div>
+
+    <!-- ===== ACTIVITY LOG ===== -->
+    <div class="screen" id="screen-activity">
+      <div class="sec-hd">
+        <h2><i class="ti ti-list-details"></i> Activity Log</h2>
+        <button class="btn btn-ghost btn-sm" onclick="clearActivityLog()"><i class="ti ti-trash"></i> Clear</button>
+      </div>
+      <div class="lf-hint2" style="margin-bottom:12px">এই লগটা শুধু এই ব্রাউজারে সেভ থাকে (নিজস্ব রেফারেন্সের জন্য) — GitHub-এর নিজের commit history-ই মূল, চিরস্থায়ী রেকর্ড।</div>
+      <div class="card"><div id="activityLogList"></div></div>
+    </div>
+
+    <!-- ===== SETTINGS ===== -->
+    <div class="screen" id="screen-settings">
+      <div class="sec-hd"><h2><i class="ti ti-settings"></i> Settings</h2></div>
+      <div class="two-col">
+        <div>
+          <div class="card">
+            <div class="card-title"><i class="ti ti-cloud"></i> Worker Connection</div>
+            <div class="field"><label>Cloudflare Worker URL</label><input type="text" id="setWorkerUrl" placeholder="https://workhive-ai-proxy.your-subdomain.workers.dev"></div>
+            <div class="field"><label>Panel Secret (X-Panel-Key)</label><div class="pw-wrap"><input type="password" id="setPanelKey" placeholder="Worker-এ PANEL_SECRET হিসেবে যা বসিয়েছেন ঠিক তাই"><span class="pw-eye" onclick="togglePwView('setPanelKey')"><i class="ti ti-eye"></i></span></div></div>
+            <button class="btn btn-primary" style="width:100%" onclick="saveConnectionSettings()"><i class="ti ti-device-floppy"></i> Save &amp; Test Connection</button>
+            <div class="lf-hint2" style="margin-top:8px" id="connTestResult"></div>
+          </div>
+          <div class="card">
+            <div class="card-title"><i class="ti ti-brand-github"></i> GitHub Repository</div>
+            <div class="field"><label>Owner (username/org)</label><input type="text" id="setGhOwner" placeholder="your-github-username"></div>
+            <div class="field"><label>Repository name</label><input type="text" id="setGhRepo" placeholder="workhive"></div>
+            <div class="field"><label>Branch</label><input type="text" id="setGhBranch" placeholder="main" value="main"></div>
+            <div class="lf-hint2">Owner/Repo/Branch এখানে সেভ হয় শুধু সুবিধার জন্য — আসল সিকিউরিটি Worker-এর GITHUB_TOKEN দিয়েই হয়, যেটা কখনো browser-এ আসে না।</div>
+            <button class="btn btn-primary" style="width:100%;margin-top:10px" onclick="saveGithubSettings()"><i class="ti ti-device-floppy"></i> Save Repository Info</button>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="card-title"><i class="ti ti-files"></i> Manageable Files</div>
+            <div class="lf-hint2" style="margin-bottom:10px">যেসব ফাইল AI দিয়ে এডিট করতে চান, সেগুলোর নাম ও রিপোর ভেতরের ঠিক path (যেমন: <code>user-site.html</code> বা <code>admin/index.html</code>) এখানে যোগ করুন।</div>
+            <div id="fileManageList"></div>
+            <div style="display:flex;gap:8px;margin-top:10px">
+              <input type="text" id="newFileLabel" placeholder="নাম (যেমন: User Site)" style="flex:1;padding:9px 12px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--text);font-size:12.5px">
+              <input type="text" id="newFilePath" placeholder="path (যেমন: user-site.html)" style="flex:1;padding:9px 12px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--text);font-size:12.5px">
+              <button class="btn btn-primary btn-sm" onclick="addManagedFile()"><i class="ti ti-plus"></i></button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title"><i class="ti ti-key"></i> Panel Password</div>
+            <div class="field"><label>নতুন পাসওয়ার্ড</label><input type="password" id="newDevPass" placeholder="Leave blank to keep current"></div>
+            <button class="btn btn-ghost" style="width:100%" onclick="changeDevPassword()"><i class="ti ti-lock"></i> Update Password</button>
+          </div>
+          <div class="card">
+            <div class="card-title"><i class="ti ti-book"></i> Worker Secrets Checklist</div>
+            <div style="font-size:12.5px;color:var(--text2);line-height:2">
+              <div><i class="ti ti-circle-check" style="color:var(--green)"></i> GROQ_API_KEY</div>
+              <div><i class="ti ti-circle-check" style="color:var(--green)"></i> GEMINI_API_KEY</div>
+              <div><i class="ti ti-circle-check" style="color:var(--green)"></i> GITHUB_TOKEN</div>
+              <div><i class="ti ti-circle-check" style="color:var(--green)"></i> PANEL_SECRET</div>
+              <div><i class="ti ti-circle-check" style="color:var(--green)"></i> ALLOWED_ORIGIN</div>
+              <div><i class="ti ti-circle-check" style="color:var(--green)"></i> GITHUB_OWNER / GITHUB_REPO / GITHUB_BRANCH (Variables)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══════════════════════ STATE ═══════════════════════
+const S = {
+  provider: 'gemini',
+  files: [],           // [{label, path}]
+  activeFile: null,     // {label, path}
+  currentContent: '',   // fetched from GitHub
+  currentSha: '',
+  patches: [],          // AI-proposed patches with status after dry-run
+  previewContent: '',   // content after applying patches (not yet published)
+  pendingImage: null,   // {base64, mimeType}
+  activityLog: [],
+  historyFile: null,
+};
+
+// ═══════════════════════ STORAGE HELPERS ═══════════════════════
+function ls(k, val) { if (val !== undefined) { localStorage.setItem(k, val); return; } return localStorage.getItem(k) || ''; }
+function lsJson(k, val) { if (val !== undefined) { localStorage.setItem(k, JSON.stringify(val)); return; } try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } }
+function $(id) { return document.getElementById(id); }
+
+// ═══════════════════════ TOAST ═══════════════════════
+let _tt;
+function showToast(msg, type = 'success') {
+  const el = $('toast');
+  const icons = { success: 'circle-check', error: 'circle-x', info: 'info-circle', warn: 'alert-triangle' };
+  el.className = 'toast ' + type;
+  el.innerHTML = `<i class="ti ti-${icons[type] || 'info-circle'}" style="font-size:16px"></i>${msg}`;
+  el.classList.add('show');
+  clearTimeout(_tt);
+  _tt = setTimeout(() => el.classList.remove('show'), 3800);
+}
+
+// ═══════════════════════ ACTIVITY LOG (local only) ═══════════════════════
+function addActivityLog(text) {
+  S.activityLog.unshift({ text, time: new Date().toLocaleString() });
+  if (S.activityLog.length > 100) S.activityLog.pop();
+  lsJson('wds_activity_log', S.activityLog);
+  renderActivityLog();
+}
+function renderActivityLog() {
+  const el = $('activityLogList'); if (!el) return;
+  el.innerHTML = S.activityLog.map(l => `<div class="log-item"><div class="log-dot"></div><div class="log-text">${escHtml(l.text)}</div><div class="log-time">${l.time}</div></div>`).join('') || '<div style="color:var(--text3);text-align:center;padding:24px">এখনো কোনো একটিভিটি নেই।</div>';
+}
+function clearActivityLog() {
+  if (!confirm('Activity log মুছে ফেলতে চান? (এটা শুধু এই ব্রাউজারেই — GitHub history অক্ষত থাকবে)')) return;
+  S.activityLog = []; lsJson('wds_activity_log', S.activityLog); renderActivityLog();
+  showToast('Activity log cleared', 'info');
+}
+function escHtml(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+// ═══════════════════════ AUTH (local panel password gate) ═══════════════════════
+function togglePwView(id) { const i = $(id); i.type = i.type === 'password' ? 'text' : 'password'; }
+function doDevLogin() {
+  const pass = $('loginPass').value;
+  const errEl = $('loginErr');
+  if (!pass) { errEl.textContent = 'পাসওয়ার্ড দিন'; return; }
+  const saved = ls('wds_pass');
+  if (!saved) {
+    ls('wds_pass', pass);
+    enterShell();
+  } else if (pass === saved) {
+    enterShell();
+  } else {
+    errEl.textContent = '❌ ভুল পাসওয়ার্ড';
+  }
+}
+function doDevLogout() {
+  if (!confirm('Logout করতে চান?')) return;
+  sessionStorage.removeItem('wds_session');
+  location.reload();
+}
+function changeDevPassword() {
+  const np = $('newDevPass').value;
+  if (!np) { showToast('নতুন পাসওয়ার্ড দিন', 'error'); return; }
+  ls('wds_pass', np);
+  $('newDevPass').value = '';
+  showToast('✅ পাসওয়ার্ড পরিবর্তন হয়েছে', 'success');
+}
+function enterShell() {
+  sessionStorage.setItem('wds_session', '1');
+  $('loginScreen').style.display = 'none';
+  $('shell').style.display = 'flex';
+  initStudio();
+}
+
+// ═══════════════════════ NAVIGATION ═══════════════════════
+function goScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $('screen-' + name)?.classList.add('active');
+  document.querySelectorAll('.tb-nav-item').forEach(t => t.classList.toggle('active', t.dataset.scr === name));
+  if (name === 'history') renderHistoryFilePills();
+  if (name === 'activity') renderActivityLog();
+  if (name === 'settings') renderFileManageList();
+}
+
+// ═══════════════════════ CONNECTION SETTINGS ═══════════════════════
+function loadConnectionSettings() {
+  $('setWorkerUrl').value = ls('wds_worker_url');
+  $('setPanelKey').value = ls('wds_panel_key');
+  $('setGhOwner').value = ls('wds_gh_owner');
+  $('setGhRepo').value = ls('wds_gh_repo');
+  $('setGhBranch').value = ls('wds_gh_branch') || 'main';
+}
+async function saveConnectionSettings() {
+  const url = $('setWorkerUrl').value.trim().replace(/\/$/, '');
+  const key = $('setPanelKey').value.trim();
+  if (!url || !key) { showToast('Worker URL ও Panel Secret দুটোই দিন', 'error'); return; }
+  ls('wds_worker_url', url);
+  ls('wds_panel_key', key);
+  $('connTestResult').textContent = '⏳ টেস্ট করা হচ্ছে...';
+  try {
+    const res = await fetch(url + '/github/commits?path=README.md&per_page=1', { headers: { 'X-Panel-Key': key } });
+    if (res.status === 401) { $('connTestResult').innerHTML = '<span style="color:var(--red)">❌ Panel Secret ভুল — Worker-এর PANEL_SECRET-এর সাথে মিলছে না</span>'; updateConnPill(false); return; }
+    $('connTestResult').innerHTML = '<span style="color:var(--green)">✅ Worker-এর সাথে সংযোগ সফল হয়েছে</span>';
+    updateConnPill(true);
+    addActivityLog('🔌 Worker connection saved & tested successfully');
+    showToast('✅ সংযোগ সফল হয়েছে!', 'success');
+  } catch (e) {
+    $('connTestResult').innerHTML = '<span style="color:var(--red)">❌ সংযোগ ব্যর্থ — URL ঠিক আছে কিনা দেখুন</span>';
+    updateConnPill(false);
+  }
+}
+function saveGithubSettings() {
+  ls('wds_gh_owner', $('setGhOwner').value.trim());
+  ls('wds_gh_repo', $('setGhRepo').value.trim());
+  ls('wds_gh_branch', $('setGhBranch').value.trim() || 'main');
+  showToast('✅ Repository তথ্য সেভ হয়েছে', 'success');
+}
+function updateConnPill(ok) {
+  const pill = $('connPill'), txt = $('connText');
+  pill.className = 'conn-pill ' + (ok ? 'ok' : 'off');
+  txt.textContent = ok ? 'Connected' : 'Not configured';
+}
+
+// ═══════════════════════ API HELPER ═══════════════════════
+function workerUrl() { return ls('wds_worker_url').replace(/\/$/, ''); }
+function panelKey() { return ls('wds_panel_key'); }
+async function apiFetch(path, opts = {}) {
+  const url = workerUrl();
+  if (!url || !panelKey()) throw new Error('আগে Settings-এ গিয়ে Worker URL ও Panel Secret সেভ করুন');
+  const headers = Object.assign({ 'X-Panel-Key': panelKey() }, opts.headers || {});
+  if (opts.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
+  const res = await fetch(url + path, { ...opts, headers });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.ok === false) throw new Error(data.error || ('Request failed: ' + res.status));
+  return data;
+}
+
+// ═══════════════════════ MANAGED FILES ═══════════════════════
+function loadFiles() {
+  S.files = lsJson('wds_files') || [];
+}
+function saveFiles() { lsJson('wds_files', S.files); }
+function renderFilePills() {
+  const wrap = $('filePills'), noAlert = $('noFilesAlert'), pillsWrap = $('filePillsWrap');
+  if (!S.files.length) { noAlert.style.display = 'flex'; pillsWrap.style.display = 'none'; return; }
+  noAlert.style.display = 'none'; pillsWrap.style.display = 'block';
+  wrap.innerHTML = S.files.map((f, i) => `<div class="file-pill ${S.activeFile && S.activeFile.path === f.path ? 'active' : ''}" onclick="selectFile(${i})"><i class="ti ti-file-code"></i> ${escHtml(f.label)}</div>`).join('');
+}
+function selectFile(i) {
+  S.activeFile = S.files[i];
+  discardChanges();
+  renderFilePills();
+  addActivityLog(`📂 Selected file: ${S.activeFile.label} (${S.activeFile.path})`);
+}
+function renderFileManageList() {
+  const el = $('fileManageList'); if (!el) return;
+  el.innerHTML = S.files.map((f, i) => `
+    <div class="file-manage-row">
+      <input type="text" value="${escHtml(f.label)}" onchange="updateManagedFile(${i},'label',this.value)">
+      <input type="text" value="${escHtml(f.path)}" onchange="updateManagedFile(${i},'path',this.value)">
+      <button class="btn btn-danger btn-xs" onclick="removeManagedFile(${i})"><i class="ti ti-trash"></i></button>
+    </div>`).join('') || '<div style="color:var(--text3);font-size:12.5px;padding:8px 0">কোনো ফাইল যোগ করা হয়নি।</div>';
+}
+function addManagedFile() {
+  const label = $('newFileLabel').value.trim(), path = $('newFilePath').value.trim();
+  if (!label || !path) { showToast('নাম ও path দুটোই দিন', 'error'); return; }
+  S.files.push({ label, path });
+  saveFiles(); renderFileManageList(); renderFilePills();
+  $('newFileLabel').value = ''; $('newFilePath').value = '';
+  showToast('✅ ফাইল যোগ হয়েছে', 'success');
+}
+function updateManagedFile(i, field, val) {
+  S.files[i][field] = val; saveFiles(); renderFilePills();
+}
+function removeManagedFile(i) {
+  if (!confirm(`"${S.files[i].label}" ফাইলটা লিস্ট থেকে সরাতে চান? (GitHub-এর আসল ফাইল মুছবে না)`)) return;
+  S.files.splice(i, 1); saveFiles(); renderFileManageList(); renderFilePills();
+}
+
+// ═══════════════════════ PROVIDER + IMAGE ═══════════════════════
+function setProvider(p) {
+  S.provider = p;
+  $('provGemini').classList.toggle('active', p === 'gemini');
+  $('provGroq').classList.toggle('active', p === 'groq');
+}
+function handleStudioImage(input) {
+  const file = input.files && input.files[0]; if (!file) return;
+  if (!file.type.startsWith('image/')) { showToast('একটা ইমেজ ফাইল বেছে নিন', 'error'); return; }
+  if (file.size > 6 * 1024 * 1024) { showToast('ছবি খুব বড় (সর্বোচ্চ 6MB)', 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const dataUrl = e.target.result;
+    const base64 = dataUrl.split(',')[1];
+    S.pendingImage = { base64, mimeType: file.type };
+    $('imgUploadBox').classList.add('has-img');
+    $('imgUploadInner').innerHTML = `<img class="upload-preview" src="${dataUrl}"><div style="font-size:11px;color:var(--text3);text-align:center">✅ ছবি যুক্ত হয়েছে — এবার Gemini ব্যবহার হবে · <span style="color:var(--red);cursor:pointer;font-weight:700" onclick="event.stopPropagation();removeStudioImage()">সরিয়ে ফেলুন</span></div>`;
+  };
+  reader.readAsDataURL(file);
+}
+function removeStudioImage() {
+  S.pendingImage = null;
+  $('studioImgInput').value = '';
+  $('imgUploadBox').classList.remove('has-img');
+  $('imgUploadInner').innerHTML = `<div style="font-size:26px;margin-bottom:6px">🖼️</div><div style="font-size:12px;color:var(--text3);font-weight:600">ছবি বেছে নিতে ক্লিক করুন (PNG/JPG)</div>`;
+}
+
+// ═══════════════════════ GENERATE CHANGES ═══════════════════════
+async function generateChanges() {
+  if (!S.activeFile) { showToast('আগে একটা ফাইল সিলেক্ট করুন', 'error'); return; }
+  const prompt = $('studioPrompt').value.trim();
+  if (!prompt) { showToast('আপনার পরিবর্তনের নির্দেশ লিখুন', 'error'); return; }
+  const btn = $('genBtn');
+  btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader spin-ico"></i> ফাইল লোড হচ্ছে...';
+  $('patchSummaryCard').style.display = 'none';
+  $('rawAiCard').style.display = 'none';
+  $('previewWrap').style.display = 'none';
+  try {
+    const fileRes = await apiFetch('/github/file?path=' + encodeURIComponent(S.activeFile.path));
+    S.currentContent = fileRes.content;
+    S.currentSha = fileRes.sha;
+
+    btn.innerHTML = '<i class="ti ti-loader spin-ico"></i> AI ভাবছে...';
+    const body = {
+      provider: S.provider,
+      prompt,
+      currentContent: S.currentContent,
+      fileName: S.activeFile.path,
+    };
+    if (S.pendingImage) { body.imageBase64 = S.pendingImage.base64; body.imageMimeType = S.pendingImage.mimeType; }
+
+    const aiRes = await apiFetch('/ai/edit', { method: 'POST', body: JSON.stringify(body) });
+
+    if (aiRes.raw) {
+      $('rawAiCard').style.display = 'block';
+      $('rawAiText').textContent = aiRes.raw;
+      showToast('⚠️ AI বৈধ JSON দেয়নি — নিচে raw output দেখুন', 'warn');
+      addActivityLog(`⚠️ AI edit for "${S.activeFile.label}" returned invalid JSON`);
+      return;
+    }
+
+    if (aiRes.full_content) {
+      S.patches = [];
+      S.previewContent = aiRes.full_content;
+      $('patchSummaryCard').style.display = 'block';
+      $('patchSummaryText').textContent = (aiRes.summary || 'AI একটা সম্পূর্ণ নতুন ফাইল তৈরি করেছে।') + ' (পুরো ফাইল replace হবে)';
+      $('patchList').innerHTML = '<div class="alert warn"><i class="ti ti-alert-triangle"></i> এটা পুরো ফাইল replace করবে, ছোট patch না — Preview খুলে ভালোভাবে চেক করে নিন।</div>';
+      showToast('✅ AI নতুন ফাইল তৈরি করেছে — Preview করে দেখুন', 'success');
+    } else {
+      S.patches = (aiRes.patches || []).map(p => ({ ...p, status: 'pending' }));
+      applyPatchesDryRun();
+      $('patchSummaryCard').style.display = 'block';
+      $('patchSummaryText').textContent = aiRes.summary || 'পরিবর্তনের সারাংশ পাওয়া যায়নি।';
+      renderPatchList();
+      showToast(`✅ ${S.patches.length}টা পরিবর্তন প্রস্তাব করেছে AI`, 'success');
+    }
+    addActivityLog(`✨ Generated changes for "${S.activeFile.label}" — ${(aiRes.summary || '').slice(0, 80)}`);
+  } catch (e) {
+    console.error(e);
+    showToast('❌ ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<i class="ti ti-wand"></i> Generate Changes';
+  }
+}
+
+// ═══════════════════════ PATCH APPLY LOGIC ═══════════════════════
+function countOccurrences(haystack, needle) {
+  if (!needle) return 0;
+  return haystack.split(needle).length - 1;
+}
+function applyPatchesDryRun() {
+  let working = S.currentContent;
+  S.patches.forEach(p => {
+    const count = countOccurrences(working, p.old_str);
+    if (count === 1) {
+      working = working.split(p.old_str).join(p.new_str);
+      p.status = 'applied';
+    } else if (count === 0) {
+      p.status = 'not_found';
+    } else {
+      p.status = 'ambiguous'; p.count = count;
+    }
+  });
+  S.previewContent = working;
+}
+function renderPatchList() {
+  const el = $('patchList');
+  el.innerHTML = S.patches.map((p, i) => `
+    <div class="patch-item">
+      <div class="patch-hd">
+        <span class="patch-status ${p.status}">${p.status === 'applied' ? '✓ Applied' : p.status === 'not_found' ? '✗ Not Found' : '⚠ Ambiguous'}</span>
+        <span class="patch-desc">${escHtml(p.description || 'Change ' + (i + 1))}</span>
+      </div>
+      <div class="patch-diff"><span class="old">− ${escHtml((p.old_str || '').slice(0, 200))}${(p.old_str || '').length > 200 ? '…' : ''}</span><span class="new">+ ${escHtml((p.new_str || '').slice(0, 200))}${(p.new_str || '').length > 200 ? '…' : ''}</span></div>
+    </div>`).join('');
+  const failedCount = S.patches.filter(p => p.status !== 'applied').length;
+  if (failedCount > 0) {
+    el.innerHTML = `<div class="alert warn"><i class="ti ti-alert-triangle"></i> ${failedCount}টা পরিবর্তন বসানো যায়নি (ফাইলে মিল পাওয়া যায়নি বা একাধিকবার মিলেছে) — নিচে দেখুন কোনগুলো। বাকিগুলো Preview-এ প্রয়োগ হবে।</div>` + el.innerHTML;
+  }
+}
+function discardChanges() {
+  S.patches = []; S.previewContent = ''; S.currentContent = ''; S.currentSha = '';
+  $('patchSummaryCard').style.display = 'none';
+  $('rawAiCard').style.display = 'none';
+  $('previewWrap').style.display = 'none';
+  removeStudioImage();
+  $('studioPrompt').value = '';
+}
+
+// ═══════════════════════ PREVIEW ═══════════════════════
+function buildPreview() {
+  if (!S.previewContent) { showToast('প্রিভিউ করার মতো কিছু নেই', 'error'); return; }
+  const frame = $('previewFrame');
+  frame.srcdoc = S.previewContent;
+  $('previewWrap').style.display = 'block';
+  $('previewWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  addActivityLog(`👁️ Built preview for "${S.activeFile.label}"`);
+}
+function openPreviewNewTab() {
+  if (!S.previewContent) return;
+  const blob = new Blob([S.previewContent], { type: 'text/html' });
+  window.open(URL.createObjectURL(blob), '_blank');
+}
+
+// ═══════════════════════ PUBLISH ═══════════════════════
+async function publishChanges() {
+  if (!S.previewContent || !S.activeFile) { showToast('আগে Preview বানান', 'error'); return; }
+  const summary = $('patchSummaryText').textContent || 'AI Studio update';
+  if (!confirm(`"${S.activeFile.label}" ফাইলে এই পরিবর্তনগুলো এখনই লাইভ সাইটে পাবলিশ করতে চান?\n\n${summary}`)) return;
+  const btn = $('publishBtn');
+  btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader spin-ico"></i> Publishing...';
+  try {
+    // Re-fetch latest sha right before publish, in case something else changed the file meanwhile
+    const latest = await apiFetch('/github/file?path=' + encodeURIComponent(S.activeFile.path));
+    const res = await apiFetch('/github/file', {
+      method: 'PUT',
+      body: JSON.stringify({
+        path: S.activeFile.path,
+        content: S.previewContent,
+        sha: latest.sha,
+        message: `AI Studio: ${summary}`.slice(0, 200),
+      }),
+    });
+    showToast('🚀 পাবলিশ হয়ে গেছে! কিছুক্ষণের মধ্যে লাইভ সাইটে দেখা যাবে।', 'success');
+    addActivityLog(`🚀 Published "${S.activeFile.label}" — commit ${(res.commitSha || '').slice(0, 7)} — ${summary}`);
+    discardChanges();
+    $('studioPrompt').value = '';
+  } catch (e) {
+    console.error(e);
+    showToast('❌ Publish ব্যর্থ হয়েছে: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.innerHTML = '<i class="ti ti-rocket"></i> Publish (Live করুন)';
+  }
+}
+
+// ═══════════════════════ HISTORY & ROLLBACK ═══════════════════════
+function renderHistoryFilePills() {
+  const wrap = $('historyFilePills');
+  if (!S.files.length) { wrap.innerHTML = '<div style="color:var(--text3);font-size:12.5px">আগে Settings-এ ফাইল যোগ করুন।</div>'; return; }
+  wrap.innerHTML = S.files.map((f, i) => `<div class="file-pill ${S.historyFile && S.historyFile.path === f.path ? 'active' : ''}" onclick="selectHistoryFile(${i})"><i class="ti ti-file-code"></i> ${escHtml(f.label)}</div>`).join('');
+  if (!S.historyFile && S.files.length) selectHistoryFile(0);
+}
+async function selectHistoryFile(i) {
+  S.historyFile = S.files[i];
+  renderHistoryFilePills();
+  const el = $('commitsList');
+  el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3)"><i class="ti ti-loader spin-ico"></i> লোড হচ্ছে...</div>';
+  try {
+    const res = await apiFetch('/github/commits?path=' + encodeURIComponent(S.historyFile.path) + '&per_page=25');
+    if (!res.commits || !res.commits.length) {
+      el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3)">এই ফাইলের কোনো commit history পাওয়া যায়নি।</div>';
+      return;
+    }
+    el.innerHTML = res.commits.map((c, idx) => `
+      <div class="commit-item">
+        <div class="commit-icon"><i class="ti ti-git-commit"></i></div>
+        <div class="commit-body">
+          <div class="commit-msg">${escHtml((c.message || '').split('\n')[0])}</div>
+          <div class="commit-meta">${escHtml(c.author || '')} · ${c.date ? new Date(c.date).toLocaleString() : ''} · <span class="commit-sha">${c.sha.slice(0, 7)}</span>${idx === 0 ? ' · <span style="color:var(--green);font-weight:700">বর্তমান ভার্সন</span>' : ''}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button class="btn btn-info btn-xs" onclick="previewCommit('${c.sha}')"><i class="ti ti-eye"></i> Preview</button>
+          ${idx === 0 ? '' : `<button class="btn btn-danger btn-xs" onclick="rollbackToCommit('${c.sha}','${escHtml((c.message || '').split('\\n')[0]).replace(/'/g, "\\'")}')"><i class="ti ti-history"></i> Rollback</button>`}
+        </div>
+      </div>`).join('');
+  } catch (e) {
+    console.error(e);
+    el.innerHTML = `<div class="alert danger" style="margin:14px"><i class="ti ti-alert-triangle"></i> লোড ব্যর্থ: ${escHtml(e.message)}</div>`;
+  }
+}
+async function previewCommit(sha) {
+  try {
+    showToast('⏳ লোড হচ্ছে...', 'info');
+    const res = await apiFetch(`/github/file-at-commit?path=${encodeURIComponent(S.historyFile.path)}&sha=${sha}`);
+    const blob = new Blob([res.content], { type: 'text/html' });
+    window.open(URL.createObjectURL(blob), '_blank');
+  } catch (e) { showToast('❌ ' + e.message, 'error'); }
+}
+async function rollbackToCommit(sha, msg) {
+  if (!confirm(`"${S.historyFile.label}" ফাইলটা এই ভার্সনে ফিরিয়ে নিতে চান?\n\n"${msg}" (${sha.slice(0, 7)})\n\nএটা একটা নতুন commit হিসেবে যোগ হবে — বর্তমান ভার্সন হারাবে না, GitHub history-তে থেকে যাবে।`)) return;
+  try {
+    showToast('⏳ Rollback করা হচ্ছে...', 'info');
+    const oldFile = await apiFetch(`/github/file-at-commit?path=${encodeURIComponent(S.historyFile.path)}&sha=${sha}`);
+    const latest = await apiFetch('/github/file?path=' + encodeURIComponent(S.historyFile.path));
+    const res = await apiFetch('/github/file', {
+      method: 'PUT',
+      body: JSON.stringify({
+        path: S.historyFile.path,
+        content: oldFile.content,
+        sha: latest.sha,
+        message: `Rollback ${S.historyFile.path} to ${sha.slice(0, 7)} via Dev Studio`,
+      }),
+    });
+    showToast('✅ Rollback সম্পন্ন! সাইট আগের ভার্সনে ফিরে গেছে।', 'success');
+    addActivityLog(`↩️ Rolled back "${S.historyFile.label}" to commit ${sha.slice(0, 7)} — new commit ${(res.commitSha || '').slice(0, 7)}`);
+    selectHistoryFile(S.files.findIndex(f => f.path === S.historyFile.path));
+  } catch (e) {
+    console.error(e);
+    showToast('❌ Rollback ব্যর্থ হয়েছে: ' + e.message, 'error');
+  }
+}
+
+// ═══════════════════════ INIT ═══════════════════════
+function initStudio() {
+  loadConnectionSettings();
+  loadFiles();
+  S.activityLog = lsJson('wds_activity_log') || [];
+  renderFilePills();
+  renderActivityLog();
+  if (ls('wds_worker_url') && ls('wds_panel_key')) updateConnPill(true);
+  if (S.files.length && !S.activeFile) S.activeFile = S.files[0];
+  renderFilePills();
+}
+
+(function boot() {
+  if (sessionStorage.getItem('wds_session') === '1' && ls('wds_pass')) {
+    $('loginScreen').style.display = 'none';
+    $('shell').style.display = 'flex';
+    initStudio();
+  }
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && $('loginScreen').style.display !== 'none') doDevLogin();
+  });
+})();
+</script>
+
+</body>
+</html>
