@@ -131,9 +131,13 @@ a{color:inherit;text-decoration:none}
 .patch-diff .new{color:var(--green);display:block}
 
 .preview-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:16px}
-.preview-hd{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--bg3)}
+.preview-hd{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--bg3);flex-wrap:wrap;gap:8px}
 .preview-hd-title{font-size:12px;font-weight:700;color:var(--text2);display:flex;align-items:center;gap:7px}
 #previewFrame{width:100%;height:640px;border:none;background:#fff}
+.preview-tabs{display:flex;gap:4px;padding:8px 14px 0;background:var(--bg3)}
+.preview-tab{padding:7px 14px;font-size:11.5px;font-weight:700;color:var(--text3);cursor:pointer;border-radius:8px 8px 0 0}
+.preview-tab.active{background:var(--bg2);color:var(--text)}
+#previewCodeBox{width:100%;height:640px;border:none;background:#0B0E14;color:#E8EBF5;font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:11.5px;line-height:1.6;padding:14px;resize:none;outline:none}
 
 .commit-item{display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--border)}
 .commit-item:last-child{border-bottom:none}
@@ -221,7 +225,7 @@ a{color:inherit;text-decoration:none}
     <div class="screen active" id="screen-studio">
       <div class="sec-hd"><h2><i class="ti ti-sparkles"></i> AI Studio</h2></div>
 
-      <div class="alert info" id="noFilesAlert" style="display:none"><i class="ti ti-info-circle"></i> এখনো কোনো ফাইল যোগ করা হয়নি। আগে <b>Settings</b>-এ গিয়ে আপনার User Site ও Admin Panel-এর GitHub path যোগ করুন।</div>
+      <div class="alert info" id="noFilesAlert" style="display:none"><i class="ti ti-info-circle"></i> এখনো কোনো ফাইল যোগ করা হয়নি। আগে <b>Settings</b>-এ গিয়ে আপনার GitHub Token, Repository ও ফাইল path যোগ করুন।</div>
 
       <div id="filePillsWrap">
         <div class="lf-hint2" style="margin-bottom:8px">কোন ফাইলে পরিবর্তন করতে চান?</div>
@@ -279,12 +283,18 @@ a{color:inherit;text-decoration:none}
       <div class="preview-wrap" id="previewWrap" style="display:none">
         <div class="preview-hd">
           <div class="preview-hd-title"><i class="ti ti-device-desktop"></i> Live Preview (এখনো GitHub-এ প্রকাশিত হয়নি)</div>
-          <div style="display:flex;gap:8px">
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn btn-ghost btn-sm" onclick="openPreviewNewTab()"><i class="ti ti-external-link"></i> নতুন ট্যাবে খুলুন</button>
-            <button class="btn btn-green btn-sm" onclick="publishChanges()" id="publishBtn"><i class="ti ti-rocket"></i> Publish (Live করুন)</button>
+            <button class="btn btn-ghost btn-sm" onclick="copyGeneratedCode()"><i class="ti ti-copy"></i> Copy Code</button>
+            <button class="btn btn-green btn-sm" onclick="publishChanges()" id="publishBtn"><i class="ti ti-rocket"></i> Push to GitHub</button>
           </div>
         </div>
+        <div class="preview-tabs">
+          <div class="preview-tab active" id="tabPreview" onclick="switchPreviewTab('preview')">👁️ Preview</div>
+          <div class="preview-tab" id="tabCode" onclick="switchPreviewTab('code')">📄 Code</div>
+        </div>
         <iframe id="previewFrame" sandbox="allow-scripts allow-forms allow-modals allow-popups"></iframe>
+        <textarea id="previewCodeBox" style="display:none" readonly spellcheck="false"></textarea>
       </div>
     </div>
 
@@ -315,25 +325,29 @@ a{color:inherit;text-decoration:none}
       <div class="two-col">
         <div>
           <div class="card">
-            <div class="card-title"><i class="ti ti-cloud"></i> Connection — একবারে সব বসান</div>
-            <div class="field"><label>Cloudflare Worker URL</label><input type="text" id="setWorkerUrl" placeholder="https://workhive-ai-proxy.your-subdomain.workers.dev"></div>
-            <div class="field"><label>Panel Secret (X-Panel-Key)</label><div class="pw-wrap"><input type="password" id="setPanelKey" placeholder="Worker-এ PANEL_SECRET হিসেবে যা বসিয়েছেন ঠিক তাই"><span class="pw-eye" onclick="togglePwView('setPanelKey')"><i class="ti ti-eye"></i></span></div></div>
-            <div class="field"><label>GitHub Owner (username/org)</label><input type="text" id="setGhOwner" placeholder="your-github-username"></div>
-            <div class="field"><label>GitHub Repository name</label><input type="text" id="setGhRepo" placeholder="workhive"></div>
+            <div class="card-title"><i class="ti ti-brand-github"></i> GitHub Direct Connection</div>
+            <div class="alert warn"><i class="ti ti-alert-triangle"></i> কোনো ব্যাকএন্ড/সার্ভার নেই — Token এই ব্রাউজারের localStorage-এ সেভ থাকে এবং সরাসরি GitHub API-তে ব্যবহৃত হয়। শুধু নিজের ডিভাইসে/প্রাইভেট ব্রাউজারে এই প্যানেল ব্যবহার করুন এবং Token-এ শুধু ওই একটা repo-এর <b>Contents: Read & Write</b> পারমিশন দিন (Fine-grained PAT)।</div>
+            <div class="field"><label>GitHub Personal Access Token</label><div class="pw-wrap"><input type="password" id="setGhToken" placeholder="github_pat_... অথবা ghp_..."><span class="pw-eye" onclick="togglePwView('setGhToken')"><i class="ti ti-eye"></i></span></div></div>
+            <div class="field"><label>Repository Path (owner/repo)</label><input type="text" id="setGhRepoPath" placeholder="your-username/your-repo"></div>
             <div class="field"><label>Branch</label><input type="text" id="setGhBranch" placeholder="main" value="main"></div>
-            <div class="lf-hint2">এই ৫টা তথ্য এখানেই থাকবে — Cloudflare Worker-এ আলাদা করে Owner/Repo/Branch বসাতে হবে না, শুধু ৪টা Secret (GROQ_API_KEY, GEMINI_API_KEY, GITHUB_TOKEN, PANEL_SECRET) থাকলেই যথেষ্ট।</div>
             <button class="btn btn-primary" style="width:100%;margin-top:10px" onclick="saveAllSettings()"><i class="ti ti-device-floppy"></i> Save &amp; Test Connection</button>
             <div class="lf-hint2" style="margin-top:8px" id="connTestResult"></div>
+          </div>
+          <div class="card">
+            <div class="card-title"><i class="ti ti-key"></i> AI API Keys</div>
+            <div class="field"><label>Gemini API Key</label><div class="pw-wrap"><input type="password" id="setGeminiKey" placeholder="AIza..."><span class="pw-eye" onclick="togglePwView('setGeminiKey')"><i class="ti ti-eye"></i></span></div><div class="lf-hint2">Google AI Studio থেকে ফ্রি পাওয়া যায় — ছবি বিশ্লেষণের জন্যও এটাই ব্যবহৃত হয়।</div></div>
+            <div class="field"><label>Groq API Key (ঐচ্ছিক, দ্রুত টেক্সট-ওনলি)</label><div class="pw-wrap"><input type="password" id="setGroqKey" placeholder="gsk_..."><span class="pw-eye" onclick="togglePwView('setGroqKey')"><i class="ti ti-eye"></i></span></div></div>
+            <button class="btn btn-ghost" style="width:100%" onclick="saveApiKeys()"><i class="ti ti-device-floppy"></i> Save Keys</button>
           </div>
         </div>
         <div>
           <div class="card">
             <div class="card-title"><i class="ti ti-files"></i> Manageable Files</div>
-            <div class="lf-hint2" style="margin-bottom:10px">যেসব ফাইল AI দিয়ে এডিট করতে চান, সেগুলোর নাম ও রিপোর ভেতরের ঠিক path (যেমন: <code>user-site.html</code> বা <code>admin/index.html</code>) এখানে যোগ করুন।</div>
+            <div class="lf-hint2" style="margin-bottom:10px">যেসব ফাইল AI দিয়ে এডিট করতে চান, সেগুলোর নাম ও রিপোর ভেতরের ঠিক path (যেমন: <code>index.html</code> বা <code>admin/index.html</code>) এখানে যোগ করুন।</div>
             <div id="fileManageList"></div>
             <div style="display:flex;gap:8px;margin-top:10px">
               <input type="text" id="newFileLabel" placeholder="নাম (যেমন: User Site)" style="flex:1;padding:9px 12px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--text);font-size:12.5px">
-              <input type="text" id="newFilePath" placeholder="path (যেমন: user-site.html)" style="flex:1;padding:9px 12px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--text);font-size:12.5px">
+              <input type="text" id="newFilePath" placeholder="path (যেমন: index.html)" style="flex:1;padding:9px 12px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--text);font-size:12.5px">
               <button class="btn btn-primary btn-sm" onclick="addManagedFile()"><i class="ti ti-plus"></i></button>
             </div>
           </div>
@@ -341,17 +355,6 @@ a{color:inherit;text-decoration:none}
             <div class="card-title"><i class="ti ti-key"></i> Panel Password</div>
             <div class="field"><label>নতুন পাসওয়ার্ড</label><input type="password" id="newDevPass" placeholder="Leave blank to keep current"></div>
             <button class="btn btn-ghost" style="width:100%" onclick="changeDevPassword()"><i class="ti ti-lock"></i> Update Password</button>
-          </div>
-          <div class="card">
-            <div class="card-title"><i class="ti ti-book"></i> Worker Secrets Checklist</div>
-            <div style="font-size:12.5px;color:var(--text2);line-height:2">
-              <div><i class="ti ti-circle-check" style="color:var(--green)"></i> GROQ_API_KEY</div>
-              <div><i class="ti ti-circle-check" style="color:var(--green)"></i> GEMINI_API_KEY</div>
-              <div><i class="ti ti-circle-check" style="color:var(--green)"></i> GITHUB_TOKEN</div>
-              <div><i class="ti ti-circle-check" style="color:var(--green)"></i> PANEL_SECRET</div>
-              <div><i class="ti ti-circle-check" style="color:var(--green)"></i> ALLOWED_ORIGIN</div>
-              <div><i class="ti ti-circle-check" style="color:var(--green)"></i> GITHUB_OWNER / GITHUB_REPO / GITHUB_BRANCH (Variables)</div>
-            </div>
           </div>
         </div>
       </div>
@@ -455,39 +458,52 @@ function goScreen(name) {
   if (name === 'settings') renderFileManageList();
 }
 
-// ═══════════════════════ CONNECTION SETTINGS ═══════════════════════
+// ═══════════════════════ BASE64 (unicode-safe) HELPERS ═══════════════════════
+function b64EncodeUnicode(str) {
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (m, p1) => String.fromCharCode('0x' + p1)));
+}
+function b64DecodeUnicode(str) {
+  return decodeURIComponent(atob(str.replace(/\n/g, '')).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+}
+
+// ═══════════════════════ CONNECTION SETTINGS (GitHub direct) ═══════════════════════
 function loadConnectionSettings() {
-  $('setWorkerUrl').value = ls('wds_worker_url');
-  $('setPanelKey').value = ls('wds_panel_key');
-  $('setGhOwner').value = ls('wds_gh_owner');
-  $('setGhRepo').value = ls('wds_gh_repo');
+  $('setGhToken').value = ls('wds_gh_token');
+  $('setGhRepoPath').value = ls('wds_gh_owner') && ls('wds_gh_repo') ? (ls('wds_gh_owner') + '/' + ls('wds_gh_repo')) : '';
   $('setGhBranch').value = ls('wds_gh_branch') || 'main';
+  $('setGeminiKey').value = ls('wds_gemini_key');
+  $('setGroqKey').value = ls('wds_groq_key');
+}
+function saveApiKeys() {
+  ls('wds_gemini_key', $('setGeminiKey').value.trim());
+  ls('wds_groq_key', $('setGroqKey').value.trim());
+  showToast('✅ API Key সেভ হয়েছে', 'success');
 }
 async function saveAllSettings() {
-  const url = $('setWorkerUrl').value.trim().replace(/\/$/, '');
-  const key = $('setPanelKey').value.trim();
-  const owner = $('setGhOwner').value.trim();
-  const repo = $('setGhRepo').value.trim();
+  const token = $('setGhToken').value.trim();
+  const repoPath = $('setGhRepoPath').value.trim();
   const branch = $('setGhBranch').value.trim() || 'main';
-  if (!url || !key) { showToast('Worker URL ও Panel Secret দুটোই দিন', 'error'); return; }
-  if (!owner || !repo) { showToast('GitHub Owner ও Repository name দুটোই দিন', 'error'); return; }
-  ls('wds_worker_url', url);
-  ls('wds_panel_key', key);
+  if (!token) { showToast('GitHub Personal Access Token দিন', 'error'); return; }
+  if (!repoPath.includes('/')) { showToast('Repository Path এভাবে দিন: owner/repo', 'error'); return; }
+  const [owner, repo] = repoPath.split('/').map(s => s.trim());
+  if (!owner || !repo) { showToast('Repository Path সঠিক নয়', 'error'); return; }
+  ls('wds_gh_token', token);
   ls('wds_gh_owner', owner);
   ls('wds_gh_repo', repo);
   ls('wds_gh_branch', branch);
+  saveApiKeys();
   $('connTestResult').textContent = '⏳ টেস্ট করা হচ্ছে...';
   try {
-    const res = await fetch(url + '/github/commits?' + ghQS() + '&path=' + encodeURIComponent((S.files[0] && S.files[0].path) || 'index.html') + '&per_page=1', { headers: { 'X-Panel-Key': key } });
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/branches/${encodeURIComponent(branch)}`, { headers: ghHeaders() });
     const data = await res.json().catch(() => ({}));
-    if (res.status === 401) { $('connTestResult').innerHTML = '<span style="color:var(--red)">❌ Panel Secret ভুল — Worker-এর PANEL_SECRET-এর সাথে মিলছে না</span>'; updateConnPill(false); return; }
-    if (!res.ok || data.ok === false) { $('connTestResult').innerHTML = `<span style="color:var(--red)">❌ ${escHtml(data.error || ('সংযোগ ব্যর্থ (' + res.status + ')'))}</span>`; updateConnPill(false); return; }
-    $('connTestResult').innerHTML = '<span style="color:var(--green)">✅ Worker ও GitHub — দুটোর সাথেই সংযোগ সফল হয়েছে</span>';
+    if (res.status === 401 || res.status === 403) { $('connTestResult').innerHTML = '<span style="color:var(--red)">❌ Token ভুল বা পারমিশন নেই</span>'; updateConnPill(false); return; }
+    if (!res.ok) { $('connTestResult').innerHTML = `<span style="color:var(--red)">❌ ${escHtml(data.message || ('সংযোগ ব্যর্থ (' + res.status + ')'))}</span>`; updateConnPill(false); return; }
+    $('connTestResult').innerHTML = '<span style="color:var(--green)">✅ GitHub Repository-এর সাথে সংযোগ সফল হয়েছে</span>';
     updateConnPill(true);
-    addActivityLog('🔌 Worker + GitHub connection saved & tested successfully');
+    addActivityLog('🔌 GitHub connection saved & tested successfully');
     showToast('✅ সংযোগ সফল হয়েছে!', 'success');
   } catch (e) {
-    $('connTestResult').innerHTML = '<span style="color:var(--red)">❌ সংযোগ ব্যর্থ — Worker URL ঠিক আছে কিনা দেখুন</span>';
+    $('connTestResult').innerHTML = '<span style="color:var(--red)">❌ সংযোগ ব্যর্থ — Token/Repository/ইন্টারনেট চেক করুন</span>';
     updateConnPill(false);
   }
 }
@@ -496,29 +512,48 @@ function updateConnPill(ok) {
   pill.className = 'conn-pill ' + (ok ? 'ok' : 'off');
   txt.textContent = ok ? 'Connected' : 'Not configured';
 }
-
-// ═══════════════════════ API HELPER ═══════════════════════
-function workerUrl() { return ls('wds_worker_url').replace(/\/$/, ''); }
-function panelKey() { return ls('wds_panel_key'); }
-function ghQS() {
-  return `owner=${encodeURIComponent(ls('wds_gh_owner'))}&repo=${encodeURIComponent(ls('wds_gh_repo'))}&branch=${encodeURIComponent(ls('wds_gh_branch') || 'main')}`;
-}
-function ghBodyFields() {
-  return { owner: ls('wds_gh_owner'), repo: ls('wds_gh_repo'), branch: ls('wds_gh_branch') || 'main' };
-}
 function checkGithubConfigured() {
-  if (!ls('wds_gh_owner') || !ls('wds_gh_repo')) { showToast('আগে Settings-এ গিয়ে GitHub Owner ও Repository name বসান', 'error'); return false; }
+  if (!ls('wds_gh_token') || !ls('wds_gh_owner') || !ls('wds_gh_repo')) { showToast('আগে Settings-এ গিয়ে GitHub Token ও Repository Path বসান', 'error'); return false; }
   return true;
 }
-async function apiFetch(path, opts = {}) {
-  const url = workerUrl();
-  if (!url || !panelKey()) throw new Error('আগে Settings-এ গিয়ে Worker URL ও Panel Secret সেভ করুন');
-  const headers = Object.assign({ 'X-Panel-Key': panelKey() }, opts.headers || {});
-  if (opts.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
-  const res = await fetch(url + path, { ...opts, headers });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok || data.ok === false) throw new Error(data.error || ('Request failed: ' + res.status));
-  return data;
+
+// ═══════════════════════ GITHUB REST API — DIRECT ═══════════════════════
+function ghHeaders() {
+  return { 'Authorization': 'token ' + ls('wds_gh_token'), 'Accept': 'application/vnd.github+json' };
+}
+function ghBase() {
+  return `https://api.github.com/repos/${ls('wds_gh_owner')}/${ls('wds_gh_repo')}`;
+}
+async function ghGetFile(path) {
+  const branch = ls('wds_gh_branch') || 'main';
+  const res = await fetch(`${ghBase()}/contents/${path.split('/').map(encodeURIComponent).join('/')}?ref=${encodeURIComponent(branch)}`, { headers: ghHeaders() });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'GitHub ফাইল রিড ব্যর্থ');
+  return { content: b64DecodeUnicode(data.content), sha: data.sha };
+}
+async function ghPutFile(path, content, sha, message) {
+  const branch = ls('wds_gh_branch') || 'main';
+  const res = await fetch(`${ghBase()}/contents/${path.split('/').map(encodeURIComponent).join('/')}`, {
+    method: 'PUT',
+    headers: Object.assign({ 'Content-Type': 'application/json' }, ghHeaders()),
+    body: JSON.stringify({ message, content: b64EncodeUnicode(content), sha, branch }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'GitHub পুশ ব্যর্থ');
+  return { commitSha: data.commit && data.commit.sha };
+}
+async function ghGetCommits(path, per_page = 25) {
+  const branch = ls('wds_gh_branch') || 'main';
+  const res = await fetch(`${ghBase()}/commits?path=${encodeURIComponent(path)}&sha=${encodeURIComponent(branch)}&per_page=${per_page}`, { headers: ghHeaders() });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'Commit history লোড ব্যর্থ');
+  return data.map(c => ({ sha: c.sha, message: c.commit.message, author: c.commit.author ? c.commit.author.name : '', date: c.commit.author ? c.commit.author.date : '' }));
+}
+async function ghGetFileAtCommit(path, sha) {
+  const res = await fetch(`${ghBase()}/contents/${path.split('/').map(encodeURIComponent).join('/')}?ref=${sha}`, { headers: ghHeaders() });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.message || 'পুরনো ভার্সন লোড ব্যর্থ');
+  return { content: b64DecodeUnicode(data.content) };
 }
 
 // ═══════════════════════ MANAGED FILES ═══════════════════════
@@ -590,6 +625,57 @@ function removeStudioImage() {
   $('imgUploadInner').innerHTML = `<div style="font-size:26px;margin-bottom:6px">🖼️</div><div style="font-size:12px;color:var(--text3);font-weight:600">ছবি বেছে নিতে ক্লিক করুন (PNG/JPG)</div>`;
 }
 
+// ═══════════════════════ AI CALLS — DIRECT (Gemini / Groq) ═══════════════════════
+function buildAISystemPrompt(fileName) {
+  return `তুমি একজন এক্সপার্ট ওয়েব ডেভেলপার। ফাইল "${fileName}"-এ ব্যবহারকারীর অনুরোধ অনুযায়ী প্রয়োজনীয় পরিবর্তন করো।
+শুধুমাত্র নিচের বৈধ JSON ফরম্যাটে উত্তর দাও — কোনো markdown code fence, ব্যাখ্যা বা অতিরিক্ত টেক্সট ছাড়া:
+{"summary":"পরিবর্তনের সংক্ষিপ্ত বাংলা বর্ণনা","patches":[{"description":"এই patch কী করে","old_str":"বিদ্যমান কোডের হুবহু ও ইউনিক একটি অংশ","new_str":"তার পরিবর্তে বসবে এমন নতুন কোড"}]}
+নিয়মাবলী:
+- old_str অবশ্যই ফাইলের বিদ্যমান কোডের সাথে ক্যারেক্টার-বাই-ক্যারেক্টার হুবহু মিলতে হবে এবং ফাইলে ঠিক একবার (unique) থাকতে হবে।
+- old_str যতটা সম্ভব ছোট রাখো, কিন্তু ইউনিক নিশ্চিত করতে প্রয়োজনে আশেপাশের কিছু লাইন যোগ করো।
+- পুরো ফাইল নতুন করে লিখবে না — শুধু প্রাসঙ্গিক অংশটুকু patch করো।
+- একাধিক জায়গায় পরিবর্তন দরকার হলে patches অ্যারেতে একাধিক entry দাও।
+- যদি সত্যিই পুরো ফাইল replace করা আবশ্যক হয় (যেমন একদম নতুন পেজ), তাহলে {"summary":"...","full_content":"সম্পূর্ণ নতুন ফাইলের কোড"} ফরম্যাটে দাও।`;
+}
+function parseAiJson(text) {
+  let cleaned = (text || '').trim();
+  cleaned = cleaned.replace(/^```(json)?/i, '').replace(/```$/, '').trim();
+  const start = cleaned.indexOf('{');
+  const end = cleaned.lastIndexOf('}');
+  if (start === -1 || end === -1) return null;
+  try { return JSON.parse(cleaned.slice(start, end + 1)); } catch (e) { return null; }
+}
+async function callGemini(systemPrompt, userPrompt, image) {
+  const key = ls('wds_gemini_key');
+  if (!key) throw new Error('Gemini API Key দিন Settings-এ');
+  const parts = [{ text: systemPrompt + '\n\n' + userPrompt }];
+  if (image) parts.push({ inline_data: { mime_type: image.mimeType, data: image.base64 } });
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ contents: [{ parts }], generationConfig: { temperature: 0.2 } }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error((data.error && data.error.message) || 'Gemini রিকোয়েস্ট ব্যর্থ');
+  const cand = data.candidates && data.candidates[0];
+  if (!cand) throw new Error('Gemini থেকে কোনো উত্তর আসেনি');
+  return (cand.content && cand.content.parts || []).map(p => p.text || '').join('');
+}
+async function callGroq(systemPrompt, userPrompt) {
+  const key = ls('wds_groq_key');
+  if (!key) throw new Error('Groq API Key দিন Settings-এ');
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
+      temperature: 0.2,
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error((data.error && data.error.message) || 'Groq রিকোয়েস্ট ব্যর্থ');
+  return (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
+}
+
 // ═══════════════════════ GENERATE CHANGES ═══════════════════════
 async function generateChanges() {
   if (!S.activeFile) { showToast('আগে একটা ফাইল সিলেক্ট করুন', 'error'); return; }
@@ -602,24 +688,22 @@ async function generateChanges() {
   $('previewWrap').style.display = 'none';
   try {
     if (!checkGithubConfigured()) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-wand"></i> Generate Changes'; return; }
-    const fileRes = await apiFetch('/github/file?' + ghQS() + '&path=' + encodeURIComponent(S.activeFile.path));
+    const fileRes = await ghGetFile(S.activeFile.path);
     S.currentContent = fileRes.content;
     S.currentSha = fileRes.sha;
 
     btn.innerHTML = '<i class="ti ti-loader spin-ico"></i> AI ভাবছে...';
-    const body = {
-      provider: S.provider,
-      prompt,
-      currentContent: S.currentContent,
-      fileName: S.activeFile.path,
-    };
-    if (S.pendingImage) { body.imageBase64 = S.pendingImage.base64; body.imageMimeType = S.pendingImage.mimeType; }
+    const systemPrompt = buildAISystemPrompt(S.activeFile.path);
+    const userPrompt = `=== CURRENT FILE CONTENT (${S.activeFile.path}) ===\n${S.currentContent}\n\n=== USER REQUEST ===\n${prompt}`;
 
-    const aiRes = await apiFetch('/ai/edit', { method: 'POST', body: JSON.stringify(body) });
+    const useGemini = S.provider === 'gemini' || !!S.pendingImage;
+    if (S.pendingImage && S.provider !== 'gemini') showToast('ছবি থাকায় Gemini ব্যবহার হচ্ছে', 'info');
+    const rawText = useGemini ? await callGemini(systemPrompt, userPrompt, S.pendingImage) : await callGroq(systemPrompt, userPrompt);
 
-    if (aiRes.raw) {
+    const aiRes = parseAiJson(rawText);
+    if (!aiRes) {
       $('rawAiCard').style.display = 'block';
-      $('rawAiText').textContent = aiRes.raw;
+      $('rawAiText').textContent = rawText;
       showToast('⚠️ AI বৈধ JSON দেয়নি — নিচে raw output দেখুন', 'warn');
       addActivityLog(`⚠️ AI edit for "${S.activeFile.label}" returned invalid JSON`);
       return;
@@ -693,51 +777,59 @@ function discardChanges() {
   $('studioPrompt').value = '';
 }
 
-// ═══════════════════════ PREVIEW ═══════════════════════
+// ═══════════════════════ PREVIEW (Iframe + Code box) ═══════════════════════
 function buildPreview() {
   if (!S.previewContent) { showToast('প্রিভিউ করার মতো কিছু নেই', 'error'); return; }
   const frame = $('previewFrame');
   frame.srcdoc = S.previewContent;
+  $('previewCodeBox').value = S.previewContent;
+  switchPreviewTab('preview');
   $('previewWrap').style.display = 'block';
   $('previewWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
   addActivityLog(`👁️ Built preview for "${S.activeFile.label}"`);
+}
+function switchPreviewTab(tab) {
+  $('tabPreview').classList.toggle('active', tab === 'preview');
+  $('tabCode').classList.toggle('active', tab === 'code');
+  $('previewFrame').style.display = tab === 'preview' ? 'block' : 'none';
+  $('previewCodeBox').style.display = tab === 'code' ? 'block' : 'none';
 }
 function openPreviewNewTab() {
   if (!S.previewContent) return;
   const blob = new Blob([S.previewContent], { type: 'text/html' });
   window.open(URL.createObjectURL(blob), '_blank');
 }
+function copyGeneratedCode() {
+  if (!S.previewContent) { showToast('কপি করার মতো কোড নেই', 'error'); return; }
+  navigator.clipboard.writeText(S.previewContent).then(() => {
+    showToast('📋 কোড কপি হয়েছে', 'success');
+  }).catch(() => {
+    $('previewCodeBox').select();
+    document.execCommand('copy');
+    showToast('📋 কোড কপি হয়েছে', 'success');
+  });
+}
 
-// ═══════════════════════ PUBLISH ═══════════════════════
+// ═══════════════════════ PUBLISH (Push to GitHub) ═══════════════════════
 async function publishChanges() {
   if (!S.previewContent || !S.activeFile) { showToast('আগে Preview বানান', 'error'); return; }
   const summary = $('patchSummaryText').textContent || 'AI Studio update';
-  if (!confirm(`"${S.activeFile.label}" ফাইলে এই পরিবর্তনগুলো এখনই লাইভ সাইটে পাবলিশ করতে চান?\n\n${summary}`)) return;
+  if (!confirm(`"${S.activeFile.label}" ফাইলে এই পরিবর্তনগুলো এখনই GitHub-এ (লাইভ সাইটে) পাবলিশ করতে চান?\n\n${summary}`)) return;
   const btn = $('publishBtn');
   btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader spin-ico"></i> Publishing...';
   try {
+    if (!checkGithubConfigured()) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-rocket"></i> Push to GitHub'; return; }
     // Re-fetch latest sha right before publish, in case something else changed the file meanwhile
-    if (!checkGithubConfigured()) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-rocket"></i> Publish (Live করুন)'; return; }
-    const latest = await apiFetch('/github/file?' + ghQS() + '&path=' + encodeURIComponent(S.activeFile.path));
-    const res = await apiFetch('/github/file', {
-      method: 'PUT',
-      body: JSON.stringify({
-        ...ghBodyFields(),
-        path: S.activeFile.path,
-        content: S.previewContent,
-        sha: latest.sha,
-        message: `AI Studio: ${summary}`.slice(0, 200),
-      }),
-    });
+    const latest = await ghGetFile(S.activeFile.path);
+    const res = await ghPutFile(S.activeFile.path, S.previewContent, latest.sha, `AI Studio: ${summary}`.slice(0, 200));
     showToast('🚀 পাবলিশ হয়ে গেছে! কিছুক্ষণের মধ্যে লাইভ সাইটে দেখা যাবে।', 'success');
     addActivityLog(`🚀 Published "${S.activeFile.label}" — commit ${(res.commitSha || '').slice(0, 7)} — ${summary}`);
     discardChanges();
-    $('studioPrompt').value = '';
   } catch (e) {
     console.error(e);
     showToast('❌ Publish ব্যর্থ হয়েছে: ' + e.message, 'error');
   } finally {
-    btn.disabled = false; btn.innerHTML = '<i class="ti ti-rocket"></i> Publish (Live করুন)';
+    btn.disabled = false; btn.innerHTML = '<i class="ti ti-rocket"></i> Push to GitHub';
   }
 }
 
@@ -755,12 +847,12 @@ async function selectHistoryFile(i) {
   el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3)"><i class="ti ti-loader spin-ico"></i> লোড হচ্ছে...</div>';
   try {
     if (!checkGithubConfigured()) { el.innerHTML = ''; return; }
-    const res = await apiFetch('/github/commits?' + ghQS() + '&path=' + encodeURIComponent(S.historyFile.path) + '&per_page=25');
-    if (!res.commits || !res.commits.length) {
+    const commits = await ghGetCommits(S.historyFile.path, 25);
+    if (!commits.length) {
       el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3)">এই ফাইলের কোনো commit history পাওয়া যায়নি।</div>';
       return;
     }
-    el.innerHTML = res.commits.map((c, idx) => `
+    el.innerHTML = commits.map((c, idx) => `
       <div class="commit-item">
         <div class="commit-icon"><i class="ti ti-git-commit"></i></div>
         <div class="commit-body">
@@ -780,7 +872,7 @@ async function selectHistoryFile(i) {
 async function previewCommit(sha) {
   try {
     showToast('⏳ লোড হচ্ছে...', 'info');
-    const res = await apiFetch(`/github/file-at-commit?${ghQS()}&path=${encodeURIComponent(S.historyFile.path)}&sha=${sha}`);
+    const res = await ghGetFileAtCommit(S.historyFile.path, sha);
     const blob = new Blob([res.content], { type: 'text/html' });
     window.open(URL.createObjectURL(blob), '_blank');
   } catch (e) { showToast('❌ ' + e.message, 'error'); }
@@ -789,18 +881,9 @@ async function rollbackToCommit(sha, msg) {
   if (!confirm(`"${S.historyFile.label}" ফাইলটা এই ভার্সনে ফিরিয়ে নিতে চান?\n\n"${msg}" (${sha.slice(0, 7)})\n\nএটা একটা নতুন commit হিসেবে যোগ হবে — বর্তমান ভার্সন হারাবে না, GitHub history-তে থেকে যাবে।`)) return;
   try {
     showToast('⏳ Rollback করা হচ্ছে...', 'info');
-    const oldFile = await apiFetch(`/github/file-at-commit?${ghQS()}&path=${encodeURIComponent(S.historyFile.path)}&sha=${sha}`);
-    const latest = await apiFetch('/github/file?' + ghQS() + '&path=' + encodeURIComponent(S.historyFile.path));
-    const res = await apiFetch('/github/file', {
-      method: 'PUT',
-      body: JSON.stringify({
-        ...ghBodyFields(),
-        path: S.historyFile.path,
-        content: oldFile.content,
-        sha: latest.sha,
-        message: `Rollback ${S.historyFile.path} to ${sha.slice(0, 7)} via Dev Studio`,
-      }),
-    });
+    const oldFile = await ghGetFileAtCommit(S.historyFile.path, sha);
+    const latest = await ghGetFile(S.historyFile.path);
+    const res = await ghPutFile(S.historyFile.path, oldFile.content, latest.sha, `Rollback ${S.historyFile.path} to ${sha.slice(0, 7)} via Dev Studio`);
     showToast('✅ Rollback সম্পন্ন! সাইট আগের ভার্সনে ফিরে গেছে।', 'success');
     addActivityLog(`↩️ Rolled back "${S.historyFile.label}" to commit ${sha.slice(0, 7)} — new commit ${(res.commitSha || '').slice(0, 7)}`);
     selectHistoryFile(S.files.findIndex(f => f.path === S.historyFile.path));
@@ -817,7 +900,7 @@ function initStudio() {
   S.activityLog = lsJson('wds_activity_log') || [];
   renderFilePills();
   renderActivityLog();
-  if (ls('wds_worker_url') && ls('wds_panel_key')) updateConnPill(true);
+  if (ls('wds_gh_token') && ls('wds_gh_owner') && ls('wds_gh_repo')) updateConnPill(true);
   if (S.files.length && !S.activeFile) S.activeFile = S.files[0];
   renderFilePills();
 }
