@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WorkHive Dev Studio</title>
+<title>WorkHive Dev Studio — Precision Patch System</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.10.0/dist/tabler-icons.min.css">
 <style>
@@ -119,25 +119,52 @@ a{color:inherit;text-decoration:none}
 .alert.success{background:var(--green-bg);border:1px solid var(--green-border);color:var(--green)}
 .alert.danger{background:var(--red-bg);border:1px solid var(--red-border);color:var(--red)}
 
-.patch-item{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px}
-.patch-hd{display:flex;align-items:center;gap:8px;margin-bottom:6px}
-.patch-status{font-size:9.5px;font-weight:800;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.3px}
+/* ===== Precision Patch / Diff UI ===== */
+.patch-stats-row{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.pstat{flex:1;min-width:90px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;text-align:center}
+.pstat .n{font-size:18px;font-weight:900}
+.pstat .l{font-size:9.5px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-top:2px}
+.pstat.ok .n{color:var(--green)}
+.pstat.bad .n{color:var(--red)}
+.pstat.warn2 .n{color:var(--amber)}
+
+.patch-item{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden}
+.patch-hd{display:flex;align-items:center;gap:8px;padding:11px 13px;cursor:pointer;flex-wrap:wrap}
+.patch-hd:hover{background:rgba(255,255,255,.02)}
+.patch-status{font-size:9.5px;font-weight:800;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.3px;flex-shrink:0}
 .patch-status.applied{background:var(--green-bg);color:var(--green)}
 .patch-status.not_found{background:var(--red-bg);color:var(--red)}
 .patch-status.ambiguous{background:var(--amber-bg);color:var(--amber)}
-.patch-desc{font-size:12.5px;color:var(--text2);flex:1}
-.patch-diff{font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:10.5px;line-height:1.6;background:#0B0E14;border-radius:8px;padding:8px 10px;overflow-x:auto;white-space:pre-wrap;word-break:break-word;max-height:140px;overflow-y:auto}
-.patch-diff .old{color:var(--red);display:block}
-.patch-diff .new{color:var(--green);display:block}
+.patch-status.wrong_file{background:var(--red-bg);color:var(--red)}
+.patch-status.no_anchor,.patch-status.invalid_action{background:var(--red-bg);color:var(--red)}
+.action-badge{font-size:9.5px;font-weight:800;padding:2px 8px;border-radius:6px;flex-shrink:0;font-family:'SFMono-Regular',Consolas,Menlo,monospace}
+.action-badge.INSERT_AFTER{background:var(--blue-bg);color:var(--blue)}
+.action-badge.INSERT_BEFORE{background:var(--teal-bg);color:var(--teal)}
+.action-badge.REPLACE{background:var(--purple-bg);color:var(--purple)}
+.patch-desc{font-size:12.5px;color:var(--text);flex:1;font-weight:600;min-width:150px}
+.patch-toggle-ico{color:var(--text3);font-size:14px;transition:transform .15s;flex-shrink:0}
+.patch-toggle-ico.open{transform:rotate(180deg)}
+.patch-body{display:none;padding:0 13px 13px}
+.patch-body.open{display:block}
+.patch-file-path{font-size:10.5px;color:var(--text3);margin-bottom:8px;font-family:monospace}
+.diff-block{font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:11px;line-height:1.65;background:#0B0E14;border:1px solid var(--border);border-radius:8px;padding:10px 12px;overflow-x:auto;white-space:pre-wrap;word-break:break-word;max-height:280px;overflow-y:auto}
+.diff-line{display:block;padding:1px 6px;border-radius:3px;white-space:pre-wrap}
+.diff-line.ctx{color:var(--text3);opacity:.65}
+.diff-line.anchor{color:#93a3c4;background:rgba(255,255,255,.03)}
+.diff-line.add{color:#86efac;background:rgba(34,197,94,.09)}
+.diff-line.del{color:#fca5a5;background:rgba(239,68,68,.09);text-decoration:line-through;text-decoration-color:rgba(252,165,165,.5)}
+.patch-err-note{font-size:11.5px;color:var(--amber);background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:8px;padding:8px 10px;margin-top:8px;line-height:1.5}
 
 .preview-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-lg);overflow:hidden;margin-bottom:16px}
 .preview-hd{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);background:var(--bg3);flex-wrap:wrap;gap:8px}
 .preview-hd-title{font-size:12px;font-weight:700;color:var(--text2);display:flex;align-items:center;gap:7px}
-#previewFrame{width:100%;height:640px;border:none;background:#fff}
+#previewFrame{width:100%;height:560px;border:none;background:#fff}
 .preview-tabs{display:flex;gap:4px;padding:8px 14px 0;background:var(--bg3)}
 .preview-tab{padding:7px 14px;font-size:11.5px;font-weight:700;color:var(--text3);cursor:pointer;border-radius:8px 8px 0 0}
 .preview-tab.active{background:var(--bg2);color:var(--text)}
-#previewCodeBox{width:100%;height:640px;border:none;background:#0B0E14;color:#E8EBF5;font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:11.5px;line-height:1.6;padding:14px;resize:none;outline:none}
+#previewCodeBox{width:100%;height:560px;border:none;background:#0B0E14;color:#E8EBF5;font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:11.5px;line-height:1.6;padding:14px;resize:none;outline:none}
+.decision-bar{display:flex;gap:10px;padding:14px;border-top:1px solid var(--border);background:var(--bg3)}
+.decision-bar .btn{flex:1;justify-content:center;padding:12px;font-size:13px}
 
 .commit-item{display:flex;align-items:center;gap:12px;padding:13px 14px;border-bottom:1px solid var(--border)}
 .commit-item:last-child{border-bottom:none}
@@ -182,7 +209,7 @@ a{color:inherit;text-decoration:none}
       <div class="brand-icon">🧬</div>
       <div>
         <div class="brand-name">WorkHive Dev Studio</div>
-        <div class="brand-label">AI Code Control Panel</div>
+        <div class="brand-label">Precision Patch Control Panel</div>
       </div>
     </div>
     <div class="login-title">Sign In</div>
@@ -223,7 +250,7 @@ a{color:inherit;text-decoration:none}
 
     <!-- ===== AI STUDIO ===== -->
     <div class="screen active" id="screen-studio">
-      <div class="sec-hd"><h2><i class="ti ti-sparkles"></i> AI Studio</h2></div>
+      <div class="sec-hd"><h2><i class="ti ti-sparkles"></i> AI Studio — Precision Patch</h2></div>
 
       <div class="alert info" id="noFilesAlert" style="display:none"><i class="ti ti-info-circle"></i> এখনো কোনো ফাইল যোগ করা হয়নি। আগে <b>Settings</b>-এ গিয়ে আপনার GitHub Token, Repository ও ফাইল path যোগ করুন।</div>
 
@@ -240,19 +267,19 @@ a{color:inherit;text-decoration:none}
               <div class="provider-opt active" id="provGemini" onclick="setProvider('gemini')">✨ Gemini <span style="font-weight:500;opacity:.7">(টেক্সট + ছবি)</span></div>
               <div class="provider-opt" id="provGroq" onclick="setProvider('groq')">⚡ Groq <span style="font-weight:500;opacity:.7">(দ্রুত, শুধু টেক্সট)</span></div>
             </div>
-            <div class="lf-hint2" style="margin-top:8px">ছবি (ডিজাইন/ওয়্যারফ্রেম) আপলোড করলে স্বয়ংক্রিয়ভাবে Gemini ব্যবহার হবে, প্রোভাইডার যাই সিলেক্ট থাকুক না কেন।</div>
+            <div class="lf-hint2" style="margin-top:8px">ছবি (ডিজাইন/ওয়্যারফ্রেম) আপলোড করলে স্বয়ংক্রিয়ভাবে Gemini ব্যবহার হবে।</div>
           </div>
 
           <div class="card">
             <div class="card-title"><i class="ti ti-message-2"></i> Change Request</div>
             <div class="field">
-              <label>কী পরিবর্তন করতে চান? (বাংলা বা English)</label>
-              <textarea id="studioPrompt" placeholder="উদাহরণ: হোম স্ক্রিনের Wallet কার্ডের রঙ সবুজের বদলে নীল করে দাও। অথবা: Support স্ক্রিনে একটা নতুন FAQ যোগ করো যেখানে লেখা থাকবে..."></textarea>
+              <label>কী পরিবর্তন / নতুন ফিচার চান?</label>
+              <textarea id="studioPrompt" placeholder="উদাহরণ: উইথড্র পৃষ্ঠায় একটা লাল বাটন যোগ করো যেটাতে ক্লিক করলে সাপোর্ট চ্যাট খুলবে।"></textarea>
             </div>
             <div class="field">
-              <label>নির্দিষ্ট কোড অংশ (ঐচ্ছিক — টোকেন বাঁচাতে সাহায্য করে)</label>
-              <textarea id="studioTargetArea" placeholder="চাইলে এখানে ঠিক যে অংশটা পরিবর্তন করতে চান তার আশেপাশের কোড পেস্ট করুন (যেমন Helpline সেকশনের HTML)। খালি রাখলে AI নিজে থেকেই পুরো ফাইল না পড়ে শুধু প্রাসঙ্গিক অংশ খুঁজে বের করবে।" style="min-height:70px"></textarea>
-              <div class="lf-hint2">এটা দিলে পুরো ফাইল AI-কে পাঠানো হবে না — শুধু এই অংশটুকু পাঠানো হবে, তাই দ্রুত ও কম টোকেন খরচ হবে এবং বাকি সাইট অক্ষত থাকার নিশ্চয়তা বেশি।</div>
+              <label>নির্দিষ্ট কোড অংশ (ঐচ্ছিক — নির্ভুলতা বাড়ায়)</label>
+              <textarea id="studioTargetArea" placeholder="চাইলে এখানে ঠিক যে অংশটার আশেপাশে পরিবর্তন করতে চান তার কোড পেস্ট করুন। খালি রাখলে AI নিজে থেকেই প্রাসঙ্গিক অংশ খুঁজে বের করবে।" style="min-height:70px"></textarea>
+              <div class="lf-hint2">এটা দিলে টোকেন কম খরচ হয় এবং AI-এর সঠিক anchor বাছাইয়ের সম্ভাবনা বাড়ে।</div>
             </div>
             <div class="field">
               <label>ডিজাইন/মকআপ ছবি (ঐচ্ছিক)</label>
@@ -264,23 +291,22 @@ a{color:inherit;text-decoration:none}
               </div>
               <input type="file" id="studioImgInput" accept="image/*" style="display:none" onchange="handleStudioImage(this)">
             </div>
-            <button class="btn btn-primary" id="genBtn" style="width:100%" onclick="generateChanges()"><i class="ti ti-wand"></i> Generate Changes</button>
+            <button class="btn btn-primary" id="genBtn" style="width:100%" onclick="generateChanges()"><i class="ti ti-wand"></i> Generate Precision Patch</button>
           </div>
+
+          <div class="alert info"><i class="ti ti-shield-check"></i> <b>Precision মোড:</b> AI পুরো ফাইল কখনো রি-রাইট করবে না। সে শুধু নির্দিষ্ট <code>searchAnchor</code> খুঁজে সেই জায়গায় নতুন কোড <code>INSERT_AFTER</code> / <code>INSERT_BEFORE</code> করবে অথবা ঠিক ওই অংশটুকু <code>REPLACE</code> করবে — বাকি পুরো ফাইল অক্ষত থাকে।</div>
         </div>
 
         <div>
           <div class="card" id="patchSummaryCard" style="display:none">
-            <div class="card-title"><i class="ti ti-git-commit"></i> AI-এর প্রস্তাবিত পরিবর্তন</div>
+            <div class="card-title"><i class="ti ti-git-commit"></i> AI-এর প্রস্তাবিত Patch সমূহ</div>
             <div id="patchSummaryText" style="font-size:13px;color:var(--text2);margin-bottom:12px;line-height:1.6"></div>
+            <div class="patch-stats-row" id="patchStatsRow"></div>
             <div id="patchList"></div>
-            <div style="display:flex;gap:8px;margin-top:10px">
-              <button class="btn btn-ghost" style="flex:1" onclick="discardChanges()"><i class="ti ti-x"></i> Discard</button>
-              <button class="btn btn-info" style="flex:1" onclick="buildPreview()"><i class="ti ti-eye"></i> Build Preview</button>
-            </div>
           </div>
           <div class="card" id="rawAiCard" style="display:none">
             <div class="card-title"><i class="ti ti-alert-triangle"></i> AI বৈধ JSON দেয়নি — Raw আউটপুট</div>
-            <div class="patch-diff" id="rawAiText"></div>
+            <div class="diff-block" id="rawAiText"></div>
           </div>
         </div>
       </div>
@@ -291,15 +317,19 @@ a{color:inherit;text-decoration:none}
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn btn-ghost btn-sm" onclick="openPreviewNewTab()"><i class="ti ti-external-link"></i> নতুন ট্যাবে খুলুন</button>
             <button class="btn btn-ghost btn-sm" onclick="copyGeneratedCode()"><i class="ti ti-copy"></i> Copy Code</button>
-            <button class="btn btn-green btn-sm" onclick="publishChanges()" id="publishBtn"><i class="ti ti-rocket"></i> Push to GitHub</button>
+            <button class="btn btn-ghost btn-sm" id="refreshPreviewBtn" onclick="refreshPreviewFromCode()"><i class="ti ti-refresh"></i> Preview Refresh</button>
           </div>
         </div>
         <div class="preview-tabs">
           <div class="preview-tab active" id="tabPreview" onclick="switchPreviewTab('preview')">👁️ Preview</div>
-          <div class="preview-tab" id="tabCode" onclick="switchPreviewTab('code')">📄 Code</div>
+          <div class="preview-tab" id="tabCode" onclick="switchPreviewTab('code')">📄 Code (edit করা যাবে)</div>
         </div>
         <iframe id="previewFrame" sandbox="allow-scripts allow-forms allow-modals allow-popups"></iframe>
-        <textarea id="previewCodeBox" style="display:none" readonly spellcheck="false"></textarea>
+        <textarea id="previewCodeBox" style="display:none" spellcheck="false" oninput="onCodeBoxEdit()"></textarea>
+        <div class="decision-bar">
+          <button class="btn btn-danger" onclick="discardChanges()"><i class="ti ti-x"></i> Reject / Discard</button>
+          <button class="btn btn-green" onclick="acceptAndCommit()" id="acceptBtn"><i class="ti ti-rocket"></i> Accept &amp; Commit to GitHub</button>
+        </div>
       </div>
     </div>
 
@@ -320,7 +350,7 @@ a{color:inherit;text-decoration:none}
         <h2><i class="ti ti-list-details"></i> Activity Log</h2>
         <button class="btn btn-ghost btn-sm" onclick="clearActivityLog()"><i class="ti ti-trash"></i> Clear</button>
       </div>
-      <div class="lf-hint2" style="margin-bottom:12px">এই লগটা শুধু এই ব্রাউজারে সেভ থাকে (নিজস্ব রেফারেন্সের জন্য) — GitHub-এর নিজের commit history-ই মূল, চিরস্থায়ী রেকর্ড।</div>
+      <div class="lf-hint2" style="margin-bottom:12px">এই লগটা শুধু এই ব্রাউজারে সেভ থাকে — GitHub-এর নিজের commit history-ই মূল, চিরস্থায়ী রেকর্ড।</div>
       <div class="card"><div id="activityLogList"></div></div>
     </div>
 
@@ -372,13 +402,13 @@ a{color:inherit;text-decoration:none}
 // ═══════════════════════ STATE ═══════════════════════
 const S = {
   provider: 'gemini',
-  files: [],           // [{label, path}]
-  activeFile: null,     // {label, path}
-  currentContent: '',   // fetched from GitHub
+  files: [],
+  activeFile: null,
+  currentContent: '',
   currentSha: '',
-  patches: [],          // AI-proposed patches with status after dry-run
-  previewContent: '',   // content after applying patches (not yet published)
-  pendingImage: null,   // {base64, mimeType}
+  patches: [],
+  previewContent: '',
+  pendingImage: null,
   activityLog: [],
   historyFile: null,
 };
@@ -387,6 +417,7 @@ const S = {
 function ls(k, val) { if (val !== undefined) { localStorage.setItem(k, val); return; } return localStorage.getItem(k) || ''; }
 function lsJson(k, val) { if (val !== undefined) { localStorage.setItem(k, JSON.stringify(val)); return; } try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch (e) { return null; } }
 function $(id) { return document.getElementById(id); }
+function escHtml(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
 // ═══════════════════════ TOAST ═══════════════════════
 let _tt;
@@ -416,7 +447,6 @@ function clearActivityLog() {
   S.activityLog = []; lsJson('wds_activity_log', S.activityLog); renderActivityLog();
   showToast('Activity log cleared', 'info');
 }
-function escHtml(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
 // ═══════════════════════ AUTH (local panel password gate) ═══════════════════════
 function togglePwView(id) { const i = $(id); i.type = i.type === 'password' ? 'text' : 'password'; }
@@ -425,14 +455,9 @@ function doDevLogin() {
   const errEl = $('loginErr');
   if (!pass) { errEl.textContent = 'পাসওয়ার্ড দিন'; return; }
   const saved = ls('wds_pass');
-  if (!saved) {
-    ls('wds_pass', pass);
-    enterShell();
-  } else if (pass === saved) {
-    enterShell();
-  } else {
-    errEl.textContent = '❌ ভুল পাসওয়ার্ড';
-  }
+  if (!saved) { ls('wds_pass', pass); enterShell(); }
+  else if (pass === saved) { enterShell(); }
+  else { errEl.textContent = '❌ ভুল পাসওয়ার্ড'; }
 }
 function doDevLogout() {
   if (!confirm('Logout করতে চান?')) return;
@@ -562,9 +587,7 @@ async function ghGetFileAtCommit(path, sha) {
 }
 
 // ═══════════════════════ MANAGED FILES ═══════════════════════
-function loadFiles() {
-  S.files = lsJson('wds_files') || [];
-}
+function loadFiles() { S.files = lsJson('wds_files') || []; }
 function saveFiles() { lsJson('wds_files', S.files); }
 function renderFilePills() {
   const wrap = $('filePills'), noAlert = $('noFilesAlert'), pillsWrap = $('filePillsWrap');
@@ -595,9 +618,7 @@ function addManagedFile() {
   $('newFileLabel').value = ''; $('newFilePath').value = '';
   showToast('✅ ফাইল যোগ হয়েছে', 'success');
 }
-function updateManagedFile(i, field, val) {
-  S.files[i][field] = val; saveFiles(); renderFilePills();
-}
+function updateManagedFile(i, field, val) { S.files[i][field] = val; saveFiles(); renderFilePills(); }
 function removeManagedFile(i) {
   if (!confirm(`"${S.files[i].label}" ফাইলটা লিস্ট থেকে সরাতে চান? (GitHub-এর আসল ফাইল মুছবে না)`)) return;
   S.files.splice(i, 1); saveFiles(); renderFileManageList(); renderFilePills();
@@ -632,15 +653,37 @@ function removeStudioImage() {
 
 // ═══════════════════════ AI CALLS — DIRECT (Gemini / Groq) ═══════════════════════
 function buildAISystemPrompt(fileName) {
-  return `তুমি একজন এক্সপার্ট ওয়েব ডেভেলপার। ফাইল "${fileName}"-এ ব্যবহারকারীর অনুরোধ অনুযায়ী প্রয়োজনীয় পরিবর্তন করো।
-শুধুমাত্র নিচের বৈধ JSON ফরম্যাটে উত্তর দাও — কোনো markdown code fence, ব্যাখ্যা বা অতিরিক্ত টেক্সট ছাড়া:
-{"summary":"পরিবর্তনের সংক্ষিপ্ত বাংলা বর্ণনা","patches":[{"description":"এই patch কী করে","old_str":"বিদ্যমান কোডের হুবহু ও ইউনিক একটি অংশ","new_str":"তার পরিবর্তে বসবে এমন নতুন কোড"}]}
-নিয়মাবলী:
-- old_str অবশ্যই ফাইলের বিদ্যমান কোডের সাথে ক্যারেক্টার-বাই-ক্যারেক্টার হুবহু মিলতে হবে এবং ফাইলে ঠিক একবার (unique) থাকতে হবে।
-- old_str যতটা সম্ভব ছোট রাখো, কিন্তু ইউনিক নিশ্চিত করতে প্রয়োজনে আশেপাশের কিছু লাইন যোগ করো।
-- পুরো ফাইল নতুন করে লিখবে না — শুধু প্রাসঙ্গিক অংশটুকু patch করো।
-- একাধিক জায়গায় পরিবর্তন দরকার হলে patches অ্যারেতে একাধিক entry দাও।
-- যদি সত্যিই পুরো ফাইল replace করা আবশ্যক হয় (যেমন একদম নতুন পেজ), তাহলে {"summary":"...","full_content":"সম্পূর্ণ নতুন ফাইলের কোড"} ফরম্যাটে দাও।`;
+  return `তুমি একজন এক্সপার্ট ওয়েব ডেভেলপার এবং তোমার একমাত্র কাজ পদ্ধতি হলো "Precision Patch" — তুমি কখনোই পুরো ফাইল নতুন করে লিখবে না বা রি-রাইট করবে না। তুমি শুধু নির্দিষ্ট, ছোট, targeted কোড পরিবর্তন/সংযোজন করবে।
+
+টার্গেট ফাইল: "${fileName}"
+
+তোমাকে অবশ্যই নিচের বৈধ JSON ফরম্যাটে উত্তর দিতে হবে — কোনো markdown code fence (\`\`\`), ব্যাখ্যা, বা অতিরিক্ত টেক্সট ছাড়া, শুধু raw JSON:
+
+{
+  "summary": "পরিবর্তনের সংক্ষিপ্ত বাংলা বর্ণনা (এক থেকে দুই লাইনে)",
+  "patches": [
+    {
+      "description": "এই নির্দিষ্ট patch টা কী করে (সংক্ষেপে, বাংলায়)",
+      "filePath": "${fileName}",
+      "searchAnchor": "ফাইলে বিদ্যমান কোডের একটি হুবহু (character-by-character) ও ইউনিক অংশ",
+      "action": "INSERT_AFTER",
+      "newSnippet": "নতুন HTML/CSS/JS কোড"
+    }
+  ]
+}
+
+action-এর মান অবশ্যই এই তিনটার একটা হতে হবে: "INSERT_AFTER", "INSERT_BEFORE", অথবা "REPLACE"।
+
+কঠোর নিয়মাবলী (এগুলো ভাঙা যাবে না):
+1. "filePath" সবসময় ঠিক "${fileName}" হতে হবে — অন্য কোনো ফাইলের নাম দিও না, একাধিক ফাইলে পরিবর্তন সাপোর্টেড না।
+2. "searchAnchor" নিচে দেওয়া প্রকৃত কোড থেকেই হুবহু কপি করতে হবে (একটাও character/space/indentation ভিন্ন হওয়া চলবে না) এবং সেটা ফাইলে ঠিক একবার (unique) থাকতে হবে — অন্যথায় patch ব্যর্থ হবে।
+3. searchAnchor কমপক্ষে একটা সম্পূর্ণ লাইন বা HTML ট্যাগ/attribute-সহ অংশ হওয়া উচিত, যাতে নির্ভরযোগ্যভাবে খুঁজে পাওয়া যায় — কিন্তু অপ্রয়োজনীয়ভাবে লম্বা কোরো না।
+4. action = "INSERT_AFTER" হলে newSnippet ঠিক searchAnchor-এর পরে বসবে; searchAnchor নিজে অপরিবর্তিত থাকবে।
+5. action = "INSERT_BEFORE" হলে newSnippet ঠিক searchAnchor-এর আগে বসবে; searchAnchor নিজে অপরিবর্তিত থাকবে।
+6. action = "REPLACE" হলে searchAnchor সম্পূর্ণভাবে newSnippet দিয়ে প্রতিস্থাপিত হবে।
+7. একটা ফিচারের জন্য HTML + CSS + JS আলাদা জায়গায় বসাতে হলে "patches" অ্যারেতে একাধিক patch object দাও, প্রতিটার নিজস্ব সঠিক searchAnchor সহ।
+8. newSnippet-এ শুধু ঠিক যতটুকু নতুন/পরিবর্তিত কোড দরকার ততটুকুই দাও — কখনো পুরো সেকশন বা ফাইল কপি-পেস্ট কোরো না।
+9. বিদ্যমান কোডের কোনো অংশ অনুমান করে লিখবে না — শুধু নিচে দেওয়া প্রকৃত কোড থেকেই searchAnchor নাও। যদি প্রয়োজনীয় কোড অংশ নিচে দেওয়া না থাকে, summary-তে সেটা উল্লেখ করো এবং patches খালি রেখো।`;
 }
 function parseAiJson(text) {
   let cleaned = (text || '').trim();
@@ -657,7 +700,7 @@ async function callGemini(systemPrompt, userPrompt, image) {
   if (image) parts.push({ inline_data: { mime_type: image.mimeType, data: image.base64 } });
   const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`, {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ contents: [{ parts }], generationConfig: { temperature: 0.2 } }),
+    body: JSON.stringify({ contents: [{ parts }], generationConfig: { temperature: 0.15 } }),
   });
   const data = await res.json();
   if (!res.ok) {
@@ -679,7 +722,7 @@ async function callGroq(systemPrompt, userPrompt) {
     body: JSON.stringify({
       model: 'llama-3.3-70b-versatile',
       messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: userPrompt }],
-      temperature: 0.2,
+      temperature: 0.15,
     }),
   });
   const data = await res.json();
@@ -687,13 +730,11 @@ async function callGroq(systemPrompt, userPrompt) {
   return (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
 }
 
-// ═══════════════════════ SMART CONTEXT ENGINE ═══════════════════════
-// লক্ষ্য: পুরো ফাইল AI-কে না পাঠিয়ে শুধু প্রাসঙ্গিক অংশটুকু পাঠানো — এতে টোকেন খরচ অনেক কমে,
-// rate-limit এরর এড়ানো যায়, এবং AI ভুল করে অপ্রাসঙ্গিক জায়গায় হাত দেয় না।
-const SMALL_FILE_CHARS = 6000;   // এর চেয়ে ছোট ফাইল হলে সরাসরি পুরোটাই পাঠানো হয়
-const CHUNK_LINES = 45;          // AI দিয়ে chunk বাছাইয়ের সময় প্রতিটা chunk-এর সাইজ
-const CONTEXT_WINDOW_LINES = 18; // কিওয়ার্ড ম্যাচের চারপাশে কতটুকু কনটেক্সট রাখা হবে
-const MAX_CONTEXT_CHARS = 9000;  // AI-কে পাঠানো context-এর সর্বোচ্চ সাইজ
+// ═══════════════════════ SMART CONTEXT ENGINE (token সাশ্রয়ী) ═══════════════════════
+const SMALL_FILE_CHARS = 6000;
+const CHUNK_LINES = 45;
+const CONTEXT_WINDOW_LINES = 18;
+const MAX_CONTEXT_CHARS = 9000;
 
 const BN_STOPWORDS = new Set(['করো','করে','করবে','দাও','যাতে','এই','এবং','একটা','একটি','করতে','চাই','চান','থাকবে','হবে','জন্য','সাথে','মধ্যে','সেটা','সেটি','নতুন','পুরানো','পুরনো','মতো','ভাবে']);
 const EN_STOPWORDS = new Set(['and','the','with','into','make','change','add','new','also','for','this','that','from','your']);
@@ -702,7 +743,6 @@ function tokenizePrompt(prompt) {
   return Array.from(new Set((prompt || '').split(/[^\p{L}\p{N}]+/u).map(w => w.trim()).filter(w => w.length >= 2)))
     .filter(w => !BN_STOPWORDS.has(w) && !EN_STOPWORDS.has(w.toLowerCase()));
 }
-
 function buildKeywordContext(content, prompt) {
   const keywords = tokenizePrompt(prompt).map(k => k.toLowerCase());
   if (!keywords.length) return null;
@@ -719,15 +759,12 @@ function buildKeywordContext(content, prompt) {
     const end = Math.min(lines.length, i + CONTEXT_WINDOW_LINES + 1);
     if (ranges.length && start <= ranges[ranges.length - 1][1]) {
       ranges[ranges.length - 1][1] = Math.max(ranges[ranges.length - 1][1], end);
-    } else {
-      ranges.push([start, end]);
-    }
+    } else { ranges.push([start, end]); }
   });
   let out = ranges.map(([s, e]) => `/* ...lines ${s + 1}-${e}... */\n` + lines.slice(s, e).join('\n')).join('\n\n');
   if (out.length > MAX_CONTEXT_CHARS) out = out.slice(0, MAX_CONTEXT_CHARS) + '\n/* ...truncated... */';
   return out;
 }
-
 function splitIntoChunks(content) {
   const lines = content.split('\n');
   const chunks = [];
@@ -747,7 +784,7 @@ function chunkSignature(text) {
 }
 async function selectRelevantChunksViaAI(chunks, prompt, hasImage) {
   const outline = chunks.map(c => `[Chunk ${c.index} | lines ${c.startLine + 1}-${c.endLine}]\n${chunkSignature(c.text)}`).join('\n\n');
-  const sys = `তুমি একজন কোড নেভিগেটর সহকারী। নিচে একটা ফাইলের বিভিন্ন অংশের (chunk) সংক্ষিপ্ত সিগনেচার (id, class, দৃশ্যমান টেক্সট, ফাংশন নাম) দেওয়া আছে। ব্যবহারকারীর অনুরোধ অনুযায়ী ঠিক কোন কোন chunk-এ পরিবর্তন লাগতে পারে তা বের করো। শুধু বৈধ JSON দাও, অন্য কিছু না: {"chunks":[chunk_index, ...]} — সর্বোচ্চ ৪টা index দাও, সম্ভাব্যতার ক্রম অনুযায়ী। নিশ্চিত না হলেও একাধিক সম্ভাব্য chunk দাও, খালি রেখো না।`;
+  const sys = `তুমি একজন কোড নেভিগেটর সহকারী। নিচে একটা ফাইলের বিভিন্ন অংশের (chunk) সংক্ষিপ্ত সিগনেচার (id, class, দৃশ্যমান টেক্সট, ফাংশন নাম) দেওয়া আছে। ব্যবহারকারীর অনুরোধ অনুযায়ী ঠিক কোন কোন chunk-এ পরিবর্তন লাগতে পারে তা বের করো। শুধু বৈধ JSON দাও, অন্য কিছু না: {"chunks":[chunk_index, ...]} — সর্বোচ্চ ৫টা index দাও, সম্ভাব্যতার ক্রম অনুযায়ী। নিশ্চিত না হলেও একাধিক সম্ভাব্য chunk দাও, খালি রেখো না।`;
   const userMsg = `=== FILE OUTLINE (chunks) ===\n${outline}\n\n=== USER REQUEST ===\n${prompt}`;
   const useGemini = S.provider === 'gemini' || hasImage;
   const raw = useGemini ? await callGemini(sys, userMsg, null) : await callGroq(sys, userMsg);
@@ -758,31 +795,23 @@ async function selectRelevantChunksViaAI(chunks, prompt, hasImage) {
   return null;
 }
 async function buildSmartContext(content, prompt, hasImage, onStatus) {
-  // ১. ফাইল ছোট হলে পুরোটাই পাঠাও, chunking-এর দরকার নেই
   if (content.length <= SMALL_FILE_CHARS) return { context: content, mode: 'full' };
-
-  // ২. আগে দ্রুত ও ফ্রি কিওয়ার্ড ম্যাচ ট্রাই করো (কোনো এক্সট্রা AI কল লাগে না)
   const kw = buildKeywordContext(content, prompt);
   if (kw) return { context: kw, mode: 'keyword' };
-
-  // ৩. কিওয়ার্ড ম্যাচ না পেলে AI দিয়ে সংশ্লিষ্ট chunk খুঁজে বের করো (ছোট আউটলাইন কল)
   if (onStatus) onStatus();
   const chunks = splitIntoChunks(content);
   let chosen = null;
   try { chosen = await selectRelevantChunksViaAI(chunks, prompt, hasImage); } catch (e) { chosen = null; }
-  if (!chosen || !chosen.length) chosen = [0, 1, 2]; // শেষ উপায়: শুরুর কয়েকটা chunk নাও
-
+  if (!chosen || !chosen.length) chosen = [0, 1, 2];
   const chosenSet = new Set();
-  chosen.forEach(idx => {
-    for (let d = -1; d <= 1; d++) { const ci = idx + d; if (ci >= 0 && ci < chunks.length) chosenSet.add(ci); }
-  });
+  chosen.forEach(idx => { for (let d = -1; d <= 1; d++) { const ci = idx + d; if (ci >= 0 && ci < chunks.length) chosenSet.add(ci); } });
   const sortedIdx = [...chosenSet].sort((a, b) => a - b);
   let out = sortedIdx.map(i => `/* ...lines ${chunks[i].startLine + 1}-${chunks[i].endLine}... */\n` + chunks[i].text).join('\n\n');
   if (out.length > MAX_CONTEXT_CHARS) out = out.slice(0, MAX_CONTEXT_CHARS) + '\n/* ...truncated... */';
   return { context: out, mode: 'ai-chunk' };
 }
 
-// ═══════════════════════ GENERATE CHANGES ═══════════════════════
+// ═══════════════════════ GENERATE PRECISION PATCH ═══════════════════════
 async function generateChanges() {
   if (!S.activeFile) { showToast('আগে একটা ফাইল সিলেক্ট করুন', 'error'); return; }
   const prompt = $('studioPrompt').value.trim();
@@ -793,25 +822,22 @@ async function generateChanges() {
   $('rawAiCard').style.display = 'none';
   $('previewWrap').style.display = 'none';
   try {
-    if (!checkGithubConfigured()) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-wand"></i> Generate Changes'; return; }
+    if (!checkGithubConfigured()) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-wand"></i> Generate Precision Patch'; return; }
     const fileRes = await ghGetFile(S.activeFile.path);
     S.currentContent = fileRes.content;
     S.currentSha = fileRes.sha;
 
     const manualTarget = $('studioTargetArea').value.trim();
     let contextText, contextMode;
-    if (manualTarget) {
-      contextText = manualTarget;
-      contextMode = 'manual';
-    } else {
+    if (manualTarget) { contextText = manualTarget; contextMode = 'manual'; }
+    else {
       btn.innerHTML = '<i class="ti ti-loader spin-ico"></i> প্রাসঙ্গিক অংশ খোঁজা হচ্ছে...';
       const smart = await buildSmartContext(S.currentContent, prompt, !!S.pendingImage, () => { btn.innerHTML = '<i class="ti ti-loader spin-ico"></i> AI প্রাসঙ্গিক অংশ বাছাই করছে...'; });
-      contextText = smart.context;
-      contextMode = smart.mode;
+      contextText = smart.context; contextMode = smart.mode;
     }
 
-    btn.innerHTML = '<i class="ti ti-loader spin-ico"></i> AI পরিবর্তন তৈরি করছে...';
-    const systemPrompt = buildAISystemPrompt(S.activeFile.path) + (contextMode !== 'full' ? '\n\nমনে রাখো: নিচে পুরো ফাইল না, শুধু প্রাসঙ্গিক অংশ দেওয়া হয়েছে (মাঝেমধ্যে "/* ...lines X-Y... */" কমেন্ট দিয়ে চিহ্নিত)। old_str অবশ্যই এই দেওয়া অংশ থেকেই হুবহু নিতে হবে।' : '');
+    btn.innerHTML = '<i class="ti ti-loader spin-ico"></i> AI Precision Patch তৈরি করছে...';
+    const systemPrompt = buildAISystemPrompt(S.activeFile.path) + (contextMode !== 'full' ? '\n\nমনে রাখো: নিচে পুরো ফাইল না, শুধু প্রাসঙ্গিক অংশ দেওয়া হয়েছে (মাঝেমধ্যে "/* ...lines X-Y... */" কমেন্ট দিয়ে চিহ্নিত)। searchAnchor অবশ্যই এই দেওয়া অংশ থেকেই হুবহু নিতে হবে।' : '');
     const userPrompt = `=== ${contextMode === 'full' ? 'CURRENT FILE CONTENT' : 'RELEVANT CODE SECTION(S)'} (${S.activeFile.path}) ===\n${contextText}\n\n=== USER REQUEST ===\n${prompt}`;
 
     const useGemini = S.provider === 'gemini' || !!S.pendingImage;
@@ -822,99 +848,170 @@ async function generateChanges() {
     } catch (aiErr) {
       if (useGemini && aiErr.isQuota) {
         if (!S.pendingImage && ls('wds_groq_key')) {
-          // Gemini quota আটকে থাকলে (Google-এর account-side সমস্যা), ছবি না থাকলে স্বয়ংক্রিয়ভাবে Groq-এ ফলব্যাক করো
           showToast('⚠️ Gemini quota আটকে আছে — স্বয়ংক্রিয়ভাবে Groq দিয়ে চেষ্টা করা হচ্ছে', 'warn');
           btn.innerHTML = '<i class="ti ti-loader spin-ico"></i> Groq দিয়ে আবার চেষ্টা হচ্ছে...';
-          addActivityLog('⚠️ Gemini quota error (limit:0) — auto-fallback to Groq attempted');
+          addActivityLog('⚠️ Gemini quota error — auto-fallback to Groq attempted');
           rawText = await callGroq(systemPrompt, userPrompt);
         } else {
-          throw new Error('Gemini API-তে "quota limit: 0" সমস্যা চলছে — এটা কোডের বাগ না, Google-এর account/project-এর দিক থেকে সমস্যা। Settings-এ গিয়ে Groq API Key যোগ করুন (ছবি ছাড়া কাজের জন্য অটো-ফলব্যাক কাজ করবে), অথবা নতুন Google Cloud প্রজেক্টে fresh একটা Gemini API Key বানিয়ে দেখুন।');
+          throw new Error('Gemini API quota সমস্যা চলছে। Settings-এ Groq API Key যোগ করুন (ছবি ছাড়া কাজের জন্য অটো-ফলব্যাক কাজ করবে), অথবা নতুন Gemini API Key ব্যবহার করুন।');
         }
-      } else {
-        throw aiErr;
-      }
+      } else { throw aiErr; }
     }
 
     const aiRes = parseAiJson(rawText);
-    if (!aiRes) {
+    if (!aiRes || !Array.isArray(aiRes.patches)) {
       $('rawAiCard').style.display = 'block';
       $('rawAiText').textContent = rawText;
       showToast('⚠️ AI বৈধ JSON দেয়নি — নিচে raw output দেখুন', 'warn');
       addActivityLog(`⚠️ AI edit for "${S.activeFile.label}" returned invalid JSON`);
       return;
     }
-
-    if (aiRes.full_content) {
-      S.patches = [];
-      S.previewContent = aiRes.full_content;
-      $('patchSummaryCard').style.display = 'block';
-      $('patchSummaryText').textContent = (aiRes.summary || 'AI একটা সম্পূর্ণ নতুন ফাইল তৈরি করেছে।') + ' (পুরো ফাইল replace হবে)';
-      $('patchList').innerHTML = '<div class="alert warn"><i class="ti ti-alert-triangle"></i> এটা পুরো ফাইল replace করবে, ছোট patch না — Preview খুলে ভালোভাবে চেক করে নিন।</div>';
-      showToast('✅ AI নতুন ফাইল তৈরি করেছে — Preview করে দেখুন', 'success');
-    } else {
-      S.patches = (aiRes.patches || []).map(p => ({ ...p, status: 'pending' }));
-      applyPatchesDryRun();
-      $('patchSummaryCard').style.display = 'block';
-      $('patchSummaryText').textContent = aiRes.summary || 'পরিবর্তনের সারাংশ পাওয়া যায়নি।';
-      renderPatchList();
-      showToast(`✅ ${S.patches.length}টা পরিবর্তন প্রস্তাব করেছে AI`, 'success');
+    if (!aiRes.patches.length) {
+      showToast('AI কোনো patch প্রস্তাব করেনি — প্রম্পট আরও নির্দিষ্ট করে চেষ্টা করুন অথবা "নির্দিষ্ট কোড অংশ" ফিল্ডে প্রাসঙ্গিক কোড পেস্ট করুন', 'warn');
+      return;
     }
+
+    S.patches = aiRes.patches.map(p => ({
+      description: p.description || '',
+      filePath: p.filePath || S.activeFile.path,
+      searchAnchor: p.searchAnchor || '',
+      action: (p.action || '').toUpperCase(),
+      newSnippet: p.newSnippet != null ? p.newSnippet : '',
+      status: 'pending',
+    }));
+
+    applyAnchorPatches();
+
+    $('patchSummaryCard').style.display = 'block';
+    $('patchSummaryText').textContent = aiRes.summary || 'পরিবর্তনের সারাংশ পাওয়া যায়নি।';
+    renderPatchStats();
+    renderPatchList();
+
+    const appliedCount = S.patches.filter(p => p.status === 'applied').length;
+    if (appliedCount > 0) {
+      buildPreview();
+      showToast(`✅ ${appliedCount}/${S.patches.length}টা patch সফলভাবে প্রয়োগ হয়েছে — Preview দেখুন`, 'success');
+    } else {
+      showToast('⚠️ কোনো patch প্রয়োগ করা যায়নি — নিচে বিস্তারিত দেখুন', 'error');
+    }
+
     const modeLabel = { full: 'পুরো ফাইল', keyword: 'কিওয়ার্ড-ম্যাচড অংশ', 'ai-chunk': 'AI-বাছাইকৃত অংশ', manual: 'ম্যানুয়াল অংশ' }[contextMode] || contextMode;
-    addActivityLog(`✨ Generated changes for "${S.activeFile.label}" (context: ${modeLabel}, ${contextText.length} chars sent) — ${(aiRes.summary || '').slice(0, 80)}`);
+    addActivityLog(`✨ Generated ${S.patches.length} patch(es) for "${S.activeFile.label}" (context: ${modeLabel}) — ${appliedCount} applied — ${(aiRes.summary || '').slice(0, 80)}`);
   } catch (e) {
     console.error(e);
     showToast('❌ ' + e.message, 'error');
   } finally {
-    btn.disabled = false; btn.innerHTML = '<i class="ti ti-wand"></i> Generate Changes';
+    btn.disabled = false; btn.innerHTML = '<i class="ti ti-wand"></i> Generate Precision Patch';
   }
 }
 
-// ═══════════════════════ PATCH APPLY LOGIC ═══════════════════════
+// ═══════════════════════ ANCHOR PATCH ENGINE (core precision logic) ═══════════════════════
 function countOccurrences(haystack, needle) {
   if (!needle) return 0;
   return haystack.split(needle).length - 1;
 }
-function applyPatchesDryRun() {
+function trimEdgeLines(text) {
+  // trims to whole-line boundaries so context looks clean, not mid-word cut
+  const lines = text.split('\n');
+  if (lines.length > 1) { lines.shift(); } // drop possibly-partial first line
+  return lines.join('\n');
+}
+function buildDiffHtml(contentBefore, idx, anchor, action, newSnippet) {
+  const CTX = 220;
+  let beforeCtx = contentBefore.slice(Math.max(0, idx - CTX), idx);
+  let afterCtx = contentBefore.slice(idx + anchor.length, idx + anchor.length + CTX);
+  beforeCtx = trimEdgeLines(beforeCtx);
+  const afterLines = afterCtx.split('\n');
+  if (afterLines.length > 1) afterLines.pop();
+  afterCtx = afterLines.join('\n');
+
+  let html = '';
+  if (beforeCtx.trim()) html += `<span class="diff-line ctx">${escHtml(beforeCtx)}</span>`;
+  if (action === 'REPLACE') {
+    html += `<span class="diff-line del">− ${escHtml(anchor)}</span>`;
+    html += `<span class="diff-line add">+ ${escHtml(newSnippet)}</span>`;
+  } else if (action === 'INSERT_BEFORE') {
+    html += `<span class="diff-line add">+ ${escHtml(newSnippet)}</span>`;
+    html += `<span class="diff-line anchor">  ${escHtml(anchor)}</span>`;
+  } else { // INSERT_AFTER (default)
+    html += `<span class="diff-line anchor">  ${escHtml(anchor)}</span>`;
+    html += `<span class="diff-line add">+ ${escHtml(newSnippet)}</span>`;
+  }
+  if (afterCtx.trim()) html += `<span class="diff-line ctx">${escHtml(afterCtx)}</span>`;
+  return html;
+}
+function applyAnchorPatches() {
   let working = S.currentContent;
   S.patches.forEach(p => {
-    const count = countOccurrences(working, p.old_str);
-    if (count === 1) {
-      working = working.split(p.old_str).join(p.new_str);
-      p.status = 'applied';
-    } else if (count === 0) {
-      p.status = 'not_found';
-    } else {
-      p.status = 'ambiguous'; p.count = count;
+    if (!p.filePath || (S.activeFile && p.filePath !== S.activeFile.path)) {
+      p.status = 'wrong_file';
+      p.diffHtml = `<span class="diff-line del">এই patch অন্য ফাইলের জন্য (${escHtml(p.filePath || '—')}), কিন্তু বর্তমানে শুধু "${escHtml(S.activeFile ? S.activeFile.path : '')}" লোড করা আছে — বাদ দেওয়া হয়েছে।</span>`;
+      return;
     }
+    const anchor = p.searchAnchor || '';
+    if (!anchor) { p.status = 'no_anchor'; p.diffHtml = '<span class="diff-line del">searchAnchor খালি — এই patch প্রয়োগ করা যায়নি।</span>'; return; }
+    if (!['INSERT_AFTER', 'INSERT_BEFORE', 'REPLACE'].includes(p.action)) {
+      p.status = 'invalid_action'; p.diffHtml = `<span class="diff-line del">অজানা action: "${escHtml(p.action)}" — শুধু INSERT_AFTER/INSERT_BEFORE/REPLACE সাপোর্টেড।</span>`; return;
+    }
+    const count = countOccurrences(working, anchor);
+    if (count === 0) { p.status = 'not_found'; p.diffHtml = `<span class="diff-line del">searchAnchor ফাইলে খুঁজে পাওয়া যায়নি:</span><span class="diff-line ctx">${escHtml(anchor.slice(0, 300))}</span>`; return; }
+    if (count > 1) { p.status = 'ambiguous'; p.count = count; p.diffHtml = `<span class="diff-line del">এই searchAnchor ফাইলে ${count} বার পাওয়া গেছে (unique হতে হবে):</span><span class="diff-line ctx">${escHtml(anchor.slice(0, 300))}</span>`; return; }
+
+    const idx = working.indexOf(anchor);
+    p.diffHtml = buildDiffHtml(working, idx, anchor, p.action, p.newSnippet);
+
+    let newWorking;
+    if (p.action === 'INSERT_AFTER') newWorking = working.slice(0, idx + anchor.length) + '\n' + p.newSnippet + working.slice(idx + anchor.length);
+    else if (p.action === 'INSERT_BEFORE') newWorking = working.slice(0, idx) + p.newSnippet + '\n' + working.slice(idx);
+    else newWorking = working.slice(0, idx) + p.newSnippet + working.slice(idx + anchor.length); // REPLACE
+
+    working = newWorking;
+    p.status = 'applied';
   });
   S.previewContent = working;
 }
+function renderPatchStats() {
+  const applied = S.patches.filter(p => p.status === 'applied').length;
+  const failed = S.patches.length - applied;
+  const addedLines = S.patches.filter(p => p.status === 'applied').reduce((s, p) => s + (p.newSnippet || '').split('\n').length, 0);
+  $('patchStatsRow').innerHTML = `
+    <div class="pstat ok"><div class="n">${applied}</div><div class="l">Applied</div></div>
+    <div class="pstat ${failed > 0 ? 'bad' : ''}"><div class="n">${failed}</div><div class="l">Failed</div></div>
+    <div class="pstat"><div class="n">+${addedLines}</div><div class="l">Lines Added</div></div>
+    <div class="pstat"><div class="n">${S.patches.length}</div><div class="l">Total Patches</div></div>`;
+}
+const STATUS_LABELS = {
+  applied: '✓ Applied', not_found: '✗ Not Found', ambiguous: '⚠ Ambiguous',
+  wrong_file: '✗ Wrong File', no_anchor: '✗ No Anchor', invalid_action: '✗ Invalid Action', pending: '… Pending'
+};
 function renderPatchList() {
   const el = $('patchList');
   el.innerHTML = S.patches.map((p, i) => `
     <div class="patch-item">
-      <div class="patch-hd">
-        <span class="patch-status ${p.status}">${p.status === 'applied' ? '✓ Applied' : p.status === 'not_found' ? '✗ Not Found' : '⚠ Ambiguous'}</span>
-        <span class="patch-desc">${escHtml(p.description || 'Change ' + (i + 1))}</span>
+      <div class="patch-hd" onclick="togglePatchBody(${i})">
+        <span class="patch-status ${p.status}">${STATUS_LABELS[p.status] || p.status}</span>
+        <span class="action-badge ${p.action}">${escHtml(p.action || '?')}</span>
+        <span class="patch-desc">${escHtml(p.description || 'Patch ' + (i + 1))}</span>
+        <i class="ti ti-chevron-down patch-toggle-ico" id="patchToggleIco${i}"></i>
       </div>
-      <div class="patch-diff"><span class="old">− ${escHtml((p.old_str || '').slice(0, 200))}${(p.old_str || '').length > 200 ? '…' : ''}</span><span class="new">+ ${escHtml((p.new_str || '').slice(0, 200))}${(p.new_str || '').length > 200 ? '…' : ''}</span></div>
+      <div class="patch-body" id="patchBody${i}">
+        <div class="patch-file-path"><i class="ti ti-file-code"></i> ${escHtml(p.filePath || '')}</div>
+        <div class="diff-block">${p.diffHtml || ''}</div>
+        ${p.status !== 'applied' ? `<div class="patch-err-note"><i class="ti ti-info-circle"></i> এই patch টা preview-এ প্রয়োগ হয়নি। চাইলে নিচে Preview খুলে "Code" ট্যাবে গিয়ে সরাসরি ম্যানুয়ালি এই পরিবর্তনটা যোগ করে নিতে পারেন।</div>` : ''}
+      </div>
     </div>`).join('');
-  const failedCount = S.patches.filter(p => p.status !== 'applied').length;
-  if (failedCount > 0) {
-    el.innerHTML = `<div class="alert warn"><i class="ti ti-alert-triangle"></i> ${failedCount}টা পরিবর্তন বসানো যায়নি (ফাইলে মিল পাওয়া যায়নি বা একাধিকবার মিলেছে) — নিচে দেখুন কোনগুলো। বাকিগুলো Preview-এ প্রয়োগ হবে।</div>` + el.innerHTML;
-  }
+  // auto-open failed patches so the user notices them immediately
+  S.patches.forEach((p, i) => { if (p.status !== 'applied') togglePatchBody(i, true); });
 }
-function discardChanges() {
-  S.patches = []; S.previewContent = ''; S.currentContent = ''; S.currentSha = '';
-  $('patchSummaryCard').style.display = 'none';
-  $('rawAiCard').style.display = 'none';
-  $('previewWrap').style.display = 'none';
-  removeStudioImage();
-  $('studioPrompt').value = '';
-  $('studioTargetArea').value = '';
+function togglePatchBody(i, forceOpen) {
+  const body = $('patchBody' + i), ico = $('patchToggleIco' + i);
+  if (!body) return;
+  const shouldOpen = forceOpen !== undefined ? forceOpen : !body.classList.contains('open');
+  body.classList.toggle('open', shouldOpen);
+  if (ico) ico.classList.toggle('open', shouldOpen);
 }
 
-// ═══════════════════════ PREVIEW (Iframe + Code box) ═══════════════════════
+// ═══════════════════════ PREVIEW (Iframe + editable Code box) ═══════════════════════
 function buildPreview() {
   if (!S.previewContent) { showToast('প্রিভিউ করার মতো কিছু নেই', 'error'); return; }
   const frame = $('previewFrame');
@@ -923,13 +1020,22 @@ function buildPreview() {
   switchPreviewTab('preview');
   $('previewWrap').style.display = 'block';
   $('previewWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
-  addActivityLog(`👁️ Built preview for "${S.activeFile.label}"`);
 }
 function switchPreviewTab(tab) {
   $('tabPreview').classList.toggle('active', tab === 'preview');
   $('tabCode').classList.toggle('active', tab === 'code');
   $('previewFrame').style.display = tab === 'preview' ? 'block' : 'none';
   $('previewCodeBox').style.display = tab === 'code' ? 'block' : 'none';
+}
+function onCodeBoxEdit() {
+  // keep S.previewContent in sync with any manual edits made in the Code tab
+  S.previewContent = $('previewCodeBox').value;
+}
+function refreshPreviewFromCode() {
+  S.previewContent = $('previewCodeBox').value;
+  $('previewFrame').srcdoc = S.previewContent;
+  switchPreviewTab('preview');
+  showToast('🔄 Preview রিফ্রেশ হয়েছে সর্বশেষ কোড দিয়ে', 'info');
 }
 function openPreviewNewTab() {
   if (!S.previewContent) return;
@@ -946,27 +1052,40 @@ function copyGeneratedCode() {
     showToast('📋 কোড কপি হয়েছে', 'success');
   });
 }
+function discardChanges() {
+  S.patches = []; S.previewContent = ''; S.currentContent = ''; S.currentSha = '';
+  $('patchSummaryCard').style.display = 'none';
+  $('rawAiCard').style.display = 'none';
+  $('previewWrap').style.display = 'none';
+  removeStudioImage();
+  $('studioPrompt').value = '';
+  $('studioTargetArea').value = '';
+  showToast('বাতিল করা হয়েছে — GitHub-এ কিছুই পুশ হয়নি', 'info');
+}
 
-// ═══════════════════════ PUBLISH (Push to GitHub) ═══════════════════════
-async function publishChanges() {
-  if (!S.previewContent || !S.activeFile) { showToast('আগে Preview বানান', 'error'); return; }
-  const summary = $('patchSummaryText').textContent || 'AI Studio update';
-  if (!confirm(`"${S.activeFile.label}" ফাইলে এই পরিবর্তনগুলো এখনই GitHub-এ (লাইভ সাইটে) পাবলিশ করতে চান?\n\n${summary}`)) return;
-  const btn = $('publishBtn');
-  btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader spin-ico"></i> Publishing...';
+// ═══════════════════════ ACCEPT & COMMIT (only path to GitHub) ═══════════════════════
+async function acceptAndCommit() {
+  if (!S.previewContent || !S.activeFile) { showToast('আগে একটা প্যাচ Generate করুন', 'error'); return; }
+  const summary = $('patchSummaryText').textContent || 'AI Studio precision patch';
+  const failedCount = S.patches.filter(p => p.status !== 'applied').length;
+  const warnMsg = failedCount > 0 ? `\n\n⚠️ খেয়াল করুন: ${failedCount}টা patch প্রয়োগ হয়নি (Preview-এ নেই), শুধু বাকিগুলো commit হবে।` : '';
+  if (!confirm(`"${S.activeFile.label}" ফাইলে এই পরিবর্তনগুলো এখনই GitHub-এ (লাইভ সাইটে) commit করতে চান?\n\n${summary}${warnMsg}`)) return;
+  const btn = $('acceptBtn');
+  btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader spin-ico"></i> Committing...';
   try {
-    if (!checkGithubConfigured()) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-rocket"></i> Push to GitHub'; return; }
-    // Re-fetch latest sha right before publish, in case something else changed the file meanwhile
+    if (!checkGithubConfigured()) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-rocket"></i> Accept &amp; Commit to GitHub'; return; }
+    // re-fetch latest sha right before commit, in case the file changed meanwhile
     const latest = await ghGetFile(S.activeFile.path);
-    const res = await ghPutFile(S.activeFile.path, S.previewContent, latest.sha, `AI Studio: ${summary}`.slice(0, 200));
-    showToast('🚀 পাবলিশ হয়ে গেছে! কিছুক্ষণের মধ্যে লাইভ সাইটে দেখা যাবে।', 'success');
-    addActivityLog(`🚀 Published "${S.activeFile.label}" — commit ${(res.commitSha || '').slice(0, 7)} — ${summary}`);
+    const codeToCommit = $('previewCodeBox').value || S.previewContent;
+    const res = await ghPutFile(S.activeFile.path, codeToCommit, latest.sha, `AI Studio Precision Patch: ${summary}`.slice(0, 200));
+    showToast('🚀 Commit হয়ে গেছে! কিছুক্ষণের মধ্যে লাইভ সাইটে দেখা যাবে।', 'success');
+    addActivityLog(`🚀 Committed "${S.activeFile.label}" — commit ${(res.commitSha || '').slice(0, 7)} — ${summary} (${S.patches.filter(p=>p.status==='applied').length} patches applied)`);
     discardChanges();
   } catch (e) {
     console.error(e);
-    showToast('❌ Publish ব্যর্থ হয়েছে: ' + e.message, 'error');
+    showToast('❌ Commit ব্যর্থ হয়েছে: ' + e.message, 'error');
   } finally {
-    btn.disabled = false; btn.innerHTML = '<i class="ti ti-rocket"></i> Push to GitHub';
+    btn.disabled = false; btn.innerHTML = '<i class="ti ti-rocket"></i> Accept &amp; Commit to GitHub';
   }
 }
 
@@ -985,10 +1104,7 @@ async function selectHistoryFile(i) {
   try {
     if (!checkGithubConfigured()) { el.innerHTML = ''; return; }
     const commits = await ghGetCommits(S.historyFile.path, 25);
-    if (!commits.length) {
-      el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3)">এই ফাইলের কোনো commit history পাওয়া যায়নি।</div>';
-      return;
-    }
+    if (!commits.length) { el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3)">এই ফাইলের কোনো commit history পাওয়া যায়নি।</div>'; return; }
     el.innerHTML = commits.map((c, idx) => `
       <div class="commit-item">
         <div class="commit-icon"><i class="ti ti-git-commit"></i></div>
