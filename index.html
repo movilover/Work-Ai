@@ -250,6 +250,11 @@ a{color:inherit;text-decoration:none}
               <textarea id="studioPrompt" placeholder="উদাহরণ: হোম স্ক্রিনের Wallet কার্ডের রঙ সবুজের বদলে নীল করে দাও। অথবা: Support স্ক্রিনে একটা নতুন FAQ যোগ করো যেখানে লেখা থাকবে..."></textarea>
             </div>
             <div class="field">
+              <label>নির্দিষ্ট কোড অংশ (ঐচ্ছিক — টোকেন বাঁচাতে সাহায্য করে)</label>
+              <textarea id="studioTargetArea" placeholder="চাইলে এখানে ঠিক যে অংশটা পরিবর্তন করতে চান তার আশেপাশের কোড পেস্ট করুন (যেমন Helpline সেকশনের HTML)। খালি রাখলে AI নিজে থেকেই পুরো ফাইল না পড়ে শুধু প্রাসঙ্গিক অংশ খুঁজে বের করবে।" style="min-height:70px"></textarea>
+              <div class="lf-hint2">এটা দিলে পুরো ফাইল AI-কে পাঠানো হবে না — শুধু এই অংশটুকু পাঠানো হবে, তাই দ্রুত ও কম টোকেন খরচ হবে এবং বাকি সাইট অক্ষত থাকার নিশ্চয়তা বেশি।</div>
+            </div>
+            <div class="field">
               <label>ডিজাইন/মকআপ ছবি (ঐচ্ছিক)</label>
               <div class="upload-box" id="imgUploadBox" onclick="document.getElementById('studioImgInput').click()">
                 <div id="imgUploadInner">
@@ -655,7 +660,13 @@ async function callGemini(systemPrompt, userPrompt, image) {
     body: JSON.stringify({ contents: [{ parts }], generationConfig: { temperature: 0.2 } }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error((data.error && data.error.message) || 'Gemini রিকোয়েস্ট ব্যর্থ');
+  if (!res.ok) {
+    const msg = (data.error && data.error.message) || 'Gemini রিকোয়েস্ট ব্যর্থ';
+    const err = new Error(msg);
+    err.isQuota = res.status === 429 || /quota/i.test(msg);
+    err.status = res.status;
+    throw err;
+  }
   const cand = data.candidates && data.candidates[0];
   if (!cand) throw new Error('Gemini থেকে কোনো উত্তর আসেনি');
   return (cand.content && cand.content.parts || []).map(p => p.text || '').join('');
@@ -676,6 +687,101 @@ async function callGroq(systemPrompt, userPrompt) {
   return (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
 }
 
+// ═══════════════════════ SMART CONTEXT ENGINE ═══════════════════════
+// লক্ষ্য: পুরো ফাইল AI-কে না পাঠিয়ে শুধু প্রাসঙ্গিক অংশটুকু পাঠানো — এতে টোকেন খরচ অনেক কমে,
+// rate-limit এরর এড়ানো যায়, এবং AI ভুল করে অপ্রাসঙ্গিক জায়গায় হাত দেয় না।
+const SMALL_FILE_CHARS = 6000;   // এর চেয়ে ছোট ফাইল হলে সরাসরি পুরোটাই পাঠানো হয়
+const CHUNK_LINES = 45;          // AI দিয়ে chunk বাছাইয়ের সময় প্রতিটা chunk-এর সাইজ
+const CONTEXT_WINDOW_LINES = 18; // কিওয়ার্ড ম্যাচের চারপাশে কতটুকু কনটেক্সট রাখা হবে
+const MAX_CONTEXT_CHARS = 9000;  // AI-কে পাঠানো context-এর সর্বোচ্চ সাইজ
+
+const BN_STOPWORDS = new Set(['করো','করে','করবে','দাও','যাতে','এই','এবং','একটা','একটি','করতে','চাই','চান','থাকবে','হবে','জন্য','সাথে','মধ্যে','সেটা','সেটি','নতুন','পুরানো','পুরনো','মতো','ভাবে']);
+const EN_STOPWORDS = new Set(['and','the','with','into','make','change','add','new','also','for','this','that','from','your']);
+
+function tokenizePrompt(prompt) {
+  return Array.from(new Set((prompt || '').split(/[^\p{L}\p{N}]+/u).map(w => w.trim()).filter(w => w.length >= 2)))
+    .filter(w => !BN_STOPWORDS.has(w) && !EN_STOPWORDS.has(w.toLowerCase()));
+}
+
+function buildKeywordContext(content, prompt) {
+  const keywords = tokenizePrompt(prompt).map(k => k.toLowerCase());
+  if (!keywords.length) return null;
+  const lines = content.split('\n');
+  const matched = [];
+  lines.forEach((line, idx) => {
+    const lower = line.toLowerCase();
+    if (keywords.some(k => lower.includes(k))) matched.push(idx);
+  });
+  if (!matched.length) return null;
+  const ranges = [];
+  matched.forEach(i => {
+    const start = Math.max(0, i - CONTEXT_WINDOW_LINES);
+    const end = Math.min(lines.length, i + CONTEXT_WINDOW_LINES + 1);
+    if (ranges.length && start <= ranges[ranges.length - 1][1]) {
+      ranges[ranges.length - 1][1] = Math.max(ranges[ranges.length - 1][1], end);
+    } else {
+      ranges.push([start, end]);
+    }
+  });
+  let out = ranges.map(([s, e]) => `/* ...lines ${s + 1}-${e}... */\n` + lines.slice(s, e).join('\n')).join('\n\n');
+  if (out.length > MAX_CONTEXT_CHARS) out = out.slice(0, MAX_CONTEXT_CHARS) + '\n/* ...truncated... */';
+  return out;
+}
+
+function splitIntoChunks(content) {
+  const lines = content.split('\n');
+  const chunks = [];
+  for (let i = 0; i < lines.length; i += CHUNK_LINES) {
+    const startLine = i, endLine = Math.min(i + CHUNK_LINES, lines.length);
+    chunks.push({ index: chunks.length, startLine, endLine, text: lines.slice(startLine, endLine).join('\n') });
+  }
+  return chunks;
+}
+function chunkSignature(text) {
+  const sig = [];
+  sig.push(...((text.match(/(?:id|class|name)="[^"]{0,60}"/g) || []).slice(0, 25)));
+  sig.push(...((text.match(/<!--[\s\S]{0,80}?-->/g) || []).slice(0, 8)));
+  sig.push(...((text.match(/>([^<>{}\n]{2,50})</g) || []).slice(0, 25).map(t => t.slice(1, -1))));
+  sig.push(...((text.match(/function\s+\w+/g) || [])));
+  return sig.join(' | ').slice(0, 700);
+}
+async function selectRelevantChunksViaAI(chunks, prompt, hasImage) {
+  const outline = chunks.map(c => `[Chunk ${c.index} | lines ${c.startLine + 1}-${c.endLine}]\n${chunkSignature(c.text)}`).join('\n\n');
+  const sys = `তুমি একজন কোড নেভিগেটর সহকারী। নিচে একটা ফাইলের বিভিন্ন অংশের (chunk) সংক্ষিপ্ত সিগনেচার (id, class, দৃশ্যমান টেক্সট, ফাংশন নাম) দেওয়া আছে। ব্যবহারকারীর অনুরোধ অনুযায়ী ঠিক কোন কোন chunk-এ পরিবর্তন লাগতে পারে তা বের করো। শুধু বৈধ JSON দাও, অন্য কিছু না: {"chunks":[chunk_index, ...]} — সর্বোচ্চ ৪টা index দাও, সম্ভাব্যতার ক্রম অনুযায়ী। নিশ্চিত না হলেও একাধিক সম্ভাব্য chunk দাও, খালি রেখো না।`;
+  const userMsg = `=== FILE OUTLINE (chunks) ===\n${outline}\n\n=== USER REQUEST ===\n${prompt}`;
+  const useGemini = S.provider === 'gemini' || hasImage;
+  const raw = useGemini ? await callGemini(sys, userMsg, null) : await callGroq(sys, userMsg);
+  const parsed = parseAiJson(raw);
+  if (parsed && Array.isArray(parsed.chunks) && parsed.chunks.length) {
+    return parsed.chunks.filter(n => Number.isInteger(n) && n >= 0 && n < chunks.length);
+  }
+  return null;
+}
+async function buildSmartContext(content, prompt, hasImage, onStatus) {
+  // ১. ফাইল ছোট হলে পুরোটাই পাঠাও, chunking-এর দরকার নেই
+  if (content.length <= SMALL_FILE_CHARS) return { context: content, mode: 'full' };
+
+  // ২. আগে দ্রুত ও ফ্রি কিওয়ার্ড ম্যাচ ট্রাই করো (কোনো এক্সট্রা AI কল লাগে না)
+  const kw = buildKeywordContext(content, prompt);
+  if (kw) return { context: kw, mode: 'keyword' };
+
+  // ৩. কিওয়ার্ড ম্যাচ না পেলে AI দিয়ে সংশ্লিষ্ট chunk খুঁজে বের করো (ছোট আউটলাইন কল)
+  if (onStatus) onStatus();
+  const chunks = splitIntoChunks(content);
+  let chosen = null;
+  try { chosen = await selectRelevantChunksViaAI(chunks, prompt, hasImage); } catch (e) { chosen = null; }
+  if (!chosen || !chosen.length) chosen = [0, 1, 2]; // শেষ উপায়: শুরুর কয়েকটা chunk নাও
+
+  const chosenSet = new Set();
+  chosen.forEach(idx => {
+    for (let d = -1; d <= 1; d++) { const ci = idx + d; if (ci >= 0 && ci < chunks.length) chosenSet.add(ci); }
+  });
+  const sortedIdx = [...chosenSet].sort((a, b) => a - b);
+  let out = sortedIdx.map(i => `/* ...lines ${chunks[i].startLine + 1}-${chunks[i].endLine}... */\n` + chunks[i].text).join('\n\n');
+  if (out.length > MAX_CONTEXT_CHARS) out = out.slice(0, MAX_CONTEXT_CHARS) + '\n/* ...truncated... */';
+  return { context: out, mode: 'ai-chunk' };
+}
+
 // ═══════════════════════ GENERATE CHANGES ═══════════════════════
 async function generateChanges() {
   if (!S.activeFile) { showToast('আগে একটা ফাইল সিলেক্ট করুন', 'error'); return; }
@@ -692,13 +798,42 @@ async function generateChanges() {
     S.currentContent = fileRes.content;
     S.currentSha = fileRes.sha;
 
-    btn.innerHTML = '<i class="ti ti-loader spin-ico"></i> AI ভাবছে...';
-    const systemPrompt = buildAISystemPrompt(S.activeFile.path);
-    const userPrompt = `=== CURRENT FILE CONTENT (${S.activeFile.path}) ===\n${S.currentContent}\n\n=== USER REQUEST ===\n${prompt}`;
+    const manualTarget = $('studioTargetArea').value.trim();
+    let contextText, contextMode;
+    if (manualTarget) {
+      contextText = manualTarget;
+      contextMode = 'manual';
+    } else {
+      btn.innerHTML = '<i class="ti ti-loader spin-ico"></i> প্রাসঙ্গিক অংশ খোঁজা হচ্ছে...';
+      const smart = await buildSmartContext(S.currentContent, prompt, !!S.pendingImage, () => { btn.innerHTML = '<i class="ti ti-loader spin-ico"></i> AI প্রাসঙ্গিক অংশ বাছাই করছে...'; });
+      contextText = smart.context;
+      contextMode = smart.mode;
+    }
+
+    btn.innerHTML = '<i class="ti ti-loader spin-ico"></i> AI পরিবর্তন তৈরি করছে...';
+    const systemPrompt = buildAISystemPrompt(S.activeFile.path) + (contextMode !== 'full' ? '\n\nমনে রাখো: নিচে পুরো ফাইল না, শুধু প্রাসঙ্গিক অংশ দেওয়া হয়েছে (মাঝেমধ্যে "/* ...lines X-Y... */" কমেন্ট দিয়ে চিহ্নিত)। old_str অবশ্যই এই দেওয়া অংশ থেকেই হুবহু নিতে হবে।' : '');
+    const userPrompt = `=== ${contextMode === 'full' ? 'CURRENT FILE CONTENT' : 'RELEVANT CODE SECTION(S)'} (${S.activeFile.path}) ===\n${contextText}\n\n=== USER REQUEST ===\n${prompt}`;
 
     const useGemini = S.provider === 'gemini' || !!S.pendingImage;
     if (S.pendingImage && S.provider !== 'gemini') showToast('ছবি থাকায় Gemini ব্যবহার হচ্ছে', 'info');
-    const rawText = useGemini ? await callGemini(systemPrompt, userPrompt, S.pendingImage) : await callGroq(systemPrompt, userPrompt);
+    let rawText;
+    try {
+      rawText = useGemini ? await callGemini(systemPrompt, userPrompt, S.pendingImage) : await callGroq(systemPrompt, userPrompt);
+    } catch (aiErr) {
+      if (useGemini && aiErr.isQuota) {
+        if (!S.pendingImage && ls('wds_groq_key')) {
+          // Gemini quota আটকে থাকলে (Google-এর account-side সমস্যা), ছবি না থাকলে স্বয়ংক্রিয়ভাবে Groq-এ ফলব্যাক করো
+          showToast('⚠️ Gemini quota আটকে আছে — স্বয়ংক্রিয়ভাবে Groq দিয়ে চেষ্টা করা হচ্ছে', 'warn');
+          btn.innerHTML = '<i class="ti ti-loader spin-ico"></i> Groq দিয়ে আবার চেষ্টা হচ্ছে...';
+          addActivityLog('⚠️ Gemini quota error (limit:0) — auto-fallback to Groq attempted');
+          rawText = await callGroq(systemPrompt, userPrompt);
+        } else {
+          throw new Error('Gemini API-তে "quota limit: 0" সমস্যা চলছে — এটা কোডের বাগ না, Google-এর account/project-এর দিক থেকে সমস্যা। Settings-এ গিয়ে Groq API Key যোগ করুন (ছবি ছাড়া কাজের জন্য অটো-ফলব্যাক কাজ করবে), অথবা নতুন Google Cloud প্রজেক্টে fresh একটা Gemini API Key বানিয়ে দেখুন।');
+        }
+      } else {
+        throw aiErr;
+      }
+    }
 
     const aiRes = parseAiJson(rawText);
     if (!aiRes) {
@@ -724,7 +859,8 @@ async function generateChanges() {
       renderPatchList();
       showToast(`✅ ${S.patches.length}টা পরিবর্তন প্রস্তাব করেছে AI`, 'success');
     }
-    addActivityLog(`✨ Generated changes for "${S.activeFile.label}" — ${(aiRes.summary || '').slice(0, 80)}`);
+    const modeLabel = { full: 'পুরো ফাইল', keyword: 'কিওয়ার্ড-ম্যাচড অংশ', 'ai-chunk': 'AI-বাছাইকৃত অংশ', manual: 'ম্যানুয়াল অংশ' }[contextMode] || contextMode;
+    addActivityLog(`✨ Generated changes for "${S.activeFile.label}" (context: ${modeLabel}, ${contextText.length} chars sent) — ${(aiRes.summary || '').slice(0, 80)}`);
   } catch (e) {
     console.error(e);
     showToast('❌ ' + e.message, 'error');
@@ -775,6 +911,7 @@ function discardChanges() {
   $('previewWrap').style.display = 'none';
   removeStudioImage();
   $('studioPrompt').value = '';
+  $('studioTargetArea').value = '';
 }
 
 // ═══════════════════════ PREVIEW (Iframe + Code box) ═══════════════════════
