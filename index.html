@@ -188,12 +188,48 @@ a{color:inherit;text-decoration:none}
 .toast.info{background:rgba(59,130,246,0.12);border:1px solid var(--blue-border);color:var(--blue)}
 .toast.warn{background:rgba(245,158,11,0.12);border:1px solid var(--amber-border);color:var(--amber)}
 
-.file-manage-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border)}
+.file-manage-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap}
 .file-manage-row:last-child{border-bottom:none}
-.file-manage-row input{flex:1}
+.file-manage-row input{flex:1;min-width:110px}
+.file-manage-row select{flex:1;min-width:110px;padding:9px 10px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--text);font-size:12px;font-family:inherit}
+.file-manage-self{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--text2);font-weight:700;white-space:nowrap;cursor:pointer;user-select:none}
 .two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .spin-ico{animation:spin 1s linear infinite;display:inline-block}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+
+/* ===== Repositories (multi-repo) ===== */
+.repo-item{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:10px}
+.repo-item-hd{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.repo-item-hd input{flex:1;min-width:100px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--text);font-size:12px;font-family:inherit}
+.repo-status-badge{font-size:9.5px;font-weight:800;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.repo-status-badge.ok{background:var(--green-bg);color:var(--green)}
+.repo-status-badge.off{background:var(--red-bg);color:var(--red)}
+.repo-status-badge.untested{background:var(--bg4);color:var(--text3)}
+.repo-item-row{display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.repo-item-row input{flex:1;min-width:90px;padding:8px 10px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--text);font-size:12px;font-family:inherit}
+.repo-item-actions{display:flex;gap:6px;justify-content:flex-end}
+.self-file-badge{font-size:9.5px;font-weight:800;padding:2px 8px;border-radius:20px;background:var(--teal-bg);color:var(--teal);white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+.repo-tag{font-size:9.5px;color:var(--text3);font-weight:700;margin-left:4px}
+
+/* ===== Chat-style conversational editing ===== */
+.chat-log{max-height:420px;overflow-y:auto;padding:2px 2px 6px;margin-bottom:12px;display:flex;flex-direction:column;gap:10px}
+.chat-bubble{max-width:92%;border-radius:14px;padding:11px 13px;font-size:12.5px;line-height:1.6}
+.chat-bubble.user{align-self:flex-end;background:var(--purple-bg);border:1px solid var(--purple-border);color:var(--text)}
+.chat-bubble.ai{align-self:flex-start;background:var(--bg3);border:1px solid var(--border);color:var(--text)}
+.chat-bubble.ai.error{background:var(--red-bg);border-color:var(--red-border);color:var(--red)}
+.chat-bubble-meta{font-size:9.5px;color:var(--text3);margin-bottom:4px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.chat-bubble-patches{margin-top:8px;display:flex;flex-direction:column;gap:6px}
+.chat-mini-patch{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:7px 9px;font-size:11px;display:flex;align-items:center;gap:6px;cursor:pointer}
+.chat-mini-patch:hover{border-color:var(--border3)}
+.chat-empty{color:var(--text3);font-size:12px;text-align:center;padding:20px 10px}
+.chat-input-row{display:flex;gap:8px;align-items:flex-end}
+.chat-input-row textarea{flex:1;min-height:52px;max-height:140px;padding:11px 13px;border-radius:var(--radius);background:rgba(255,255,255,0.04);border:1px solid var(--border2);color:var(--text);font-family:inherit;font-size:13px;font-weight:600;outline:none;resize:vertical}
+.chat-input-row textarea:focus{border-color:rgba(168,85,247,0.5);background:rgba(168,85,247,0.02)}
+.chat-send-btn{padding:13px 16px;border-radius:var(--radius);border:none;background:var(--purple);color:#fff;font-weight:800;cursor:pointer;display:flex;align-items:center;gap:6px;flex-shrink:0}
+.chat-send-btn:hover:not(:disabled){background:#9333ea}
+.chat-send-btn:disabled{opacity:.5;cursor:not-allowed}
+.chat-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;flex-wrap:wrap}
+.self-reload-banner{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--teal-bg);border:1px solid var(--teal-border);color:var(--teal);padding:11px 14px;border-radius:var(--radius);margin-bottom:14px;font-size:12.5px;font-weight:700;flex-wrap:wrap}
 
 @media(max-width:900px){.two-col{grid-template-columns:1fr}.tb-nav-item span{display:none}}
 </style>
@@ -252,7 +288,9 @@ a{color:inherit;text-decoration:none}
     <div class="screen active" id="screen-studio">
       <div class="sec-hd"><h2><i class="ti ti-sparkles"></i> AI Studio — Precision Patch</h2></div>
 
-      <div class="alert info" id="noFilesAlert" style="display:none"><i class="ti ti-info-circle"></i> এখনো কোনো ফাইল যোগ করা হয়নি। আগে <b>Settings</b>-এ গিয়ে আপনার GitHub Token, Repository ও ফাইল path যোগ করুন।</div>
+      <div class="alert info" id="noFilesAlert" style="display:none"><i class="ti ti-info-circle"></i> এখনো কোনো ফাইল যোগ করা হয়নি। আগে <b>Settings</b>-এ গিয়ে আপনার GitHub Repository ও ফাইল path যোগ করুন।</div>
+      <div id="selfReloadBanner" style="display:none"></div>
+      <div id="activeFileConnInfo" style="margin-bottom:10px"></div>
 
       <div id="filePillsWrap">
         <div class="lf-hint2" style="margin-bottom:8px">কোন ফাইলে পরিবর্তন করতে চান?</div>
@@ -271,15 +309,15 @@ a{color:inherit;text-decoration:none}
           </div>
 
           <div class="card">
-            <div class="card-title"><i class="ti ti-message-2"></i> Change Request</div>
-            <div class="field">
-              <label>কী পরিবর্তন / নতুন ফিচার চান?</label>
-              <textarea id="studioPrompt" placeholder="উদাহরণ: উইথড্র পৃষ্ঠায় একটা লাল বাটন যোগ করো যেটাতে ক্লিক করলে সাপোর্ট চ্যাট খুলবে।"></textarea>
+            <div class="chat-toolbar">
+              <div class="card-title" style="margin-bottom:0"><i class="ti ti-message-2"></i> Live Chat — ধাপে ধাপে এডিট</div>
+              <button class="btn btn-ghost btn-xs" onclick="resetChatSession()" title="খসড়া বাতিল করে নতুন করে শুরু করুন"><i class="ti ti-refresh"></i> নতুন সেশন</button>
             </div>
+            <div id="chatLog" class="chat-log"><div class="chat-empty">এখানে আপনার নির্দেশগুলো একের পর এক লিখুন — যেমন প্রথমে "বাটনটা সবুজ করো" তারপর "না, নীল করো" — প্রতিটা নির্দেশ আগেরটার উপর ভিত্তি করে কাজ করবে, যতক্ষণ না আপনি Accept &amp; Commit করছেন বা নতুন সেশন শুরু করছেন।</div></div>
             <div class="field">
               <label>নির্দিষ্ট কোড অংশ (ঐচ্ছিক — নির্ভুলতা বাড়ায়)</label>
-              <textarea id="studioTargetArea" placeholder="চাইলে এখানে ঠিক যে অংশটার আশেপাশে পরিবর্তন করতে চান তার কোড পেস্ট করুন। খালি রাখলে AI নিজে থেকেই প্রাসঙ্গিক অংশ খুঁজে বের করবে।" style="min-height:70px"></textarea>
-              <div class="lf-hint2">এটা দিলে টোকেন কম খরচ হয় এবং AI-এর সঠিক anchor বাছাইয়ের সম্ভাবনা বাড়ে।</div>
+              <textarea id="studioTargetArea" placeholder="চাইলে এখানে ঠিক যে অংশটার আশেপাশে পরিবর্তন করতে চান তার কোড পেস্ট করুন। খালি রাখলে AI নিজে থেকেই প্রাসঙ্গিক অংশ খুঁজে বের করবে।" style="min-height:56px"></textarea>
+              <div class="lf-hint2">এটা দিলে টোকেন কম খরচ হয় এবং AI-এর সঠিক anchor বাছাইয়ের সম্ভাবনা বাড়ে। শুধু প্রথম মেসেজে প্রযোজ্য।</div>
             </div>
             <div class="field">
               <label>ডিজাইন/মকআপ ছবি (ঐচ্ছিক)</label>
@@ -291,7 +329,10 @@ a{color:inherit;text-decoration:none}
               </div>
               <input type="file" id="studioImgInput" accept="image/*" style="display:none" onchange="handleStudioImage(this)">
             </div>
-            <button class="btn btn-primary" id="genBtn" style="width:100%" onclick="generateChanges()"><i class="ti ti-wand"></i> Generate Precision Patch</button>
+            <div class="chat-input-row">
+              <textarea id="studioPrompt" placeholder="উদাহরণ: বাটনটা সবুজ করো" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChatMessage();}"></textarea>
+              <button class="chat-send-btn" id="genBtn" onclick="sendChatMessage()"><i class="ti ti-send"></i></button>
+            </div>
           </div>
 
           <div class="alert info"><i class="ti ti-shield-check"></i> <b>Precision মোড:</b> AI পুরো ফাইল কখনো রি-রাইট করবে না। সে শুধু নির্দিষ্ট <code>searchAnchor</code> খুঁজে সেই জায়গায় নতুন কোড <code>INSERT_AFTER</code> / <code>INSERT_BEFORE</code> করবে অথবা ঠিক ওই অংশটুকু <code>REPLACE</code> করবে — বাকি পুরো ফাইল অক্ষত থাকে।</div>
@@ -360,13 +401,26 @@ a{color:inherit;text-decoration:none}
       <div class="two-col">
         <div>
           <div class="card">
-            <div class="card-title"><i class="ti ti-brand-github"></i> GitHub Direct Connection</div>
-            <div class="alert warn"><i class="ti ti-alert-triangle"></i> কোনো ব্যাকএন্ড/সার্ভার নেই — Token এই ব্রাউজারের localStorage-এ সেভ থাকে এবং সরাসরি GitHub API-তে ব্যবহৃত হয়। শুধু নিজের ডিভাইসে/প্রাইভেট ব্রাউজারে এই প্যানেল ব্যবহার করুন এবং Token-এ শুধু ওই একটা repo-এর <b>Contents: Read & Write</b> পারমিশন দিন (Fine-grained PAT)।</div>
-            <div class="field"><label>GitHub Personal Access Token</label><div class="pw-wrap"><input type="password" id="setGhToken" placeholder="github_pat_... অথবা ghp_..."><span class="pw-eye" onclick="togglePwView('setGhToken')"><i class="ti ti-eye"></i></span></div></div>
-            <div class="field"><label>Repository Path (owner/repo)</label><input type="text" id="setGhRepoPath" placeholder="your-username/your-repo"></div>
-            <div class="field"><label>Branch</label><input type="text" id="setGhBranch" placeholder="main" value="main"></div>
-            <button class="btn btn-primary" style="width:100%;margin-top:10px" onclick="saveAllSettings()"><i class="ti ti-device-floppy"></i> Save &amp; Test Connection</button>
-            <div class="lf-hint2" style="margin-top:8px" id="connTestResult"></div>
+            <div class="card-title"><i class="ti ti-brand-github"></i> GitHub Repositories</div>
+            <div class="alert warn"><i class="ti ti-alert-triangle"></i> কোনো ব্যাকএন্ড/সার্ভার নেই — Token এই ব্রাউজারের localStorage-এ সেভ থাকে এবং সরাসরি GitHub API-তে ব্যবহৃত হয়। শুধু নিজের ডিভাইসে/প্রাইভেট ব্রাউজারে এই প্যানেল ব্যবহার করুন।</div>
+            <div class="lf-hint2" style="margin-bottom:10px">User Site আর Admin Panel <b>আলাদা GitHub repo</b>-তে থাকলে এখানে দুটো repo আলাদাভাবে যোগ করুন — প্রতিটার নিজস্ব Token/owner/repo/branch থাকবে। একই repo হলে একটাই যোগ করলেই যথেষ্ট।</div>
+            <div id="repoList"></div>
+            <div class="repo-item" id="newRepoForm" style="border-style:dashed">
+              <div class="repo-item-hd">
+                <input type="text" id="newRepoLabel" placeholder="নাম (যেমন: Admin Panel Repo)">
+              </div>
+              <div class="repo-item-row">
+                <div class="pw-wrap" style="flex:1;min-width:120px">
+                  <input type="password" id="newRepoToken" placeholder="GitHub Token (ghp_... / github_pat_...)" style="padding-right:38px">
+                  <span class="pw-eye" onclick="togglePwView('newRepoToken')" style="right:8px"><i class="ti ti-eye"></i></span>
+                </div>
+                <input type="text" id="newRepoPath" placeholder="owner/repo">
+                <input type="text" id="newRepoBranch" placeholder="branch" value="main" style="max-width:90px">
+              </div>
+              <div class="repo-item-actions">
+                <button class="btn btn-primary btn-sm" onclick="addRepo()"><i class="ti ti-plus"></i> Repo যোগ করো</button>
+              </div>
+            </div>
           </div>
           <div class="card">
             <div class="card-title"><i class="ti ti-key"></i> AI API Keys</div>
@@ -378,11 +432,13 @@ a{color:inherit;text-decoration:none}
         <div>
           <div class="card">
             <div class="card-title"><i class="ti ti-files"></i> Manageable Files</div>
-            <div class="lf-hint2" style="margin-bottom:10px">যেসব ফাইল AI দিয়ে এডিট করতে চান, সেগুলোর নাম ও রিপোর ভেতরের ঠিক path (যেমন: <code>index.html</code> বা <code>admin/index.html</code>) এখানে যোগ করুন।</div>
+            <div class="lf-hint2" style="margin-bottom:10px">যেসব ফাইল AI দিয়ে এডিট করতে চান, সেগুলোর নাম, path এবং কোন repo-তে আছে সেটা এখানে যোগ করুন। প্যানেলটা নিজেই যদি একটা ফাইল হয় (এই HTML), সেটার জন্য "এটা Admin Panel নিজেই" টিক দিন।</div>
             <div id="fileManageList"></div>
-            <div style="display:flex;gap:8px;margin-top:10px">
-              <input type="text" id="newFileLabel" placeholder="নাম (যেমন: User Site)" style="flex:1;padding:9px 12px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--text);font-size:12.5px">
-              <input type="text" id="newFilePath" placeholder="path (যেমন: index.html)" style="flex:1;padding:9px 12px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--text);font-size:12.5px">
+            <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+              <input type="text" id="newFileLabel" placeholder="নাম (যেমন: User Site)" style="flex:1;min-width:110px;padding:9px 12px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--text);font-size:12.5px">
+              <input type="text" id="newFilePath" placeholder="path (যেমন: index.html)" style="flex:1;min-width:110px;padding:9px 12px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--text);font-size:12.5px">
+              <select id="newFileRepo" style="flex:1;min-width:110px;padding:9px 12px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--border2);color:var(--text);font-size:12px"></select>
+              <label class="file-manage-self"><input type="checkbox" id="newFileIsSelf"> 🔧 Admin Panel নিজেই</label>
               <button class="btn btn-primary btn-sm" onclick="addManagedFile()"><i class="ti ti-plus"></i></button>
             </div>
           </div>
@@ -402,15 +458,18 @@ a{color:inherit;text-decoration:none}
 // ═══════════════════════ STATE ═══════════════════════
 const S = {
   provider: 'gemini',
-  files: [],
+  repos: [],          // [{id,label,token,owner,repo,branch,lastTest:'ok'|'off'|null}]
+  files: [],           // [{label,path,repoId,isSelf}]
   activeFile: null,
-  currentContent: '',
+  currentContent: '',  // baseline content loaded fresh from GitHub for the active session
   currentSha: '',
-  patches: [],
-  previewContent: '',
+  patches: [],          // patches from the MOST RECENT chat turn (for stats/list display)
+  previewContent: '',   // current working draft (accumulates across chat turns)
   pendingImage: null,
   activityLog: [],
   historyFile: null,
+  chatLog: [],           // [{role:'user'|'ai'|'error', text, summary, patches}]
+  sessionActive: false,  // whether a draft session has been loaded for the active file
 };
 
 // ═══════════════════════ STORAGE HELPERS ═══════════════════════
@@ -485,7 +544,7 @@ function goScreen(name) {
   document.querySelectorAll('.tb-nav-item').forEach(t => t.classList.toggle('active', t.dataset.scr === name));
   if (name === 'history') renderHistoryFilePills();
   if (name === 'activity') renderActivityLog();
-  if (name === 'settings') renderFileManageList();
+  if (name === 'settings') { renderRepoList(); renderFileManageList(); }
 }
 
 // ═══════════════════════ BASE64 (unicode-safe) HELPERS ═══════════════════════
@@ -496,11 +555,8 @@ function b64DecodeUnicode(str) {
   return decodeURIComponent(atob(str.replace(/\n/g, '')).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
 }
 
-// ═══════════════════════ CONNECTION SETTINGS (GitHub direct) ═══════════════════════
+// ═══════════════════════ CONNECTION SETTINGS (GitHub — multi repo) ═══════════════════════
 function loadConnectionSettings() {
-  $('setGhToken').value = ls('wds_gh_token');
-  $('setGhRepoPath').value = ls('wds_gh_owner') && ls('wds_gh_repo') ? (ls('wds_gh_owner') + '/' + ls('wds_gh_repo')) : '';
-  $('setGhBranch').value = ls('wds_gh_branch') || 'main';
   $('setGeminiKey').value = ls('wds_gemini_key');
   $('setGroqKey').value = ls('wds_groq_key');
 }
@@ -509,78 +565,140 @@ function saveApiKeys() {
   ls('wds_groq_key', $('setGroqKey').value.trim());
   showToast('✅ API Key সেভ হয়েছে', 'success');
 }
-async function saveAllSettings() {
-  const token = $('setGhToken').value.trim();
-  const repoPath = $('setGhRepoPath').value.trim();
-  const branch = $('setGhBranch').value.trim() || 'main';
-  if (!token) { showToast('GitHub Personal Access Token দিন', 'error'); return; }
-  if (!repoPath.includes('/')) { showToast('Repository Path এভাবে দিন: owner/repo', 'error'); return; }
-  const [owner, repo] = repoPath.split('/').map(s => s.trim());
-  if (!owner || !repo) { showToast('Repository Path সঠিক নয়', 'error'); return; }
-  ls('wds_gh_token', token);
-  ls('wds_gh_owner', owner);
-  ls('wds_gh_repo', repo);
-  ls('wds_gh_branch', branch);
-  saveApiKeys();
-  $('connTestResult').textContent = '⏳ টেস্ট করা হচ্ছে...';
-  try {
-    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/branches/${encodeURIComponent(branch)}`, { headers: ghHeaders() });
-    const data = await res.json().catch(() => ({}));
-    if (res.status === 401 || res.status === 403) { $('connTestResult').innerHTML = '<span style="color:var(--red)">❌ Token ভুল বা পারমিশন নেই</span>'; updateConnPill(false); return; }
-    if (!res.ok) { $('connTestResult').innerHTML = `<span style="color:var(--red)">❌ ${escHtml(data.message || ('সংযোগ ব্যর্থ (' + res.status + ')'))}</span>`; updateConnPill(false); return; }
-    $('connTestResult').innerHTML = '<span style="color:var(--green)">✅ GitHub Repository-এর সাথে সংযোগ সফল হয়েছে</span>';
-    updateConnPill(true);
-    addActivityLog('🔌 GitHub connection saved & tested successfully');
-    showToast('✅ সংযোগ সফল হয়েছে!', 'success');
-  } catch (e) {
-    $('connTestResult').innerHTML = '<span style="color:var(--red)">❌ সংযোগ ব্যর্থ — Token/Repository/ইন্টারনেট চেক করুন</span>';
-    updateConnPill(false);
+
+function loadRepos() {
+  S.repos = lsJson('wds_repos') || [];
+  // one-time migration from the old single-repo settings, if present and not already migrated
+  const oldToken = ls('wds_gh_token'), oldOwner = ls('wds_gh_owner'), oldRepo = ls('wds_gh_repo');
+  if (oldToken && oldOwner && oldRepo && !S.repos.length) {
+    const migrated = { id: 'repo_' + Date.now(), label: oldOwner + '/' + oldRepo, token: oldToken, owner: oldOwner, repo: oldRepo, branch: ls('wds_gh_branch') || 'main', lastTest: null };
+    S.repos.push(migrated);
+    saveRepos();
+    // point any legacy files (which only had {label,path}) at this migrated repo
+    S.files.forEach(f => { if (!f.repoId) f.repoId = migrated.id; });
+    saveFiles();
   }
 }
-function updateConnPill(ok) {
-  const pill = $('connPill'), txt = $('connText');
-  pill.className = 'conn-pill ' + (ok ? 'ok' : 'off');
-  txt.textContent = ok ? 'Connected' : 'Not configured';
+function saveRepos() { lsJson('wds_repos', S.repos); }
+function getRepo(id) { return S.repos.find(r => r.id === id) || null; }
+function getFileRepo(file) { return file ? getRepo(file.repoId) : null; }
+
+function renderRepoList() {
+  const el = $('repoList'); if (!el) return;
+  el.innerHTML = S.repos.map((r, i) => `
+    <div class="repo-item">
+      <div class="repo-item-hd">
+        <input type="text" value="${escHtml(r.label)}" onchange="updateRepo(${i},'label',this.value)" placeholder="Repo নাম">
+        <span class="repo-status-badge ${r.lastTest === 'ok' ? 'ok' : (r.lastTest === 'off' ? 'off' : 'untested')}">${r.lastTest === 'ok' ? '✅ Connected' : (r.lastTest === 'off' ? '❌ ব্যর্থ' : '… টেস্ট করা হয়নি')}</span>
+      </div>
+      <div class="repo-item-row">
+        <div class="pw-wrap" style="flex:1;min-width:120px">
+          <input type="password" value="${escHtml(r.token)}" onchange="updateRepo(${i},'token',this.value)" placeholder="Token" style="padding-right:38px">
+          <span class="pw-eye" onclick="togglePwView(this.previousElementSibling.id)" style="right:8px"></span>
+        </div>
+        <input type="text" value="${escHtml(r.owner + '/' + r.repo)}" onchange="updateRepoPath(${i},this.value)" placeholder="owner/repo">
+        <input type="text" value="${escHtml(r.branch)}" onchange="updateRepo(${i},'branch',this.value)" placeholder="branch" style="max-width:90px">
+      </div>
+      <div class="repo-item-actions">
+        <button class="btn btn-danger btn-xs" onclick="removeRepo(${i})"><i class="ti ti-trash"></i></button>
+        <button class="btn btn-info btn-xs" onclick="testRepo(${i})"><i class="ti ti-plug-connected"></i> Test</button>
+      </div>
+    </div>`).join('') || '<div class="lf-hint2" style="margin-bottom:10px">এখনো কোনো repo যোগ করা হয়নি — নিচে থেকে একটা যোগ করুন।</div>';
 }
-function checkGithubConfigured() {
-  if (!ls('wds_gh_token') || !ls('wds_gh_owner') || !ls('wds_gh_repo')) { showToast('আগে Settings-এ গিয়ে GitHub Token ও Repository Path বসান', 'error'); return false; }
+function updateRepo(i, field, val) { S.repos[i][field] = val.trim(); S.repos[i].lastTest = null; saveRepos(); renderRepoList(); refreshTopConnPill(); }
+function updateRepoPath(i, val) {
+  const parts = val.trim().split('/').map(s => s.trim());
+  if (parts.length === 2 && parts[0] && parts[1]) { S.repos[i].owner = parts[0]; S.repos[i].repo = parts[1]; }
+  S.repos[i].lastTest = null; saveRepos(); renderRepoList(); refreshTopConnPill();
+}
+function removeRepo(i) {
+  const r = S.repos[i];
+  const usedBy = S.files.filter(f => f.repoId === r.id);
+  if (usedBy.length && !confirm(`"${r.label}" repo-টা ${usedBy.length}টা ফাইল ব্যবহার করছে (${usedBy.map(f => f.label).join(', ')})। তারপরও মুছে ফেলতে চান? ওই ফাইলগুলো তখন কোনো repo-এর সাথে যুক্ত থাকবে না।`)) return;
+  S.repos.splice(i, 1); saveRepos(); renderRepoList(); renderFileManageList(); refreshTopConnPill();
+}
+async function testRepo(i) {
+  const r = S.repos[i];
+  if (!r.token || !r.owner || !r.repo) { showToast('Token ও owner/repo দুটোই দিন', 'error'); return; }
+  showToast('⏳ সংযোগ টেস্ট করা হচ্ছে...', 'info');
+  try {
+    const res = await fetch(`https://api.github.com/repos/${r.owner}/${r.repo}/branches/${encodeURIComponent(r.branch || 'main')}`, { headers: { 'Authorization': 'token ' + r.token, 'Accept': 'application/vnd.github+json' } });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      r.lastTest = 'off'; saveRepos(); renderRepoList(); refreshTopConnPill();
+      showToast('❌ ' + (data.message || ('সংযোগ ব্যর্থ (' + res.status + ')')), 'error');
+      return;
+    }
+    r.lastTest = 'ok'; saveRepos(); renderRepoList(); refreshTopConnPill();
+    addActivityLog(`🔌 Repo "${r.label}" (${r.owner}/${r.repo}) — সংযোগ সফল`);
+    showToast('✅ সংযোগ সফল হয়েছে!', 'success');
+  } catch (e) {
+    r.lastTest = 'off'; saveRepos(); renderRepoList(); refreshTopConnPill();
+    showToast('❌ সংযোগ ব্যর্থ — Token/Repository/ইন্টারনেট চেক করুন', 'error');
+  }
+}
+function addRepo() {
+  const label = $('newRepoLabel').value.trim();
+  const token = $('newRepoToken').value.trim();
+  const path = $('newRepoPath').value.trim();
+  const branch = $('newRepoBranch').value.trim() || 'main';
+  if (!token) { showToast('GitHub Token দিন', 'error'); return; }
+  if (!path.includes('/')) { showToast('owner/repo ফরম্যাটে দিন', 'error'); return; }
+  const [owner, repo] = path.split('/').map(s => s.trim());
+  if (!owner || !repo) { showToast('owner/repo সঠিক নয়', 'error'); return; }
+  const r = { id: 'repo_' + Date.now(), label: label || (owner + '/' + repo), token, owner, repo, branch, lastTest: null };
+  S.repos.push(r); saveRepos(); renderRepoList(); renderFileRepoOptions();
+  $('newRepoLabel').value = ''; $('newRepoToken').value = ''; $('newRepoPath').value = ''; $('newRepoBranch').value = 'main';
+  showToast('✅ Repo যোগ হয়েছে — এবার "Test" চেপে যাচাই করে নিন', 'success');
+  testRepo(S.repos.length - 1);
+}
+function refreshTopConnPill() {
+  const okCount = S.repos.filter(r => r.lastTest === 'ok').length;
+  const pill = $('connPill'), txt = $('connText');
+  if (!S.repos.length) { pill.className = 'conn-pill off'; txt.textContent = 'কোনো repo নেই'; return; }
+  pill.className = 'conn-pill ' + (okCount > 0 ? 'ok' : 'off');
+  txt.textContent = okCount > 0 ? `${okCount}/${S.repos.length} repo সংযুক্ত` : `${S.repos.length} repo — টেস্ট করুন`;
+}
+function checkFileRepoConfigured(file) {
+  const repo = getFileRepo(file);
+  if (!repo || !repo.token || !repo.owner || !repo.repo) { showToast('আগে Settings-এ গিয়ে এই ফাইলের জন্য একটা GitHub Repo যোগ ও সিলেক্ট করুন', 'error'); return false; }
   return true;
 }
 
-// ═══════════════════════ GITHUB REST API — DIRECT ═══════════════════════
-function ghHeaders() {
-  return { 'Authorization': 'token ' + ls('wds_gh_token'), 'Accept': 'application/vnd.github+json' };
+// ═══════════════════════ GITHUB REST API — DIRECT (per-repo) ═══════════════════════
+function ghHeaders(repo) {
+  return { 'Authorization': 'token ' + repo.token, 'Accept': 'application/vnd.github+json' };
 }
-function ghBase() {
-  return `https://api.github.com/repos/${ls('wds_gh_owner')}/${ls('wds_gh_repo')}`;
+function ghBase(repo) {
+  return `https://api.github.com/repos/${repo.owner}/${repo.repo}`;
 }
-async function ghGetFile(path) {
-  const branch = ls('wds_gh_branch') || 'main';
-  const res = await fetch(`${ghBase()}/contents/${path.split('/').map(encodeURIComponent).join('/')}?ref=${encodeURIComponent(branch)}`, { headers: ghHeaders() });
+async function ghGetFile(repo, path) {
+  const branch = repo.branch || 'main';
+  const res = await fetch(`${ghBase(repo)}/contents/${path.split('/').map(encodeURIComponent).join('/')}?ref=${encodeURIComponent(branch)}`, { headers: ghHeaders(repo) });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || 'GitHub ফাইল রিড ব্যর্থ');
   return { content: b64DecodeUnicode(data.content), sha: data.sha };
 }
-async function ghPutFile(path, content, sha, message) {
-  const branch = ls('wds_gh_branch') || 'main';
-  const res = await fetch(`${ghBase()}/contents/${path.split('/').map(encodeURIComponent).join('/')}`, {
+async function ghPutFile(repo, path, content, sha, message) {
+  const branch = repo.branch || 'main';
+  const res = await fetch(`${ghBase(repo)}/contents/${path.split('/').map(encodeURIComponent).join('/')}`, {
     method: 'PUT',
-    headers: Object.assign({ 'Content-Type': 'application/json' }, ghHeaders()),
+    headers: Object.assign({ 'Content-Type': 'application/json' }, ghHeaders(repo)),
     body: JSON.stringify({ message, content: b64EncodeUnicode(content), sha, branch }),
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || 'GitHub পুশ ব্যর্থ');
   return { commitSha: data.commit && data.commit.sha };
 }
-async function ghGetCommits(path, per_page = 25) {
-  const branch = ls('wds_gh_branch') || 'main';
-  const res = await fetch(`${ghBase()}/commits?path=${encodeURIComponent(path)}&sha=${encodeURIComponent(branch)}&per_page=${per_page}`, { headers: ghHeaders() });
+async function ghGetCommits(repo, path, per_page = 25) {
+  const branch = repo.branch || 'main';
+  const res = await fetch(`${ghBase(repo)}/commits?path=${encodeURIComponent(path)}&sha=${encodeURIComponent(branch)}&per_page=${per_page}`, { headers: ghHeaders(repo) });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || 'Commit history লোড ব্যর্থ');
   return data.map(c => ({ sha: c.sha, message: c.commit.message, author: c.commit.author ? c.commit.author.name : '', date: c.commit.author ? c.commit.author.date : '' }));
 }
-async function ghGetFileAtCommit(path, sha) {
-  const res = await fetch(`${ghBase()}/contents/${path.split('/').map(encodeURIComponent).join('/')}?ref=${sha}`, { headers: ghHeaders() });
+async function ghGetFileAtCommit(repo, path, sha) {
+  const res = await fetch(`${ghBase(repo)}/contents/${path.split('/').map(encodeURIComponent).join('/')}?ref=${sha}`, { headers: ghHeaders(repo) });
   const data = await res.json();
   if (!res.ok) throw new Error(data.message || 'পুরনো ভার্সন লোড ব্যর্থ');
   return { content: b64DecodeUnicode(data.content) };
@@ -591,34 +709,58 @@ function loadFiles() { S.files = lsJson('wds_files') || []; }
 function saveFiles() { lsJson('wds_files', S.files); }
 function renderFilePills() {
   const wrap = $('filePills'), noAlert = $('noFilesAlert'), pillsWrap = $('filePillsWrap');
-  if (!S.files.length) { noAlert.style.display = 'flex'; pillsWrap.style.display = 'none'; return; }
+  if (!S.files.length) { noAlert.style.display = 'flex'; pillsWrap.style.display = 'none'; renderActiveFileConnInfo(); return; }
   noAlert.style.display = 'none'; pillsWrap.style.display = 'block';
-  wrap.innerHTML = S.files.map((f, i) => `<div class="file-pill ${S.activeFile && S.activeFile.path === f.path ? 'active' : ''}" onclick="selectFile(${i})"><i class="ti ti-file-code"></i> ${escHtml(f.label)}</div>`).join('');
+  wrap.innerHTML = S.files.map((f, i) => {
+    const repo = getFileRepo(f);
+    return `<div class="file-pill ${S.activeFile && S.activeFile.path === f.path ? 'active' : ''}" onclick="selectFile(${i})"><i class="ti ti-file-code"></i> ${escHtml(f.label)} ${f.isSelf ? '<span class="self-file-badge">🔧 Self</span>' : ''}<span class="repo-tag">${repo ? escHtml(repo.label) : '⚠ no repo'}</span></div>`;
+  }).join('');
+  renderActiveFileConnInfo();
+}
+function renderActiveFileConnInfo() {
+  const el = $('activeFileConnInfo'); if (!el) return;
+  if (!S.activeFile) { el.innerHTML = ''; return; }
+  const repo = getFileRepo(S.activeFile);
+  if (!repo) {
+    el.innerHTML = `<div class="alert warn" style="margin-bottom:0"><i class="ti ti-plug-off"></i> "${escHtml(S.activeFile.label)}" ফাইলের সাথে এখনো কোনো GitHub repo যুক্ত করা হয়নি — Settings-এ গিয়ে যুক্ত করুন।</div>`;
+  } else {
+    el.innerHTML = `<div class="lf-hint2" style="margin-bottom:0"><i class="ti ti-plug-connected" style="color:var(--green)"></i> "${escHtml(S.activeFile.label)}" ➜ যুক্ত আছে repo <b>${escHtml(repo.owner + '/' + repo.repo)}</b> (branch: ${escHtml(repo.branch || 'main')})${S.activeFile.isSelf ? ' — <span style="color:var(--teal);font-weight:700">🔧 এটা এই Admin Panel-এর নিজস্ব কোড</span>' : ''}</div>`;
+  }
 }
 function selectFile(i) {
   S.activeFile = S.files[i];
-  discardChanges();
+  resetChatSession(true);
   renderFilePills();
   addActivityLog(`📂 Selected file: ${S.activeFile.label} (${S.activeFile.path})`);
 }
+function renderFileRepoOptions(selectedId) {
+  const select = $('newFileRepo'); if (!select) return;
+  select.innerHTML = S.repos.map(r => `<option value="${r.id}" ${r.id === selectedId ? 'selected' : ''}>${escHtml(r.label)}</option>`).join('') || '<option value="">আগে একটা repo যোগ করুন</option>';
+}
 function renderFileManageList() {
   const el = $('fileManageList'); if (!el) return;
+  renderFileRepoOptions();
   el.innerHTML = S.files.map((f, i) => `
     <div class="file-manage-row">
       <input type="text" value="${escHtml(f.label)}" onchange="updateManagedFile(${i},'label',this.value)">
       <input type="text" value="${escHtml(f.path)}" onchange="updateManagedFile(${i},'path',this.value)">
+      <select onchange="updateManagedFile(${i},'repoId',this.value)">${S.repos.map(r => `<option value="${r.id}" ${f.repoId === r.id ? 'selected' : ''}>${escHtml(r.label)}</option>`).join('') || '<option value="">কোনো repo নেই</option>'}</select>
+      <label class="file-manage-self"><input type="checkbox" ${f.isSelf ? 'checked' : ''} onchange="updateManagedFile(${i},'isSelf',this.checked)"> 🔧 Self</label>
       <button class="btn btn-danger btn-xs" onclick="removeManagedFile(${i})"><i class="ti ti-trash"></i></button>
     </div>`).join('') || '<div style="color:var(--text3);font-size:12.5px;padding:8px 0">কোনো ফাইল যোগ করা হয়নি।</div>';
 }
 function addManagedFile() {
   const label = $('newFileLabel').value.trim(), path = $('newFilePath').value.trim();
+  const repoId = $('newFileRepo').value;
+  const isSelf = $('newFileIsSelf').checked;
   if (!label || !path) { showToast('নাম ও path দুটোই দিন', 'error'); return; }
-  S.files.push({ label, path });
+  if (!S.repos.length) { showToast('আগে অন্তত একটা GitHub Repo যোগ করুন', 'error'); return; }
+  S.files.push({ label, path, repoId: repoId || S.repos[0].id, isSelf });
   saveFiles(); renderFileManageList(); renderFilePills();
-  $('newFileLabel').value = ''; $('newFilePath').value = '';
+  $('newFileLabel').value = ''; $('newFilePath').value = ''; $('newFileIsSelf').checked = false;
   showToast('✅ ফাইল যোগ হয়েছে', 'success');
 }
-function updateManagedFile(i, field, val) { S.files[i][field] = val; saveFiles(); renderFilePills(); }
+function updateManagedFile(i, field, val) { S.files[i][field] = val; saveFiles(); renderFilePills(); if (S.activeFile && S.activeFile.path === S.files[i].path) S.activeFile = S.files[i]; }
 function removeManagedFile(i) {
   if (!confirm(`"${S.files[i].label}" ফাইলটা লিস্ট থেকে সরাতে চান? (GitHub-এর আসল ফাইল মুছবে না)`)) return;
   S.files.splice(i, 1); saveFiles(); renderFileManageList(); renderFilePills();
@@ -678,12 +820,14 @@ action-এর মান অবশ্যই এই তিনটার একট�
 1. "filePath" সবসময় ঠিক "${fileName}" হতে হবে — অন্য কোনো ফাইলের নাম দিও না, একাধিক ফাইলে পরিবর্তন সাপোর্টেড না।
 2. "searchAnchor" নিচে দেওয়া প্রকৃত কোড থেকেই হুবহু কপি করতে হবে (একটাও character/space/indentation ভিন্ন হওয়া চলবে না) এবং সেটা ফাইলে ঠিক একবার (unique) থাকতে হবে — অন্যথায় patch ব্যর্থ হবে।
 3. searchAnchor কমপক্ষে একটা সম্পূর্ণ লাইন বা HTML ট্যাগ/attribute-সহ অংশ হওয়া উচিত, যাতে নির্ভরযোগ্যভাবে খুঁজে পাওয়া যায় — কিন্তু অপ্রয়োজনীয়ভাবে লম্বা কোরো না।
+3a. খুব গুরুত্বপূর্ণ: শুধু একটা generic/পুনরাবৃত্ত ওপেনিং ট্যাগ (যেমন শুধু <div class="card">, <div class="auth-field">, <div class="task-top"> — যেটা ফাইলে বহুবার/লুপে ব্যবহৃত হয়) কখনো একা searchAnchor হিসেবে দিও না। এমন ট্যাগ ব্যবহার করার আগে চিন্তা করো এটা ফাইলে কয়বার আছে মনে হয় — যদি একাধিকবার থাকার সম্ভাবনা থাকে, তাহলে সেই ট্যাগের সাথে তার ভেতরের/পাশের একটা ইউনিক জিনিস (নির্দিষ্ট id, ইউনিক টেক্সট, ইউনিক attribute মান, বা কয়েক লাইন পরপর একসাথে) যোগ করে anchor-টাকে ফাইলে-একবার-মাত্র উপস্থিত (truly unique) বানাও।
 4. action = "INSERT_AFTER" হলে newSnippet ঠিক searchAnchor-এর পরে বসবে; searchAnchor নিজে অপরিবর্তিত থাকবে।
 5. action = "INSERT_BEFORE" হলে newSnippet ঠিক searchAnchor-এর আগে বসবে; searchAnchor নিজে অপরিবর্তিত থাকবে।
 6. action = "REPLACE" হলে searchAnchor সম্পূর্ণভাবে newSnippet দিয়ে প্রতিস্থাপিত হবে।
 7. একটা ফিচারের জন্য HTML + CSS + JS আলাদা জায়গায় বসাতে হলে "patches" অ্যারেতে একাধিক patch object দাও, প্রতিটার নিজস্ব সঠিক searchAnchor সহ।
 8. newSnippet-এ শুধু ঠিক যতটুকু নতুন/পরিবর্তিত কোড দরকার ততটুকুই দাও — কখনো পুরো সেকশন বা ফাইল কপি-পেস্ট কোরো না।
-9. বিদ্যমান কোডের কোনো অংশ অনুমান করে লিখবে না — শুধু নিচে দেওয়া প্রকৃত কোড থেকেই searchAnchor নাও। যদি প্রয়োজনীয় কোড অংশ নিচে দেওয়া না থাকে, summary-তে সেটা উল্লেখ করো এবং patches খালি রেখো।`;
+9. বিদ্যমান কোডের কোনো অংশ অনুমান করে লিখবে না — শুধু নিচে দেওয়া প্রকৃত কোড থেকেই searchAnchor নাও। যদি প্রয়োজনীয় কোড অংশ নিচে দেওয়া না থাকে (অর্থাৎ তুমি নিশ্চিত না যে এই exact টেক্সটটা ফাইলে আছে), সেই নির্দিষ্ট অংশের জন্য কোনো patch বানিও না — বরং সেটা বাদ দাও এবং summary-তে স্পষ্ট বাংলায় লেখো ঠিক কোন অংশটা করা গেল না এবং কেন (যেমন: "নিচের দেওয়া কোড অংশে KYC ফর্মের জায়গাটা দেখা যায়নি, তাই এটা বাদ দেওয়া হলো — আলাদাভাবে জিজ্ঞেস করুন")। একটা অনুরোধে একাধিক ফিচার থাকলে, যেটার কোড তুমি দেখতে পাচ্ছো শুধু সেটার জন্যই patch দাও, বাকিগুলোর জন্য অনুমান করে ভুয়া anchor বানিও না।
+10. যদি ব্যবহারকারীর একটা মেসেজে একাধিক আলাদা ফিচার/জায়গায় পরিবর্তনের অনুরোধ থাকে এবং সেগুলোর মধ্যে সম্পর্ক কম, summary-তে পরামর্শ দাও যে বড় কাজ কয়েকটা ছোট আলাদা মেসেজে ভাগ করে দিলে নির্ভুলতা বাড়ে।`;
 }
 function parseAiJson(text) {
   let cleaned = (text || '').trim();
@@ -734,7 +878,7 @@ async function callGroq(systemPrompt, userPrompt) {
 const SMALL_FILE_CHARS = 6000;
 const CHUNK_LINES = 45;
 const CONTEXT_WINDOW_LINES = 18;
-const MAX_CONTEXT_CHARS = 9000;
+const MAX_CONTEXT_CHARS = 12000;
 
 const BN_STOPWORDS = new Set(['করো','করে','করবে','দাও','যাতে','এই','এবং','একটা','একটি','করতে','চাই','চান','থাকবে','হবে','জন্য','সাথে','মধ্যে','সেটা','সেটি','নতুন','পুরানো','পুরনো','মতো','ভাবে']);
 const EN_STOPWORDS = new Set(['and','the','with','into','make','change','add','new','also','for','this','that','from','your']);
@@ -784,7 +928,7 @@ function chunkSignature(text) {
 }
 async function selectRelevantChunksViaAI(chunks, prompt, hasImage) {
   const outline = chunks.map(c => `[Chunk ${c.index} | lines ${c.startLine + 1}-${c.endLine}]\n${chunkSignature(c.text)}`).join('\n\n');
-  const sys = `তুমি একজন কোড নেভিগেটর সহকারী। নিচে একটা ফাইলের বিভিন্ন অংশের (chunk) সংক্ষিপ্ত সিগনেচার (id, class, দৃশ্যমান টেক্সট, ফাংশন নাম) দেওয়া আছে। ব্যবহারকারীর অনুরোধ অনুযায়ী ঠিক কোন কোন chunk-এ পরিবর্তন লাগতে পারে তা বের করো। শুধু বৈধ JSON দাও, অন্য কিছু না: {"chunks":[chunk_index, ...]} — সর্বোচ্চ ৫টা index দাও, সম্ভাব্যতার ক্রম অনুযায়ী। নিশ্চিত না হলেও একাধিক সম্ভাব্য chunk দাও, খালি রেখো না।`;
+  const sys = `তুমি একজন কোড নেভিগেটর সহকারী। নিচে একটা ফাইলের বিভিন্ন অংশের (chunk) সংক্ষিপ্ত সিগনেচার (id, class, দৃশ্যমান টেক্সট, ফাংশন নাম) দেওয়া আছে। ব্যবহারকারীর অনুরোধ অনুযায়ী ঠিক কোন কোন chunk-এ পরিবর্তন লাগতে পারে তা বের করো। শুধু বৈধ JSON দাও, অন্য কিছু না: {"chunks":[chunk_index, ...]} — সর্বোচ্চ ৭টা index দাও, সম্ভাব্যতার ক্রম অনুযায়ী। অনুরোধে একাধিক আলাদা ফিচার/অংশের কথা থাকলে প্রতিটার জন্য অন্তত একটা করে সম্ভাব্য chunk দাও যাতে কোনো ফিচার সম্পূর্ণ বাদ না পড়ে। নিশ্চিত না হলেও একাধিক সম্ভাব্য chunk দাও, খালি রেখো না।`;
   const userMsg = `=== FILE OUTLINE (chunks) ===\n${outline}\n\n=== USER REQUEST ===\n${prompt}`;
   const useGemini = S.provider === 'gemini' || hasImage;
   const raw = useGemini ? await callGemini(sys, userMsg, null) : await callGroq(sys, userMsg);
@@ -811,34 +955,99 @@ async function buildSmartContext(content, prompt, hasImage, onStatus) {
   return { context: out, mode: 'ai-chunk' };
 }
 
-// ═══════════════════════ GENERATE PRECISION PATCH ═══════════════════════
-async function generateChanges() {
-  if (!S.activeFile) { showToast('আগে একটা ফাইল সিলেক্ট করুন', 'error'); return; }
-  const prompt = $('studioPrompt').value.trim();
-  if (!prompt) { showToast('আপনার পরিবর্তনের নির্দেশ লিখুন', 'error'); return; }
-  const btn = $('genBtn');
-  btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader spin-ico"></i> ফাইল লোড হচ্ছে...';
+// ═══════════════════════ CHAT-STYLE CONVERSATIONAL PATCHING ═══════════════════════
+function renderChatLog() {
+  const el = $('chatLog'); if (!el) return;
+  if (!S.chatLog.length) { el.innerHTML = '<div class="chat-empty">এখানে আপনার নির্দেশগুলো একের পর এক লিখুন — যেমন প্রথমে "বাটনটা সবুজ করো" তারপর "না, নীল করো" — প্রতিটা নির্দেশ আগেরটার উপর ভিত্তি করে কাজ করবে, যতক্ষণ না আপনি Accept &amp; Commit করছেন বা নতুন সেশন শুরু করছেন।</div>'; return; }
+  el.innerHTML = S.chatLog.map((m, i) => {
+    if (m.role === 'user') return `<div class="chat-bubble user">${escHtml(m.text)}</div>`;
+    if (m.role === 'thinking') return `<div class="chat-bubble ai" id="chatThinkingBubble"><i class="ti ti-loader spin-ico"></i> ${escHtml(m.text)}</div>`;
+    if (m.role === 'error') return `<div class="chat-bubble ai error"><div class="chat-bubble-meta">⚠ সমস্যা</div>${escHtml(m.text)}</div>`;
+    // ai role
+    const applied = (m.patches || []).filter(p => p.status === 'applied').length;
+    const total = (m.patches || []).length;
+    return `<div class="chat-bubble ai">
+      <div class="chat-bubble-meta">AI · ${applied}/${total} patch প্রয়োগ হয়েছে</div>
+      ${escHtml(m.text)}
+      ${total ? `<div class="chat-bubble-patches">${(m.patches || []).map((p, pi) => `<div class="chat-mini-patch" onclick="showTurnPatches(${i})"><span class="patch-status ${p.status}" style="font-size:8.5px">${STATUS_LABELS[p.status] || p.status}</span> ${escHtml(p.description || 'Patch ' + (pi + 1))}</div>`).join('')}</div>` : ''}
+    </div>`;
+  }).join('');
+  el.scrollTop = el.scrollHeight;
+}
+function showTurnPatches(chatIndex) {
+  const m = S.chatLog[chatIndex];
+  if (!m || !m.patches) return;
+  S.patches = m.patches;
+  $('patchSummaryCard').style.display = 'block';
+  $('patchSummaryText').textContent = m.summary || '';
+  renderPatchStats();
+  renderPatchList();
+  $('patchSummaryCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function addThinkingBubble(text) {
+  S.chatLog.push({ role: 'thinking', text });
+  renderChatLog();
+}
+function removeThinkingBubble() {
+  S.chatLog = S.chatLog.filter(m => m.role !== 'thinking');
+}
+function resetChatSession(silent) {
+  S.chatLog = [];
+  S.patches = [];
+  S.previewContent = '';
+  S.currentContent = '';
+  S.currentSha = '';
+  S.sessionActive = false;
   $('patchSummaryCard').style.display = 'none';
   $('rawAiCard').style.display = 'none';
   $('previewWrap').style.display = 'none';
+  $('selfReloadBanner').style.display = 'none';
+  removeStudioImage();
+  $('studioPrompt').value = '';
+  $('studioTargetArea').value = '';
+  renderChatLog();
+  if (!silent) showToast('নতুন সেশন শুরু হলো — GitHub-এ কিছুই পুশ হয়নি', 'info');
+}
+function discardChanges() { resetChatSession(false); }
+
+async function sendChatMessage() {
+  if (!S.activeFile) { showToast('আগে একটা ফাইল সিলেক্ট করুন', 'error'); return; }
+  const prompt = $('studioPrompt').value.trim();
+  if (!prompt) { showToast('আপনার পরিবর্তনের নির্দেশ লিখুন', 'error'); return; }
+  if (!checkFileRepoConfigured(S.activeFile)) return;
+  const repo = getFileRepo(S.activeFile);
+  const btn = $('genBtn');
+  btn.disabled = true;
+  S.chatLog.push({ role: 'user', text: prompt });
+  renderChatLog();
+  addThinkingBubble('ভাবছি...');
+  $('rawAiCard').style.display = 'none';
   try {
-    if (!checkGithubConfigured()) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-wand"></i> Generate Precision Patch'; return; }
-    const fileRes = await ghGetFile(S.activeFile.path);
-    S.currentContent = fileRes.content;
-    S.currentSha = fileRes.sha;
+    if (!S.sessionActive) {
+      addThinkingBubble('ফাইল লোড হচ্ছে...');
+      const fileRes = await ghGetFile(repo, S.activeFile.path);
+      S.currentContent = fileRes.content;
+      S.currentSha = fileRes.sha;
+      S.previewContent = fileRes.content;
+      S.sessionActive = true;
+    }
+    const baseContent = S.previewContent;
 
     const manualTarget = $('studioTargetArea').value.trim();
     let contextText, contextMode;
     if (manualTarget) { contextText = manualTarget; contextMode = 'manual'; }
     else {
-      btn.innerHTML = '<i class="ti ti-loader spin-ico"></i> প্রাসঙ্গিক অংশ খোঁজা হচ্ছে...';
-      const smart = await buildSmartContext(S.currentContent, prompt, !!S.pendingImage, () => { btn.innerHTML = '<i class="ti ti-loader spin-ico"></i> AI প্রাসঙ্গিক অংশ বাছাই করছে...'; });
+      addThinkingBubble('প্রাসঙ্গিক অংশ খোঁজা হচ্ছে...');
+      const smart = await buildSmartContext(baseContent, prompt, !!S.pendingImage, () => addThinkingBubble('AI প্রাসঙ্গিক অংশ বাছাই করছে...'));
       contextText = smart.context; contextMode = smart.mode;
     }
 
-    btn.innerHTML = '<i class="ti ti-loader spin-ico"></i> AI Precision Patch তৈরি করছে...';
-    const systemPrompt = buildAISystemPrompt(S.activeFile.path) + (contextMode !== 'full' ? '\n\nমনে রাখো: নিচে পুরো ফাইল না, শুধু প্রাসঙ্গিক অংশ দেওয়া হয়েছে (মাঝেমধ্যে "/* ...lines X-Y... */" কমেন্ট দিয়ে চিহ্নিত)। searchAnchor অবশ্যই এই দেওয়া অংশ থেকেই হুবহু নিতে হবে।' : '');
-    const userPrompt = `=== ${contextMode === 'full' ? 'CURRENT FILE CONTENT' : 'RELEVANT CODE SECTION(S)'} (${S.activeFile.path}) ===\n${contextText}\n\n=== USER REQUEST ===\n${prompt}`;
+    addThinkingBubble('AI Precision Patch তৈরি করছে...');
+    const recentTurns = S.chatLog.filter(m => m.role === 'user' || m.role === 'ai').slice(-8);
+    const historyText = recentTurns.map(m => m.role === 'user' ? `USER: ${m.text}` : `AI: ${m.summary || m.text}`).join('\n');
+    let systemPrompt = buildAISystemPrompt(S.activeFile.path) + (contextMode !== 'full' ? '\n\nমনে রাখো: নিচে পুরো ফাইল না, শুধু প্রাসঙ্গিক অংশ দেওয়া হয়েছে (মাঝেমধ্যে "/* ...lines X-Y... */" কমেন্ট দিয়ে চিহ্নিত)। searchAnchor অবশ্যই এই দেওয়া অংশ থেকেই হুবহু নিতে হবে।' : '');
+    if (historyText) systemPrompt += '\n\nএটা একটা চলমান কথোপকথন। ব্যবহারকারী আগেও এই একই ফাইলে কিছু নির্দেশ দিয়েছে (নিচে দেওয়া আছে) — নতুন নির্দেশটা প্রায়ই আগের কাজের একটা পরিবর্তন/সংশোধন হতে পারে (যেমন আগে "সবুজ করো" বলার পর এখন "না, নীল করো" বললে সেটা একই এলিমেন্টের রং আবার বদলানোর কথা বলছে)। প্রসঙ্গ বুঝে কাজ করো।';
+    const userPrompt = `=== ${contextMode === 'full' ? 'CURRENT FILE CONTENT' : 'RELEVANT CODE SECTION(S)'} (${S.activeFile.path}) ===\n${contextText}\n\n${historyText ? '=== CONVERSATION SO FAR ===\n' + historyText + '\n\n' : ''}=== NEW USER REQUEST ===\n${prompt}`;
 
     const useGemini = S.provider === 'gemini' || !!S.pendingImage;
     if (S.pendingImage && S.provider !== 'gemini') showToast('ছবি থাকায় Gemini ব্যবহার হচ্ছে', 'info');
@@ -849,7 +1058,7 @@ async function generateChanges() {
       if (useGemini && aiErr.isQuota) {
         if (!S.pendingImage && ls('wds_groq_key')) {
           showToast('⚠️ Gemini quota আটকে আছে — স্বয়ংক্রিয়ভাবে Groq দিয়ে চেষ্টা করা হচ্ছে', 'warn');
-          btn.innerHTML = '<i class="ti ti-loader spin-ico"></i> Groq দিয়ে আবার চেষ্টা হচ্ছে...';
+          addThinkingBubble('Groq দিয়ে আবার চেষ্টা হচ্ছে...');
           addActivityLog('⚠️ Gemini quota error — auto-fallback to Groq attempted');
           rawText = await callGroq(systemPrompt, userPrompt);
         } else {
@@ -858,20 +1067,23 @@ async function generateChanges() {
       } else { throw aiErr; }
     }
 
+    removeThinkingBubble();
     const aiRes = parseAiJson(rawText);
     if (!aiRes || !Array.isArray(aiRes.patches)) {
       $('rawAiCard').style.display = 'block';
       $('rawAiText').textContent = rawText;
-      showToast('⚠️ AI বৈধ JSON দেয়নি — নিচে raw output দেখুন', 'warn');
+      S.chatLog.push({ role: 'error', text: 'AI বৈধ JSON দেয়নি — নিচে "AI বৈধ JSON দেয়নি — Raw আউটপুট" কার্ডে দেখুন।' });
+      renderChatLog();
       addActivityLog(`⚠️ AI edit for "${S.activeFile.label}" returned invalid JSON`);
       return;
     }
     if (!aiRes.patches.length) {
-      showToast('AI কোনো patch প্রস্তাব করেনি — প্রম্পট আরও নির্দিষ্ট করে চেষ্টা করুন অথবা "নির্দিষ্ট কোড অংশ" ফিল্ডে প্রাসঙ্গিক কোড পেস্ট করুন', 'warn');
+      S.chatLog.push({ role: 'ai', text: aiRes.summary || 'কোনো patch প্রস্তাব করা যায়নি — প্রম্পট আরও নির্দিষ্ট করে আবার চেষ্টা করুন।', patches: [], summary: aiRes.summary || '' });
+      renderChatLog();
       return;
     }
 
-    S.patches = aiRes.patches.map(p => ({
+    const patches = aiRes.patches.map(p => ({
       description: p.description || '',
       filePath: p.filePath || S.activeFile.path,
       searchAnchor: p.searchAnchor || '',
@@ -880,28 +1092,38 @@ async function generateChanges() {
       status: 'pending',
     }));
 
-    applyAnchorPatches();
+    const result = runAnchorPatches(baseContent, patches, S.activeFile.path);
+    S.previewContent = result.content;
+    S.patches = result.patches;
 
     $('patchSummaryCard').style.display = 'block';
     $('patchSummaryText').textContent = aiRes.summary || 'পরিবর্তনের সারাংশ পাওয়া যায়নি।';
     renderPatchStats();
     renderPatchList();
 
-    const appliedCount = S.patches.filter(p => p.status === 'applied').length;
+    const appliedCount = result.patches.filter(p => p.status === 'applied').length;
+    S.chatLog.push({ role: 'ai', text: aiRes.summary || 'পরিবর্তন করা হয়েছে।', patches: result.patches, summary: aiRes.summary || '' });
+    renderChatLog();
+
     if (appliedCount > 0) {
       buildPreview();
-      showToast(`✅ ${appliedCount}/${S.patches.length}টা patch সফলভাবে প্রয়োগ হয়েছে — Preview দেখুন`, 'success');
+      showToast(`✅ ${appliedCount}/${patches.length}টা patch প্রয়োগ হয়েছে — Preview আপডেট হয়েছে`, 'success');
     } else {
       showToast('⚠️ কোনো patch প্রয়োগ করা যায়নি — নিচে বিস্তারিত দেখুন', 'error');
     }
 
     const modeLabel = { full: 'পুরো ফাইল', keyword: 'কিওয়ার্ড-ম্যাচড অংশ', 'ai-chunk': 'AI-বাছাইকৃত অংশ', manual: 'ম্যানুয়াল অংশ' }[contextMode] || contextMode;
-    addActivityLog(`✨ Generated ${S.patches.length} patch(es) for "${S.activeFile.label}" (context: ${modeLabel}) — ${appliedCount} applied — ${(aiRes.summary || '').slice(0, 80)}`);
+    addActivityLog(`✨ Chat turn for "${S.activeFile.label}" (context: ${modeLabel}) — ${appliedCount}/${patches.length} applied — ${(aiRes.summary || '').slice(0, 80)}`);
   } catch (e) {
     console.error(e);
+    removeThinkingBubble();
+    S.chatLog.push({ role: 'error', text: e.message });
+    renderChatLog();
     showToast('❌ ' + e.message, 'error');
   } finally {
-    btn.disabled = false; btn.innerHTML = '<i class="ti ti-wand"></i> Generate Precision Patch';
+    btn.disabled = false;
+    $('studioPrompt').value = '';
+    removeStudioImage();
   }
 }
 
@@ -940,12 +1162,12 @@ function buildDiffHtml(contentBefore, idx, anchor, action, newSnippet) {
   if (afterCtx.trim()) html += `<span class="diff-line ctx">${escHtml(afterCtx)}</span>`;
   return html;
 }
-function applyAnchorPatches() {
-  let working = S.currentContent;
-  S.patches.forEach(p => {
-    if (!p.filePath || (S.activeFile && p.filePath !== S.activeFile.path)) {
+function runAnchorPatches(baseContent, patchesArr, activeFilePath) {
+  let working = baseContent;
+  patchesArr.forEach(p => {
+    if (!p.filePath || (activeFilePath && p.filePath !== activeFilePath)) {
       p.status = 'wrong_file';
-      p.diffHtml = `<span class="diff-line del">এই patch অন্য ফাইলের জন্য (${escHtml(p.filePath || '—')}), কিন্তু বর্তমানে শুধু "${escHtml(S.activeFile ? S.activeFile.path : '')}" লোড করা আছে — বাদ দেওয়া হয়েছে।</span>`;
+      p.diffHtml = `<span class="diff-line del">এই patch অন্য ফাইলের জন্য (${escHtml(p.filePath || '—')}), কিন্তু বর্তমানে শুধু "${escHtml(activeFilePath || '')}" লোড করা আছে — বাদ দেওয়া হয়েছে।</span>`;
       return;
     }
     const anchor = p.searchAnchor || '';
@@ -968,7 +1190,7 @@ function applyAnchorPatches() {
     working = newWorking;
     p.status = 'applied';
   });
-  S.previewContent = working;
+  return { content: working, patches: patchesArr };
 }
 function renderPatchStats() {
   const applied = S.patches.filter(p => p.status === 'applied').length;
@@ -1052,35 +1274,32 @@ function copyGeneratedCode() {
     showToast('📋 কোড কপি হয়েছে', 'success');
   });
 }
-function discardChanges() {
-  S.patches = []; S.previewContent = ''; S.currentContent = ''; S.currentSha = '';
-  $('patchSummaryCard').style.display = 'none';
-  $('rawAiCard').style.display = 'none';
-  $('previewWrap').style.display = 'none';
-  removeStudioImage();
-  $('studioPrompt').value = '';
-  $('studioTargetArea').value = '';
-  showToast('বাতিল করা হয়েছে — GitHub-এ কিছুই পুশ হয়নি', 'info');
-}
-
 // ═══════════════════════ ACCEPT & COMMIT (only path to GitHub) ═══════════════════════
 async function acceptAndCommit() {
-  if (!S.previewContent || !S.activeFile) { showToast('আগে একটা প্যাচ Generate করুন', 'error'); return; }
-  const summary = $('patchSummaryText').textContent || 'AI Studio precision patch';
-  const failedCount = S.patches.filter(p => p.status !== 'applied').length;
-  const warnMsg = failedCount > 0 ? `\n\n⚠️ খেয়াল করুন: ${failedCount}টা patch প্রয়োগ হয়নি (Preview-এ নেই), শুধু বাকিগুলো commit হবে।` : '';
-  if (!confirm(`"${S.activeFile.label}" ফাইলে এই পরিবর্তনগুলো এখনই GitHub-এ (লাইভ সাইটে) commit করতে চান?\n\n${summary}${warnMsg}`)) return;
+  if (!S.previewContent || !S.activeFile) { showToast('আগে অন্তত একটা নির্দেশ দিয়ে patch তৈরি করুন', 'error'); return; }
+  const aiTurns = S.chatLog.filter(m => m.role === 'ai' && m.summary);
+  const summary = aiTurns.length ? aiTurns.map(m => '• ' + m.summary).join('\n') : ($('patchSummaryText').textContent || 'AI Studio precision patch');
+  const totalApplied = aiTurns.reduce((s, m) => s + (m.patches || []).filter(p => p.status === 'applied').length, 0);
+  const totalFailed = aiTurns.reduce((s, m) => s + (m.patches || []).filter(p => p.status !== 'applied').length, 0);
+  const warnMsg = totalFailed > 0 ? `\n\n⚠️ খেয়াল করুন: এই সেশনে মোট ${totalFailed}টা patch প্রয়োগ হয়নি, শুধু সফল হওয়া ${totalApplied}টা commit হবে।` : '';
+  if (!confirm(`"${S.activeFile.label}" ফাইলে এই পুরো চ্যাট সেশনের পরিবর্তনগুলো এখনই GitHub-এ (লাইভ সাইটে) commit করতে চান?\n\n${summary}${warnMsg}`)) return;
+  const repo = getFileRepo(S.activeFile);
   const btn = $('acceptBtn');
   btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader spin-ico"></i> Committing...';
   try {
-    if (!checkGithubConfigured()) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-rocket"></i> Accept &amp; Commit to GitHub'; return; }
+    if (!checkFileRepoConfigured(S.activeFile)) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-rocket"></i> Accept &amp; Commit to GitHub'; return; }
     // re-fetch latest sha right before commit, in case the file changed meanwhile
-    const latest = await ghGetFile(S.activeFile.path);
+    const latest = await ghGetFile(repo, S.activeFile.path);
     const codeToCommit = $('previewCodeBox').value || S.previewContent;
-    const res = await ghPutFile(S.activeFile.path, codeToCommit, latest.sha, `AI Studio Precision Patch: ${summary}`.slice(0, 200));
+    const res = await ghPutFile(repo, S.activeFile.path, codeToCommit, latest.sha, `AI Studio Precision Patch: ${summary}`.slice(0, 200));
     showToast('🚀 Commit হয়ে গেছে! কিছুক্ষণের মধ্যে লাইভ সাইটে দেখা যাবে।', 'success');
-    addActivityLog(`🚀 Committed "${S.activeFile.label}" — commit ${(res.commitSha || '').slice(0, 7)} — ${summary} (${S.patches.filter(p=>p.status==='applied').length} patches applied)`);
-    discardChanges();
+    addActivityLog(`🚀 Committed "${S.activeFile.label}" — commit ${(res.commitSha || '').slice(0, 7)} — ${totalApplied} patches applied — ${summary.slice(0, 120)}`);
+    const wasSelf = !!S.activeFile.isSelf;
+    resetChatSession(true);
+    if (wasSelf) {
+      $('selfReloadBanner').style.display = 'block';
+      $('selfReloadBanner').innerHTML = `<div class="self-reload-banner"><span><i class="ti ti-refresh"></i> এটা এই Admin Panel-এরই কোড ছিল — commit হয়ে গেছে, কিন্তু এই ব্রাউজারে যা এখন চলছে তা এখনো পুরনো ভার্সন। পরিবর্তন কার্যকর দেখতে reload করুন।</span><button class="btn btn-primary btn-sm" onclick="location.reload()"><i class="ti ti-refresh"></i> এখনই Reload করো</button></div>`;
+    }
   } catch (e) {
     console.error(e);
     showToast('❌ Commit ব্যর্থ হয়েছে: ' + e.message, 'error');
@@ -1102,8 +1321,9 @@ async function selectHistoryFile(i) {
   const el = $('commitsList');
   el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3)"><i class="ti ti-loader spin-ico"></i> লোড হচ্ছে...</div>';
   try {
-    if (!checkGithubConfigured()) { el.innerHTML = ''; return; }
-    const commits = await ghGetCommits(S.historyFile.path, 25);
+    if (!checkFileRepoConfigured(S.historyFile)) { el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3)">এই ফাইলের সাথে কোনো repo যুক্ত নেই — Settings-এ গিয়ে যুক্ত করুন।</div>'; return; }
+    const repo = getFileRepo(S.historyFile);
+    const commits = await ghGetCommits(repo, S.historyFile.path, 25);
     if (!commits.length) { el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3)">এই ফাইলের কোনো commit history পাওয়া যায়নি।</div>'; return; }
     el.innerHTML = commits.map((c, idx) => `
       <div class="commit-item">
@@ -1125,7 +1345,8 @@ async function selectHistoryFile(i) {
 async function previewCommit(sha) {
   try {
     showToast('⏳ লোড হচ্ছে...', 'info');
-    const res = await ghGetFileAtCommit(S.historyFile.path, sha);
+    const repo = getFileRepo(S.historyFile);
+    const res = await ghGetFileAtCommit(repo, S.historyFile.path, sha);
     const blob = new Blob([res.content], { type: 'text/html' });
     window.open(URL.createObjectURL(blob), '_blank');
   } catch (e) { showToast('❌ ' + e.message, 'error'); }
@@ -1134,11 +1355,16 @@ async function rollbackToCommit(sha, msg) {
   if (!confirm(`"${S.historyFile.label}" ফাইলটা এই ভার্সনে ফিরিয়ে নিতে চান?\n\n"${msg}" (${sha.slice(0, 7)})\n\nএটা একটা নতুন commit হিসেবে যোগ হবে — বর্তমান ভার্সন হারাবে না, GitHub history-তে থেকে যাবে।`)) return;
   try {
     showToast('⏳ Rollback করা হচ্ছে...', 'info');
-    const oldFile = await ghGetFileAtCommit(S.historyFile.path, sha);
-    const latest = await ghGetFile(S.historyFile.path);
-    const res = await ghPutFile(S.historyFile.path, oldFile.content, latest.sha, `Rollback ${S.historyFile.path} to ${sha.slice(0, 7)} via Dev Studio`);
+    const repo = getFileRepo(S.historyFile);
+    const oldFile = await ghGetFileAtCommit(repo, S.historyFile.path, sha);
+    const latest = await ghGetFile(repo, S.historyFile.path);
+    const res = await ghPutFile(repo, S.historyFile.path, oldFile.content, latest.sha, `Rollback ${S.historyFile.path} to ${sha.slice(0, 7)} via Dev Studio`);
     showToast('✅ Rollback সম্পন্ন! সাইট আগের ভার্সনে ফিরে গেছে।', 'success');
     addActivityLog(`↩️ Rolled back "${S.historyFile.label}" to commit ${sha.slice(0, 7)} — new commit ${(res.commitSha || '').slice(0, 7)}`);
+    if (S.historyFile.isSelf) {
+      $('selfReloadBanner').style.display = 'block';
+      $('selfReloadBanner').innerHTML = `<div class="self-reload-banner"><span><i class="ti ti-refresh"></i> এটা Admin Panel-এরই কোড — rollback হয়ে গেছে, পরিবর্তন দেখতে reload করুন।</span><button class="btn btn-primary btn-sm" onclick="location.reload()"><i class="ti ti-refresh"></i> এখনই Reload করো</button></div>`;
+    }
     selectHistoryFile(S.files.findIndex(f => f.path === S.historyFile.path));
   } catch (e) {
     console.error(e);
@@ -1150,12 +1376,13 @@ async function rollbackToCommit(sha, msg) {
 function initStudio() {
   loadConnectionSettings();
   loadFiles();
+  loadRepos();
   S.activityLog = lsJson('wds_activity_log') || [];
-  renderFilePills();
   renderActivityLog();
-  if (ls('wds_gh_token') && ls('wds_gh_owner') && ls('wds_gh_repo')) updateConnPill(true);
+  refreshTopConnPill();
   if (S.files.length && !S.activeFile) S.activeFile = S.files[0];
   renderFilePills();
+  renderChatLog();
 }
 
 (function boot() {
