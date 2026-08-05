@@ -211,6 +211,19 @@ a{color:inherit;text-decoration:none}
 .self-file-badge{font-size:9.5px;font-weight:800;padding:2px 8px;border-radius:20px;background:var(--teal-bg);color:var(--teal);white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
 .repo-tag{font-size:9.5px;color:var(--text3);font-weight:700;margin-left:4px}
 
+/* ===== Auto-Memory / Project Map ===== */
+.file-manage-block{border-bottom:1px solid var(--border);padding:10px 0}
+.file-manage-block:last-child{border-bottom:none}
+.mem-status-row{display:flex;align-items:center;gap:8px;margin-top:6px;flex-wrap:wrap;font-size:10.5px}
+.mem-badge{padding:2px 8px;border-radius:20px;font-weight:800;white-space:nowrap}
+.mem-badge.cached{background:var(--green-bg);color:var(--green)}
+.mem-badge.uncached{background:var(--amber-bg);color:var(--amber)}
+.mem-time{color:var(--text3);font-weight:600}
+.map-viewer{margin-top:8px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;font-size:11px;max-height:220px;overflow-y:auto;font-family:'SFMono-Regular',Consolas,Menlo,monospace}
+.map-entry{padding:2px 0;color:var(--text2)}
+.map-entry .t{color:var(--text3);margin-right:6px}
+.map-entry.dup{color:var(--amber)}
+
 /* ===== Chat-style conversational editing ===== */
 .chat-log{max-height:420px;overflow-y:auto;padding:2px 2px 6px;margin-bottom:12px;display:flex;flex-direction:column;gap:10px}
 .chat-bubble{max-width:92%;border-radius:14px;padding:11px 13px;font-size:12.5px;line-height:1.6}
@@ -315,11 +328,13 @@ a{color:inherit;text-decoration:none}
               <button class="btn btn-ghost btn-xs" onclick="resetChatSession()" title="খসড়া বাতিল করে নতুন করে শুরু করুন"><i class="ti ti-refresh"></i> নতুন সেশন</button>
             </div>
             <div id="chatLog" class="chat-log"><div class="chat-empty">এখানে আপনার নির্দেশগুলো একের পর এক লিখুন — যেমন প্রথমে "বাটনটা সবুজ করো" তারপর "না, নীল করো" — প্রতিটা নির্দেশ আগেরটার উপর ভিত্তি করে কাজ করবে, যতক্ষণ না আপনি Accept &amp; Commit করছেন বা নতুন সেশন শুরু করছেন।</div></div>
-            <div class="field">
-              <label>নির্দিষ্ট কোড অংশ (ঐচ্ছিক — নির্ভুলতা বাড়ায়)</label>
-              <textarea id="studioTargetArea" placeholder="চাইলে এখানে ঠিক যে অংশটার আশেপাশে পরিবর্তন করতে চান তার কোড পেস্ট করুন। খালি রাখলে AI নিজে থেকেই প্রাসঙ্গিক অংশ খুঁজে বের করবে।" style="min-height:56px"></textarea>
-              <div class="lf-hint2">এটা দিলে টোকেন কম খরচ হয় এবং AI-এর সঠিক anchor বাছাইয়ের সম্ভাবনা বাড়ে। শুধু প্রথম মেসেজে প্রযোজ্য।</div>
-            </div>
+            <details class="field" style="margin-bottom:14px">
+              <summary style="cursor:pointer;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;list-style:none">⚙️ উন্নত অপশন — ম্যানুয়াল কোড override (সাধারণত লাগে না) ▸</summary>
+              <div style="margin-top:8px">
+                <textarea id="studioTargetArea" placeholder="সাধারণত খালি রাখুন — Auto-Memory + Project Map ইনডেক্স নিজে থেকেই প্রাসঙ্গিক কোড খুঁজে নেয়। কোনো বিরল/জটিল ক্ষেত্রে AI ঠিক জায়গা খুঁজে না পেলে এখানে সেই অংশের কোড পেস্ট করলে override হিসেবে কাজ করবে।" style="min-height:56px"></textarea>
+                <div class="lf-hint2">এটা এখন আর দরকার নেই — শুধু একেবারে edge-case-এর জন্য রাখা হয়েছে।</div>
+              </div>
+            </details>
             <div class="field">
               <label>ডিজাইন/মকআপ ছবি (ঐচ্ছিক)</label>
               <div class="upload-box" id="imgUploadBox" onclick="document.getElementById('studioImgInput').click()">
@@ -336,7 +351,7 @@ a{color:inherit;text-decoration:none}
             </div>
           </div>
 
-          <div class="alert info"><i class="ti ti-shield-check"></i> <b>Precision মোড:</b> AI পুরো ফাইল কখনো রি-রাইট করবে না। সে শুধু নির্দিষ্ট <code>searchAnchor</code> খুঁজে সেই জায়গায় নতুন কোড <code>INSERT_AFTER</code> / <code>INSERT_BEFORE</code> করবে অথবা ঠিক ওই অংশটুকু <code>REPLACE</code> করবে — বাকি পুরো ফাইল অক্ষত থাকে।</div>
+          <div class="alert info"><i class="ti ti-shield-check"></i> <b>Precision মোড + Auto-Memory:</b> ফাইলের কোড একবার লোড হলে Auto-Memory-তে সংরক্ষিত থাকে (বারবার পুরো কোড দিতে হয় না) আর Project Map ইনডেক্স স্বয়ংক্রিয়ভাবে প্রাসঙ্গিক জায়গা খুঁজে বের করে — বেশিরভাগ সময় কোনো অতিরিক্ত AI কলও লাগে না। ছোটখাটো হোয়াইটস্পেস/ইনডেন্টেশন পার্থক্য এখন fuzzy-matching দিয়ে সামলানো হয়। তবে AI পুরো ফাইল কখনো রি-রাইট করে না, আর কোনো জায়গা ফাইলে একাধিকবার/অস্পষ্টভাবে মিললে নিরাপত্তার জন্য সেই patch skip করা হয় — অনুমান করে ভুল জায়গায় বসায় না।</div>
         </div>
 
         <div>
@@ -471,6 +486,7 @@ const S = {
   historyFile: null,
   chatLog: [],           // [{role:'user'|'ai'|'error', text, summary, patches}]
   sessionActive: false,  // whether a draft session has been loaded for the active file
+  fileCache: {},          // Auto-Memory: {[repoId::path]: {content, sha, cachedAt, index}}
 };
 
 // ═══════════════════════ STORAGE HELPERS ═══════════════════════
@@ -688,8 +704,11 @@ async function ghPutFile(repo, path, content, sha, message) {
     body: JSON.stringify({ message, content: b64EncodeUnicode(content), sha, branch }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || 'GitHub পুশ ব্যর্থ');
-  return { commitSha: data.commit && data.commit.sha };
+  if (!res.ok) {
+    if (res.status === 409) throw new Error('Commit ব্যর্থ — ফাইলটা GitHub-এ এর মধ্যেই অন্য কোথাও থেকে পরিবর্তন হয়েছে (sha mismatch)। Settings থেকে এই ফাইলটা "Sync Now" করে আবার চেষ্টা করুন।');
+    throw new Error(data.message || 'GitHub পুশ ব্যর্থ');
+  }
+  return { commitSha: data.commit && data.commit.sha, contentSha: data.content && data.content.sha };
 }
 async function ghGetCommits(repo, path, per_page = 25) {
   const branch = repo.branch || 'main';
@@ -722,10 +741,12 @@ function renderActiveFileConnInfo() {
   const el = $('activeFileConnInfo'); if (!el) return;
   if (!S.activeFile) { el.innerHTML = ''; return; }
   const repo = getFileRepo(S.activeFile);
+  const cache = getCachedFile(S.activeFile);
+  const memBadge = cache ? `<span class="mem-badge cached" style="margin-left:6px">🧠 Auto-Memory: ${cache.index.length} entry indexed</span>` : `<span class="mem-badge uncached" style="margin-left:6px">⚪ প্রথম মেসেজে লোড হবে</span>`;
   if (!repo) {
     el.innerHTML = `<div class="alert warn" style="margin-bottom:0"><i class="ti ti-plug-off"></i> "${escHtml(S.activeFile.label)}" ফাইলের সাথে এখনো কোনো GitHub repo যুক্ত করা হয়নি — Settings-এ গিয়ে যুক্ত করুন।</div>`;
   } else {
-    el.innerHTML = `<div class="lf-hint2" style="margin-bottom:0"><i class="ti ti-plug-connected" style="color:var(--green)"></i> "${escHtml(S.activeFile.label)}" ➜ যুক্ত আছে repo <b>${escHtml(repo.owner + '/' + repo.repo)}</b> (branch: ${escHtml(repo.branch || 'main')})${S.activeFile.isSelf ? ' — <span style="color:var(--teal);font-weight:700">🔧 এটা এই Admin Panel-এর নিজস্ব কোড</span>' : ''}</div>`;
+    el.innerHTML = `<div class="lf-hint2" style="margin-bottom:0"><i class="ti ti-plug-connected" style="color:var(--green)"></i> "${escHtml(S.activeFile.label)}" ➜ যুক্ত আছে repo <b>${escHtml(repo.owner + '/' + repo.repo)}</b> (branch: ${escHtml(repo.branch || 'main')})${S.activeFile.isSelf ? ' — <span style="color:var(--teal);font-weight:700">🔧 এটা এই Admin Panel-এর নিজস্ব কোড</span>' : ''}${memBadge}</div>`;
   }
 }
 function selectFile(i) {
@@ -741,15 +762,56 @@ function renderFileRepoOptions(selectedId) {
 function renderFileManageList() {
   const el = $('fileManageList'); if (!el) return;
   renderFileRepoOptions();
-  el.innerHTML = S.files.map((f, i) => `
-    <div class="file-manage-row">
-      <input type="text" value="${escHtml(f.label)}" onchange="updateManagedFile(${i},'label',this.value)">
-      <input type="text" value="${escHtml(f.path)}" onchange="updateManagedFile(${i},'path',this.value)">
-      <select onchange="updateManagedFile(${i},'repoId',this.value)">${S.repos.map(r => `<option value="${r.id}" ${f.repoId === r.id ? 'selected' : ''}>${escHtml(r.label)}</option>`).join('') || '<option value="">কোনো repo নেই</option>'}</select>
-      <label class="file-manage-self"><input type="checkbox" ${f.isSelf ? 'checked' : ''} onchange="updateManagedFile(${i},'isSelf',this.checked)"> 🔧 Self</label>
-      <button class="btn btn-danger btn-xs" onclick="removeManagedFile(${i})"><i class="ti ti-trash"></i></button>
-    </div>`).join('') || '<div style="color:var(--text3);font-size:12.5px;padding:8px 0">কোনো ফাইল যোগ করা হয়নি।</div>';
+  el.innerHTML = S.files.map((f, i) => {
+    const cache = getCachedFile(f);
+    const idxCount = cache && cache.index ? cache.index.length : 0;
+    return `
+    <div class="file-manage-block">
+      <div class="file-manage-row" style="border-bottom:none;padding:0">
+        <input type="text" value="${escHtml(f.label)}" onchange="updateManagedFile(${i},'label',this.value)">
+        <input type="text" value="${escHtml(f.path)}" onchange="updateManagedFile(${i},'path',this.value)">
+        <select onchange="updateManagedFile(${i},'repoId',this.value)">${S.repos.map(r => `<option value="${r.id}" ${f.repoId === r.id ? 'selected' : ''}>${escHtml(r.label)}</option>`).join('') || '<option value="">কোনো repo নেই</option>'}</select>
+        <label class="file-manage-self"><input type="checkbox" ${f.isSelf ? 'checked' : ''} onchange="updateManagedFile(${i},'isSelf',this.checked)"> 🔧 Self</label>
+        <button class="btn btn-danger btn-xs" onclick="removeManagedFile(${i})"><i class="ti ti-trash"></i></button>
+      </div>
+      <div class="mem-status-row">
+        <span class="mem-badge ${cache ? 'cached' : 'uncached'}">${cache ? `🧠 Auto-Memory-এ আছে · ${idxCount} entry` : '⚪ এখনো লোড হয়নি'}</span>
+        ${cache ? `<span class="mem-time">শেষ sync: ${new Date(cache.cachedAt).toLocaleString()}</span>` : ''}
+        <button class="btn btn-ghost btn-xs" onclick="syncFileNow(${i})" id="syncBtn${i}"><i class="ti ti-refresh"></i> Sync Now</button>
+        ${cache ? `<button class="btn btn-ghost btn-xs" onclick="toggleFileMap(${i})"><i class="ti ti-map"></i> Project Map দেখুন</button>` : ''}
+      </div>
+      <div class="map-viewer" id="mapViewer${i}" style="display:none"></div>
+    </div>`;
+  }).join('') || '<div style="color:var(--text3);font-size:12.5px;padding:8px 0">কোনো ফাইল যোগ করা হয়নি।</div>';
 }
+async function syncFileNow(i) {
+  const f = S.files[i];
+  if (!checkFileRepoConfigured(f)) return;
+  const btn = $('syncBtn' + i);
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader spin-ico"></i> Sync হচ্ছে...'; }
+  try {
+    const repo = getFileRepo(f);
+    const res = await ghGetFile(repo, f.path);
+    setCachedFile(f, res.content, res.sha);
+    renderFileManageList();
+    showToast(`🧠 "${f.label}" Auto-Memory-এ সিঙ্ক হলো — ${getCachedFile(f).index.length}টা কোড-এন্ট্রি ম্যাপ করা হয়েছে`, 'success');
+    addActivityLog(`🧠 Synced "${f.label}" into Auto-Memory (${getCachedFile(f).index.length} indexed entries)`);
+  } catch (e) {
+    showToast('❌ Sync ব্যর্থ: ' + e.message, 'error');
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-refresh"></i> Sync Now'; }
+  }
+}
+function toggleFileMap(i) {
+  const el = $('mapViewer' + i); if (!el) return;
+  if (el.style.display === 'block') { el.style.display = 'none'; return; }
+  const f = S.files[i];
+  const cache = getCachedFile(f);
+  if (!cache) { el.innerHTML = '<div style="color:var(--text3)">প্রথমে Sync করুন।</div>'; el.style.display = 'block'; return; }
+  const dupClasses = new Set(cache.index.filter(e => e.type === 'class' && e.count > 1).map(e => e.name));
+  el.innerHTML = cache.index.map(e => `<div class="map-entry ${e.type === 'class' && dupClasses.has(e.name) ? 'dup' : ''}"><span class="t">[${e.type}]</span>${escHtml(e.name)} <span style="color:var(--text3)">· line ${e.line}${e.count > 1 ? ` · ${e.count}× (repeated)` : ''}</span></div>`).join('') || '<div style="color:var(--text3)">কোনো id/function/comment marker পাওয়া যায়নি।</div>';
+  el.style.display = 'block';
+}
+function updateManagedFile(i, field, val) { S.files[i][field] = val; saveFiles(); renderFilePills(); if (S.activeFile && S.activeFile.path === S.files[i].path) S.activeFile = S.files[i]; }
 function addManagedFile() {
   const label = $('newFileLabel').value.trim(), path = $('newFilePath').value.trim();
   const repoId = $('newFileRepo').value;
@@ -761,13 +823,78 @@ function addManagedFile() {
   $('newFileLabel').value = ''; $('newFilePath').value = ''; $('newFileIsSelf').checked = false;
   showToast('✅ ফাইল যোগ হয়েছে', 'success');
 }
-function updateManagedFile(i, field, val) { S.files[i][field] = val; saveFiles(); renderFilePills(); if (S.activeFile && S.activeFile.path === S.files[i].path) S.activeFile = S.files[i]; }
 function removeManagedFile(i) {
   if (!confirm(`"${S.files[i].label}" ফাইলটা লিস্ট থেকে সরাতে চান? (GitHub-এর আসল ফাইল মুছবে না)`)) return;
   S.files.splice(i, 1); saveFiles(); renderFileManageList(); renderFilePills();
 }
 
-// ═══════════════════════ PROVIDER + IMAGE ═══════════════════════
+// ═══════════════════════ AUTO-MEMORY + PROJECT MAP INDEX ═══════════════════════
+// Hybrid Auto-Memory & Dynamic Indexing: caches each file's real GitHub content locally
+// (so repeat sessions don't need a fresh fetch or a re-pasted snippet) and builds a light
+// structural index (ids, functions, comment markers) so relevant code can be located by
+// name/keyword match WITHOUT an extra AI call in the common case — this is what keeps
+// token usage down and removes the practical need for manually pasted "specific code" input.
+function cacheKey(file) { return file.repoId + '::' + file.path; }
+function loadFileCache() { S.fileCache = lsJson('wds_file_cache') || {}; }
+function saveFileCacheStore() { lsJson('wds_file_cache', S.fileCache); }
+function getCachedFile(file) { return file ? S.fileCache[cacheKey(file)] || null : null; }
+function setCachedFile(file, content, sha) {
+  S.fileCache[cacheKey(file)] = { content, sha, cachedAt: Date.now(), index: buildFileIndex(content) };
+  saveFileCacheStore();
+}
+function lineOf(content, charIdx) { return content.slice(0, charIdx).split('\n').length; }
+function buildFileIndex(content) {
+  const entries = [];
+  const counts = {};
+  const bump = (type, name) => { const k = type + ':' + name; counts[k] = (counts[k] || 0) + 1; return counts[k]; };
+  let m;
+  const idRe = /\bid=["']([\w-]+)["']/g;
+  while ((m = idRe.exec(content))) entries.push({ type: 'id', name: m[1], line: lineOf(content, m.index), count: bump('id', m[1]) });
+  const fnRe = /(?:async\s+function|function)\s+([A-Za-z_$][\w$]*)\s*\(/g;
+  while ((m = fnRe.exec(content))) entries.push({ type: 'function', name: m[1], line: lineOf(content, m.index), count: bump('function', m[1]) });
+  const arrowRe = /\b(?:const|let)\s+([A-Za-z_$][\w$]*)\s*=\s*(?:async\s*)?\(/g;
+  while ((m = arrowRe.exec(content))) entries.push({ type: 'function', name: m[1], line: lineOf(content, m.index), count: bump('function', m[1]) });
+  const commentRe = /<!--\s*([^\n>]{3,80}?)\s*-->/g;
+  while ((m = commentRe.exec(content))) entries.push({ type: 'comment', name: m[1].trim(), line: lineOf(content, m.index), count: bump('comment', m[1].trim()) });
+  const classRe = /\bclass=["']([^"']{1,60})["']/g;
+  while ((m = classRe.exec(content))) {
+    m[1].split(/\s+/).filter(Boolean).forEach(c => entries.push({ type: 'class', name: c, line: lineOf(content, m.index), count: bump('class', c) }));
+  }
+  // fix up final counts (bump computed count during first pass sequentially so backfill true totals)
+  entries.forEach(e => { e.count = counts[e.type + ':' + e.name]; });
+  return entries;
+}
+function matchIndexToPrompt(index, prompt) {
+  const tokens = tokenizePrompt(prompt).map(t => t.toLowerCase());
+  if (!tokens.length || !index || !index.length) return null;
+  const scored = index.map(e => {
+    const nameLower = e.name.toLowerCase();
+    let score = 0;
+    tokens.forEach(t => {
+      if (nameLower === t) score += 4;
+      else if (nameLower.includes(t) || t.includes(nameLower)) score += 2;
+    });
+    if (e.type === 'id' || e.type === 'function') score *= 1.3; // ids/functions are stronger anchors than generic classes
+    return { e, score };
+  }).filter(x => x.score > 0).sort((a, b) => b.score - a.score);
+  if (!scored.length) return null;
+  return scored.slice(0, 6).map(x => x.e);
+}
+function buildMapIndexContext(content, index, prompt) {
+  const hits = matchIndexToPrompt(index, prompt);
+  if (!hits || !hits.length) return null;
+  const lines = content.split('\n');
+  const ranges = [];
+  hits.forEach(h => {
+    const start = Math.max(0, h.line - 1 - CONTEXT_WINDOW_LINES);
+    const end = Math.min(lines.length, h.line - 1 + CONTEXT_WINDOW_LINES + 1);
+    if (ranges.length && start <= ranges[ranges.length - 1][1]) ranges[ranges.length - 1][1] = Math.max(ranges[ranges.length - 1][1], end);
+    else ranges.push([start, end]);
+  });
+  let out = ranges.map(([s, e]) => `/* ...lines ${s + 1}-${e}... */\n` + lines.slice(s, e).join('\n')).join('\n\n');
+  if (out.length > MAX_CONTEXT_CHARS) out = out.slice(0, MAX_CONTEXT_CHARS) + '\n/* ...truncated... */';
+  return out;
+}
 function setProvider(p) {
   S.provider = p;
   $('provGemini').classList.toggle('active', p === 'gemini');
@@ -796,7 +923,7 @@ function removeStudioImage() {
 
 // ═══════════════════════ AI CALLS — DIRECT (Gemini / Groq) ═══════════════════════
 function buildAISystemPrompt(fileName) {
-  return `তুমি একজন এক্সপার্ট ওয়েব ডেভেলপার এবং তোমার একমাত্র কাজ পদ্ধতি হলো "Precision Patch" — তুমি কখনোই পুরো ফাইল নতুন করে লিখবে না বা রি-রাইট করবে না। তুমি শুধু নির্দিষ্ট, ছোট, targeted কোড পরিবর্তন/সংযোজন করবে।
+  return `তুমি একটা autonomous full-repo code patching engine — এই অ্যাপের Hybrid Auto-Memory ও Project Map ইনডেক্সিং সিস্টেমের অংশ। ব্যবহারকারীর কাছ থেকে কখনো ম্যানুয়াল কোড স্নিপেট বা লাইন নম্বর চাইবে না — নিচে যা প্রাসঙ্গিক কোড (Project Map ইনডেক্স বা keyword ম্যাচ থেকে স্বয়ংক্রিয়ভাবে বাছাই করা) দেওয়া আছে তা দিয়েই কাজ চালাবে। তোমার একমাত্র কাজ পদ্ধতি হলো "Precision Patch" — তুমি কখনোই পুরো ফাইল নতুন করে লিখবে না বা রি-রাইট করবে না। তুমি শুধু নির্দিষ্ট, ছোট, targeted কোড পরিবর্তন/সংযোজন করবে — সেরা যুক্তিসঙ্গত জায়গায় (best logical code block)।
 
 টার্গেট ফাইল: "${fileName}"
 
@@ -939,10 +1066,17 @@ async function selectRelevantChunksViaAI(chunks, prompt, hasImage) {
   }
   return null;
 }
-async function buildSmartContext(content, prompt, hasImage, onStatus) {
+async function buildSmartContext(content, prompt, hasImage, onStatus, fileIndex) {
   if (content.length <= SMALL_FILE_CHARS) return { context: content, mode: 'full' };
+  // 1) Project Map Index — offline, zero AI-call keyword→id/function/comment matching (fastest, cheapest)
+  if (fileIndex && fileIndex.length) {
+    const mapCtx = buildMapIndexContext(content, fileIndex, prompt);
+    if (mapCtx) return { context: mapCtx, mode: 'map' };
+  }
+  // 2) plain keyword-in-line search fallback
   const kw = buildKeywordContext(content, prompt);
   if (kw) return { context: kw, mode: 'keyword' };
+  // 3) last resort — ask the AI itself to point at likely chunks (only extra call when 1 & 2 both miss)
   if (onStatus) onStatus();
   const chunks = splitIntoChunks(content);
   let chosen = null;
@@ -1025,21 +1159,33 @@ async function sendChatMessage() {
   $('rawAiCard').style.display = 'none';
   try {
     if (!S.sessionActive) {
-      addThinkingBubble('ফাইল লোড হচ্ছে...');
-      const fileRes = await ghGetFile(repo, S.activeFile.path);
-      S.currentContent = fileRes.content;
-      S.currentSha = fileRes.sha;
-      S.previewContent = fileRes.content;
-      S.sessionActive = true;
+      const cached = getCachedFile(S.activeFile);
+      if (cached) {
+        S.currentContent = cached.content;
+        S.currentSha = cached.sha;
+        S.previewContent = cached.content;
+        S.sessionActive = true;
+        addActivityLog(`🧠 "${S.activeFile.label}" Auto-Memory থেকে লোড হলো — কোনো নতুন GitHub কল লাগেনি`);
+      } else {
+        addThinkingBubble('ফাইল প্রথমবার লোড হচ্ছে ও Auto-Memory-তে সংরক্ষণ হচ্ছে...');
+        const fileRes = await ghGetFile(repo, S.activeFile.path);
+        S.currentContent = fileRes.content;
+        S.currentSha = fileRes.sha;
+        S.previewContent = fileRes.content;
+        S.sessionActive = true;
+        setCachedFile(S.activeFile, fileRes.content, fileRes.sha);
+        renderFileManageList();
+      }
     }
     const baseContent = S.previewContent;
+    const fileIndex = (getCachedFile(S.activeFile) || {}).index || [];
 
     const manualTarget = $('studioTargetArea').value.trim();
     let contextText, contextMode;
     if (manualTarget) { contextText = manualTarget; contextMode = 'manual'; }
     else {
-      addThinkingBubble('প্রাসঙ্গিক অংশ খোঁজা হচ্ছে...');
-      const smart = await buildSmartContext(baseContent, prompt, !!S.pendingImage, () => addThinkingBubble('AI প্রাসঙ্গিক অংশ বাছাই করছে...'));
+      addThinkingBubble('Project Map ইনডেক্স দিয়ে প্রাসঙ্গিক অংশ খোঁজা হচ্ছে...');
+      const smart = await buildSmartContext(baseContent, prompt, !!S.pendingImage, () => addThinkingBubble('স্থানীয় ইনডেক্সে মেলেনি — AI দিয়ে প্রাসঙ্গিক অংশ বাছাই করা হচ্ছে...'), fileIndex);
       contextText = smart.context; contextMode = smart.mode;
     }
 
@@ -1113,7 +1259,7 @@ async function sendChatMessage() {
       showToast('⚠️ কোনো patch প্রয়োগ করা যায়নি — নিচে বিস্তারিত দেখুন', 'error');
     }
 
-    const modeLabel = { full: 'পুরো ফাইল', keyword: 'কিওয়ার্ড-ম্যাচড অংশ', 'ai-chunk': 'AI-বাছাইকৃত অংশ', manual: 'ম্যানুয়াল অংশ' }[contextMode] || contextMode;
+    const modeLabel = { full: 'পুরো ফাইল', map: '🧠 Project Map ইনডেক্স (AI কল ছাড়াই)', keyword: 'কিওয়ার্ড-ম্যাচড অংশ', 'ai-chunk': 'AI-বাছাইকৃত অংশ', manual: 'ম্যানুয়াল অংশ' }[contextMode] || contextMode;
     addActivityLog(`✨ Chat turn for "${S.activeFile.label}" (context: ${modeLabel}) — ${appliedCount}/${patches.length} applied — ${(aiRes.summary || '').slice(0, 80)}`);
   } catch (e) {
     console.error(e);
@@ -1133,13 +1279,30 @@ function countOccurrences(haystack, needle) {
   if (!needle) return 0;
   return haystack.split(needle).length - 1;
 }
+// Whitespace/indentation-tolerant anchor resolver. Tries an exact match first (fastest,
+// most reliable); only if that fails does it fall back to a fuzzy, whitespace-normalized
+// search. Crucially: it still requires the resolved match to be UNIQUE in the file before
+// treating it as applicable — this is what keeps "fuzzy" from turning into "guess a spot
+// and hope", which would risk corrupting a live file. If it's not unique, it's reported as
+// ambiguous exactly like an exact-match anchor would be, never silently picked.
+function fuzzyFindAnchor(haystack, anchor) {
+  const exactCount = countOccurrences(haystack, anchor);
+  if (exactCount >= 1) return { text: anchor, count: exactCount, index: haystack.indexOf(anchor), fuzzy: false };
+  const escaped = anchor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const pattern = escaped.replace(/\s+/g, '\\s+');
+  let re;
+  try { re = new RegExp(pattern, 'g'); } catch (e) { return { text: null, count: 0, index: -1, fuzzy: false }; }
+  const matches = [...haystack.matchAll(re)];
+  if (!matches.length) return { text: null, count: 0, index: -1, fuzzy: false };
+  return { text: matches[0][0], count: matches.length, index: matches[0].index, fuzzy: true };
+}
 function trimEdgeLines(text) {
   // trims to whole-line boundaries so context looks clean, not mid-word cut
   const lines = text.split('\n');
   if (lines.length > 1) { lines.shift(); } // drop possibly-partial first line
   return lines.join('\n');
 }
-function buildDiffHtml(contentBefore, idx, anchor, action, newSnippet) {
+function buildDiffHtml(contentBefore, idx, anchor, action, newSnippet, fuzzy) {
   const CTX = 220;
   let beforeCtx = contentBefore.slice(Math.max(0, idx - CTX), idx);
   let afterCtx = contentBefore.slice(idx + anchor.length, idx + anchor.length + CTX);
@@ -1149,6 +1312,7 @@ function buildDiffHtml(contentBefore, idx, anchor, action, newSnippet) {
   afterCtx = afterLines.join('\n');
 
   let html = '';
+  if (fuzzy) html += `<span class="diff-line ctx">🧠 fuzzy-matched — সামান্য হোয়াইটস্পেস/ইনডেন্টেশন পার্থক্য ছিল, তাও ফাইলের আসল টেক্সট থেকেই একবার-মাত্র এই জায়গাটা নিশ্চিতভাবে মিলেছে</span>`;
   if (beforeCtx.trim()) html += `<span class="diff-line ctx">${escHtml(beforeCtx)}</span>`;
   if (action === 'REPLACE') {
     html += `<span class="diff-line del">− ${escHtml(anchor)}</span>`;
@@ -1171,17 +1335,19 @@ function runAnchorPatches(baseContent, patchesArr, activeFilePath) {
       p.diffHtml = `<span class="diff-line del">এই patch অন্য ফাইলের জন্য (${escHtml(p.filePath || '—')}), কিন্তু বর্তমানে শুধু "${escHtml(activeFilePath || '')}" লোড করা আছে — বাদ দেওয়া হয়েছে।</span>`;
       return;
     }
-    const anchor = p.searchAnchor || '';
-    if (!anchor) { p.status = 'no_anchor'; p.diffHtml = '<span class="diff-line del">searchAnchor খালি — এই patch প্রয়োগ করা যায়নি।</span>'; return; }
+    const anchorRaw = p.searchAnchor || '';
+    if (!anchorRaw) { p.status = 'no_anchor'; p.diffHtml = '<span class="diff-line del">searchAnchor খালি — এই patch প্রয়োগ করা যায়নি।</span>'; return; }
     if (!['INSERT_AFTER', 'INSERT_BEFORE', 'REPLACE'].includes(p.action)) {
       p.status = 'invalid_action'; p.diffHtml = `<span class="diff-line del">অজানা action: "${escHtml(p.action)}" — শুধু INSERT_AFTER/INSERT_BEFORE/REPLACE সাপোর্টেড।</span>`; return;
     }
-    const count = countOccurrences(working, anchor);
-    if (count === 0) { p.status = 'not_found'; p.diffHtml = `<span class="diff-line del">searchAnchor ফাইলে খুঁজে পাওয়া যায়নি:</span><span class="diff-line ctx">${escHtml(anchor.slice(0, 300))}</span>`; return; }
-    if (count > 1) { p.status = 'ambiguous'; p.count = count; p.diffHtml = `<span class="diff-line del">এই searchAnchor ফাইলে ${count} বার পাওয়া গেছে (unique হতে হবে):</span><span class="diff-line ctx">${escHtml(anchor.slice(0, 300))}</span>`; return; }
+    const found = fuzzyFindAnchor(working, anchorRaw);
+    if (found.count === 0) { p.status = 'not_found'; p.diffHtml = `<span class="diff-line del">searchAnchor ফাইলে খুঁজে পাওয়া যায়নি (exact ও fuzzy দুই চেষ্টাতেই):</span><span class="diff-line ctx">${escHtml(anchorRaw.slice(0, 300))}</span>`; return; }
+    if (found.count > 1) { p.status = 'ambiguous'; p.count = found.count; p.diffHtml = `<span class="diff-line del">এই searchAnchor ফাইলে ${found.count} বার পাওয়া গেছে (unique হতে হবে):</span><span class="diff-line ctx">${escHtml(anchorRaw.slice(0, 300))}</span>`; return; }
 
-    const idx = working.indexOf(anchor);
-    p.diffHtml = buildDiffHtml(working, idx, anchor, p.action, p.newSnippet);
+    const anchor = found.text; // use the REAL matched substring from the file, not the AI's (possibly slightly-off) version
+    const idx = found.index;
+    p.fuzzy = found.fuzzy;
+    p.diffHtml = buildDiffHtml(working, idx, anchor, p.action, p.newSnippet, found.fuzzy);
 
     let newWorking;
     if (p.action === 'INSERT_AFTER') newWorking = working.slice(0, idx + anchor.length) + '\n' + p.newSnippet + working.slice(idx + anchor.length);
@@ -1214,6 +1380,7 @@ function renderPatchList() {
       <div class="patch-hd" onclick="togglePatchBody(${i})">
         <span class="patch-status ${p.status}">${STATUS_LABELS[p.status] || p.status}</span>
         <span class="action-badge ${p.action}">${escHtml(p.action || '?')}</span>
+        ${p.fuzzy ? '<span class="self-file-badge" style="background:var(--blue-bg);color:var(--blue)">🧠 fuzzy</span>' : ''}
         <span class="patch-desc">${escHtml(p.description || 'Patch ' + (i + 1))}</span>
         <i class="ti ti-chevron-down patch-toggle-ico" id="patchToggleIco${i}"></i>
       </div>
@@ -1291,8 +1458,11 @@ async function acceptAndCommit() {
     if (!checkFileRepoConfigured(S.activeFile)) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-rocket"></i> Accept &amp; Commit to GitHub'; return; }
     // re-fetch latest sha right before commit, in case the file changed meanwhile
     const latest = await ghGetFile(repo, S.activeFile.path);
+    setCachedFile(S.activeFile, latest.content, latest.sha); // keep Auto-Memory in sync with true GitHub state
     const codeToCommit = $('previewCodeBox').value || S.previewContent;
     const res = await ghPutFile(repo, S.activeFile.path, codeToCommit, latest.sha, `AI Studio Precision Patch: ${summary}`.slice(0, 200));
+    setCachedFile(S.activeFile, codeToCommit, res.contentSha || latest.sha); // cache now reflects the newly committed truth
+    renderFileManageList();
     showToast('🚀 Commit হয়ে গেছে! কিছুক্ষণের মধ্যে লাইভ সাইটে দেখা যাবে।', 'success');
     addActivityLog(`🚀 Committed "${S.activeFile.label}" — commit ${(res.commitSha || '').slice(0, 7)} — ${totalApplied} patches applied — ${summary.slice(0, 120)}`);
     const wasSelf = !!S.activeFile.isSelf;
@@ -1378,6 +1548,7 @@ function initStudio() {
   loadConnectionSettings();
   loadFiles();
   loadRepos();
+  loadFileCache();
   S.activityLog = lsJson('wds_activity_log') || [];
   renderActivityLog();
   refreshTopConnPill();
