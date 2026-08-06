@@ -305,6 +305,7 @@ a{color:inherit;text-decoration:none}
       <div class="alert info" id="noFilesAlert" style="display:none"><i class="ti ti-info-circle"></i> এখনো কোনো ফাইল যোগ করা হয়নি। আগে <b>Settings</b>-এ গিয়ে আপনার GitHub Repository ও ফাইল path যোগ করুন।</div>
       <div id="selfReloadBanner" style="display:none"></div>
       <div id="activeFileConnInfo" style="margin-bottom:10px"></div>
+      <div id="emergencyRollbackWrap" style="margin-bottom:14px"></div>
 
       <div id="filePillsWrap">
         <div class="lf-hint2" style="margin-bottom:8px">কোন ফাইলে পরিবর্তন করতে চান?</div>
@@ -689,11 +690,23 @@ function ghHeaders(repo) {
 function ghBase(repo) {
   return `https://api.github.com/repos/${repo.owner}/${repo.repo}`;
 }
+// 404 from the GitHub Contents/Commits API almost never means "your instructions were wrong" —
+// it means one of: (a) owner/repo is misspelled, (b) the branch name doesn't exist, (c) the file
+// path doesn't exist at that exact path in that repo, or (d) the token doesn't have access to that
+// repo (wrong token, or a fine-grained PAT scoped to a different repo). Surface all four clearly
+// instead of a bare "404" so it's fixable from Settings without guessing.
+function explainGhError(repo, res, data) {
+  if (res.status === 404) {
+    return `404 Not Found — এই repo/path/branch খুঁজে পাওয়া যায়নি। Settings-এ গিয়ে চেক করুন: (১) owner/repo বানান ঠিক আছে কিনা (এখন সেট করা আছে: "${repo.owner}/${repo.repo}"), (২) branch নাম ঠিক আছে কিনা (এখন: "${repo.branch || 'main'}"), (৩) এই Token-টা আসলেই এই repo-তে access পায় কিনা (fine-grained PAT হলে ভুল repo-তে scope করা থাকতে পারে), (৪) ফাইলের path বানান ঠিক আছে কিনা।`;
+  }
+  if (res.status === 401 || res.status === 403) return 'Token ভুল, মেয়াদ শেষ হয়ে গেছে, অথবা এই repo-তে যথেষ্ট পারমিশন নেই (Contents: Read & Write দরকার)।';
+  return data && data.message ? data.message : `GitHub রিকোয়েস্ট ব্যর্থ (${res.status})`;
+}
 async function ghGetFile(repo, path) {
   const branch = repo.branch || 'main';
   const res = await fetch(`${ghBase(repo)}/contents/${path.split('/').map(encodeURIComponent).join('/')}?ref=${encodeURIComponent(branch)}`, { headers: ghHeaders(repo) });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || 'GitHub ফাইল রিড ব্যর্থ');
+  if (!res.ok) throw new Error(explainGhError(repo, res, data));
   return { content: b64DecodeUnicode(data.content), sha: data.sha };
 }
 async function ghPutFile(repo, path, content, sha, message) {
@@ -706,7 +719,7 @@ async function ghPutFile(repo, path, content, sha, message) {
   const data = await res.json();
   if (!res.ok) {
     if (res.status === 409) throw new Error('Commit ব্যর্থ — ফাইলটা GitHub-এ এর মধ্যেই অন্য কোথাও থেকে পরিবর্তন হয়েছে (sha mismatch)। Settings থেকে এই ফাইলটা "Sync Now" করে আবার চেষ্টা করুন।');
-    throw new Error(data.message || 'GitHub পুশ ব্যর্থ');
+    throw new Error(explainGhError(repo, res, data));
   }
   return { commitSha: data.commit && data.commit.sha, contentSha: data.content && data.content.sha };
 }
@@ -714,15 +727,16 @@ async function ghGetCommits(repo, path, per_page = 25) {
   const branch = repo.branch || 'main';
   const res = await fetch(`${ghBase(repo)}/commits?path=${encodeURIComponent(path)}&sha=${encodeURIComponent(branch)}&per_page=${per_page}`, { headers: ghHeaders(repo) });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || 'Commit history লোড ব্যর্থ');
+  if (!res.ok) throw new Error(explainGhError(repo, res, data));
   return data.map(c => ({ sha: c.sha, message: c.commit.message, author: c.commit.author ? c.commit.author.name : '', date: c.commit.author ? c.commit.author.date : '' }));
 }
 async function ghGetFileAtCommit(repo, path, sha) {
   const res = await fetch(`${ghBase(repo)}/contents/${path.split('/').map(encodeURIComponent).join('/')}?ref=${sha}`, { headers: ghHeaders(repo) });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.message || 'পুরনো ভার্সন লোড ব্যর্থ');
+  if (!res.ok) throw new Error(explainGhError(repo, res, data));
   return { content: b64DecodeUnicode(data.content) };
 }
+
 
 // ═══════════════════════ MANAGED FILES ═══════════════════════
 function loadFiles() { S.files = lsJson('wds_files') || []; }
@@ -739,7 +753,8 @@ function renderFilePills() {
 }
 function renderActiveFileConnInfo() {
   const el = $('activeFileConnInfo'); if (!el) return;
-  if (!S.activeFile) { el.innerHTML = ''; return; }
+  const rbWrap = $('emergencyRollbackWrap');
+  if (!S.activeFile) { el.innerHTML = ''; if (rbWrap) rbWrap.innerHTML = ''; return; }
   const repo = getFileRepo(S.activeFile);
   const cache = getCachedFile(S.activeFile);
   const memBadge = cache ? `<span class="mem-badge cached" style="margin-left:6px">🧠 Auto-Memory: ${cache.index.length} entry indexed</span>` : `<span class="mem-badge uncached" style="margin-left:6px">⚪ প্রথম মেসেজে লোড হবে</span>`;
@@ -747,6 +762,44 @@ function renderActiveFileConnInfo() {
     el.innerHTML = `<div class="alert warn" style="margin-bottom:0"><i class="ti ti-plug-off"></i> "${escHtml(S.activeFile.label)}" ফাইলের সাথে এখনো কোনো GitHub repo যুক্ত করা হয়নি — Settings-এ গিয়ে যুক্ত করুন।</div>`;
   } else {
     el.innerHTML = `<div class="lf-hint2" style="margin-bottom:0"><i class="ti ti-plug-connected" style="color:var(--green)"></i> "${escHtml(S.activeFile.label)}" ➜ যুক্ত আছে repo <b>${escHtml(repo.owner + '/' + repo.repo)}</b> (branch: ${escHtml(repo.branch || 'main')})${S.activeFile.isSelf ? ' — <span style="color:var(--teal);font-weight:700">🔧 এটা এই Admin Panel-এর নিজস্ব কোড</span>' : ''}${memBadge}</div>`;
+  }
+  if (rbWrap) {
+    rbWrap.innerHTML = repo ? `<button class="btn btn-danger btn-sm" onclick="emergencyRollback()" id="emergencyRollbackBtn"><i class="ti ti-alert-triangle"></i> 🚨 সাইট ভেঙে গেলে — সর্বশেষ commit বাতিল করে আগেরটায় ফিরে যাও</button>` : '';
+  }
+}
+async function emergencyRollback() {
+  if (!S.activeFile) return;
+  if (!checkFileRepoConfigured(S.activeFile)) return;
+  const repo = getFileRepo(S.activeFile);
+  const btn = $('emergencyRollbackBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader spin-ico"></i> চেক করা হচ্ছে...'; }
+  try {
+    const commits = await ghGetCommits(repo, S.activeFile.path, 2);
+    if (commits.length < 2) {
+      showToast('⚠️ এই ফাইলের আর কোনো পুরনো commit নেই — এটাই প্রথম ভার্সন।', 'warn');
+      return;
+    }
+    const [latest, previous] = commits;
+    const ok = confirm(`"${S.activeFile.label}" ফাইলটাকে সাথে সাথে এর ঠিক আগের commit-এ ফিরিয়ে নেওয়া হবে:\n\nবর্তমান: "${(latest.message || '').split('\n')[0]}" (${latest.sha.slice(0, 7)})\nফিরে যাবে: "${(previous.message || '').split('\n')[0]}" (${previous.sha.slice(0, 7)})\n\nএটাও একটা নতুন commit হিসেবে যোগ হবে (GitHub history অক্ষত থাকবে)। এগিয়ে যেতে চান?`);
+    if (!ok) return;
+    if (btn) btn.innerHTML = '<i class="ti ti-loader spin-ico"></i> আগের ভার্সনে ফেরানো হচ্ছে...';
+    const oldFile = await ghGetFileAtCommit(repo, S.activeFile.path, previous.sha);
+    const latestFile = await ghGetFile(repo, S.activeFile.path);
+    const res = await ghPutFile(repo, S.activeFile.path, oldFile.content, latestFile.sha, `🚨 Emergency rollback ${S.activeFile.path} to ${previous.sha.slice(0, 7)} via Dev Studio`);
+    setCachedFile(S.activeFile, oldFile.content, res.contentSha || latestFile.sha);
+    resetChatSession(true);
+    renderFileManageList();
+    showToast('✅ সাইট আগের ভালো ভার্সনে ফিরে গেছে!', 'success');
+    addActivityLog(`🚨 Emergency rollback: "${S.activeFile.label}" reverted to commit ${previous.sha.slice(0, 7)} — new commit ${(res.commitSha || '').slice(0, 7)}`);
+    if (S.activeFile.isSelf) {
+      $('selfReloadBanner').style.display = 'block';
+      $('selfReloadBanner').innerHTML = `<div class="self-reload-banner"><span><i class="ti ti-refresh"></i> এটা Admin Panel-এরই কোড — rollback হয়ে গেছে, পরিবর্তন দেখতে reload করুন।</span><button class="btn btn-primary btn-sm" onclick="location.reload()"><i class="ti ti-refresh"></i> এখনই Reload করো</button></div>`;
+    }
+  } catch (e) {
+    console.error(e);
+    showToast('❌ Emergency rollback ব্যর্থ হয়েছে: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-alert-triangle"></i> 🚨 সাইট ভেঙে গেলে — সর্বশেষ commit বাতিল করে আগেরটায় ফিরে যাও'; }
   }
 }
 function selectFile(i) {
