@@ -245,6 +245,16 @@ a{color:inherit;text-decoration:none}
 .chat-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px;flex-wrap:wrap}
 .self-reload-banner{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--teal-bg);border:1px solid var(--teal-border);color:var(--teal);padding:11px 14px;border-radius:var(--radius);margin-bottom:14px;font-size:12.5px;font-weight:700;flex-wrap:wrap}
 
+/* ===== Ambiguous candidate picker ===== */
+.ambiguous-wrap{margin-top:8px;display:flex;flex-direction:column;gap:8px}
+.ambiguous-hint{font-size:11px;color:var(--amber);font-weight:700;margin-bottom:2px}
+.ambiguous-candidate{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:9px 11px;transition:.15s}
+.ambiguous-candidate:hover{border-color:var(--purple-border);background:rgba(168,85,247,.03)}
+.ambiguous-candidate-meta{font-size:10.5px;color:var(--text3);font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.ambiguous-candidate-preview{font-family:'SFMono-Regular',Consolas,Menlo,monospace;font-size:10.5px;color:var(--text2);background:#0B0E14;border:1px solid var(--border);border-radius:6px;padding:7px 9px;overflow-x:auto;white-space:pre-wrap;word-break:break-word;margin-bottom:7px}
+.ambiguous-candidate-preview .hl{color:#fde68a;background:rgba(245,158,11,.15);border-radius:3px}
+.ambiguous-pick-btn{width:100%;justify-content:center}
+
 @media(max-width:900px){.two-col{grid-template-columns:1fr}.tb-nav-item span{display:none}}
 </style>
 </head>
@@ -352,7 +362,7 @@ a{color:inherit;text-decoration:none}
             </div>
           </div>
 
-          <div class="alert info"><i class="ti ti-shield-check"></i> <b>Precision মোড + Auto-Memory:</b> ফাইলের কোড একবার লোড হলে Auto-Memory-তে সংরক্ষিত থাকে (বারবার পুরো কোড দিতে হয় না) আর Project Map ইনডেক্স স্বয়ংক্রিয়ভাবে প্রাসঙ্গিক জায়গা খুঁজে বের করে — বেশিরভাগ সময় কোনো অতিরিক্ত AI কলও লাগে না। ছোটখাটো হোয়াইটস্পেস/ইনডেন্টেশন পার্থক্য এখন fuzzy-matching দিয়ে সামলানো হয়। তবে AI পুরো ফাইল কখনো রি-রাইট করে না, আর কোনো জায়গা ফাইলে একাধিকবার/অস্পষ্টভাবে মিললে নিরাপত্তার জন্য সেই patch skip করা হয় — অনুমান করে ভুল জায়গায় বসায় না।</div>
+          <div class="alert info"><i class="ti ti-shield-check"></i> <b>Precision মোড + Auto-Memory:</b> ফাইলের কোড একবার লোড হলে Auto-Memory-তে সংরক্ষিত থাকে (বারবার পুরো কোড দিতে হয় না) আর Project Map ইনডেক্স স্বয়ংক্রিয়ভাবে প্রাসঙ্গিক জায়গা খুঁজে বের করে — বেশিরভাগ সময় কোনো অতিরিক্ত AI কলও লাগে না। ছোটখাটো হোয়াইটস্পেস/ইনডেন্টেশন পার্থক্য এখন fuzzy-matching দিয়ে সামলানো হয়। তবে AI পুরো ফাইল কখনো রি-রাইট করে না, আর কোনো জায়গা ফাইলে একাধিকবার/অস্পষ্টভাবে মিললে সিস্টেম নিজে থেকে অনুমান করে বসায় না — বরং আপনাকে সেই সম্ভাব্য জায়গাগুলো দেখিয়ে বেছে নিতে দেয়।</div>
         </div>
 
         <div>
@@ -1056,7 +1066,7 @@ async function callGroq(systemPrompt, userPrompt) {
 }
 
 // ═══════════════════════ SMART CONTEXT ENGINE (token সাশ্রয়ী) ═══════════════════════
-const SMALL_FILE_CHARS = 6000;
+const SMALL_FILE_CHARS = 150000; // ~150KB পর্যন্ত ফাইল সরাসরি "full mode"-এ যাবে (আগে ছিল 6000)
 const CHUNK_LINES = 45;
 const CONTEXT_WINDOW_LINES = 18;
 const MAX_CONTEXT_CHARS = 12000;
@@ -1242,33 +1252,42 @@ async function sendChatMessage() {
       contextText = smart.context; contextMode = smart.mode;
     }
 
-    addThinkingBubble('AI Precision Patch তৈরি করছে...');
     const recentTurns = S.chatLog.filter(m => m.role === 'user' || m.role === 'ai').slice(-8);
     const historyText = recentTurns.map(m => m.role === 'user' ? `USER: ${m.text}` : `AI: ${m.summary || m.text}`).join('\n');
-    let systemPrompt = buildAISystemPrompt(S.activeFile.path) + (contextMode !== 'full' ? '\n\nমনে রাখো: নিচে পুরো ফাইল না, শুধু প্রাসঙ্গিক অংশ দেওয়া হয়েছে (মাঝেমধ্যে "/* ...lines X-Y... */" কমেন্ট দিয়ে চিহ্নিত)। searchAnchor অবশ্যই এই দেওয়া অংশ থেকেই হুবহু নিতে হবে।' : '');
-    if (historyText) systemPrompt += '\n\nএটা একটা চলমান কথোপকথন। ব্যবহারকারী আগেও এই একই ফাইলে কিছু নির্দেশ দিয়েছে (নিচে দেওয়া আছে) — নতুন নির্দেশটা প্রায়ই আগের কাজের একটা পরিবর্তন/সংশোধন হতে পারে (যেমন আগে "সবুজ করো" বলার পর এখন "না, নীল করো" বললে সেটা একই এলিমেন্টের রং আবার বদলানোর কথা বলছে)। প্রসঙ্গ বুঝে কাজ করো।';
-    const userPrompt = `=== ${contextMode === 'full' ? 'CURRENT FILE CONTENT' : 'RELEVANT CODE SECTION(S)'} (${S.activeFile.path}) ===\n${contextText}\n\n${historyText ? '=== CONVERSATION SO FAR ===\n' + historyText + '\n\n' : ''}=== NEW USER REQUEST ===\n${prompt}`;
 
-    const useGemini = S.provider === 'gemini' || !!S.pendingImage;
-    if (S.pendingImage && S.provider !== 'gemini') showToast('ছবি থাকায় Gemini ব্যবহার হচ্ছে', 'info');
-    let rawText;
-    try {
-      rawText = useGemini ? await callGemini(systemPrompt, userPrompt, S.pendingImage) : await callGroq(systemPrompt, userPrompt);
-    } catch (aiErr) {
-      if (useGemini && aiErr.isQuota) {
-        if (!S.pendingImage && ls('wds_groq_key')) {
-          showToast('⚠️ Gemini quota আটকে আছে — স্বয়ংক্রিয়ভাবে Groq দিয়ে চেষ্টা করা হচ্ছে', 'warn');
-          addThinkingBubble('Groq দিয়ে আবার চেষ্টা হচ্ছে...');
-          addActivityLog('⚠️ Gemini quota error — auto-fallback to Groq attempted');
-          rawText = await callGroq(systemPrompt, userPrompt);
-        } else {
-          throw new Error('Gemini API quota সমস্যা চলছে। Settings-এ Groq API Key যোগ করুন (ছবি ছাড়া কাজের জন্য অটো-ফলব্যাক কাজ করবে), অথবা নতুন Gemini API Key ব্যবহার করুন।');
-        }
-      } else { throw aiErr; }
+    // ── runs one full AI request + anchor-patch pass, given a context string/mode; used for
+    // both the initial attempt and (if needed) the full-file auto-retry below ──
+    async function runOneAiPass(ctxText, ctxMode, extraInstruction) {
+      let systemPrompt = buildAISystemPrompt(S.activeFile.path) + (ctxMode !== 'full' ? '\n\nমনে রাখো: নিচে পুরো ফাইল না, শুধু প্রাসঙ্গিক অংশ দেওয়া হয়েছে (মাঝেমধ্যে "/* ...lines X-Y... */" কমেন্ট দিয়ে চিহ্নিত)। searchAnchor অবশ্যই এই দেওয়া অংশ থেকেই হুবহু নিতে হবে।' : '');
+      if (historyText) systemPrompt += '\n\nএটা একটা চলমান কথোপকথন। ব্যবহারকারী আগেও এই একই ফাইলে কিছু নির্দেশ দিয়েছে (নিচে দেওয়া আছে) — নতুন নির্দেশটা প্রায়ই আগের কাজের একটা পরিবর্তন/সংশোধন হতে পারে (যেমন আগে "সবুজ করো" বলার পর এখন "না, নীল করো" বললে সেটা একই এলিমেন্টের রং আবার বদলানোর কথা বলছে)। প্রসঙ্গ বুঝে কাজ করো।';
+      if (extraInstruction) systemPrompt += '\n\n' + extraInstruction;
+      const userPrompt = `=== ${ctxMode === 'full' ? 'CURRENT FILE CONTENT' : 'RELEVANT CODE SECTION(S)'} (${S.activeFile.path}) ===\n${ctxText}\n\n${historyText ? '=== CONVERSATION SO FAR ===\n' + historyText + '\n\n' : ''}=== NEW USER REQUEST ===\n${prompt}`;
+
+      const useGemini = S.provider === 'gemini' || !!S.pendingImage;
+      if (S.pendingImage && S.provider !== 'gemini') showToast('ছবি থাকায় Gemini ব্যবহার হচ্ছে', 'info');
+      let rawText;
+      try {
+        rawText = useGemini ? await callGemini(systemPrompt, userPrompt, S.pendingImage) : await callGroq(systemPrompt, userPrompt);
+      } catch (aiErr) {
+        if (useGemini && aiErr.isQuota) {
+          if (!S.pendingImage && ls('wds_groq_key')) {
+            showToast('⚠️ Gemini quota আটকে আছে — স্বয়ংক্রিয়ভাবে Groq দিয়ে চেষ্টা করা হচ্ছে', 'warn');
+            addThinkingBubble('Groq দিয়ে আবার চেষ্টা হচ্ছে...');
+            addActivityLog('⚠️ Gemini quota error — auto-fallback to Groq attempted');
+            rawText = await callGroq(systemPrompt, userPrompt);
+          } else {
+            throw new Error('Gemini API quota সমস্যা চলছে। Settings-এ Groq API Key যোগ করুন (ছবি ছাড়া কাজের জন্য অটো-ফলব্যাক কাজ করবে), অথবা নতুন Gemini API Key ব্যবহার করুন।');
+          }
+        } else { throw aiErr; }
+      }
+      return rawText;
     }
 
+    addThinkingBubble('AI Precision Patch তৈরি করছে...');
+    let rawText = await runOneAiPass(contextText, contextMode, null);
+
     removeThinkingBubble();
-    const aiRes = parseAiJson(rawText);
+    let aiRes = parseAiJson(rawText);
     if (!aiRes || !Array.isArray(aiRes.patches)) {
       $('rawAiCard').style.display = 'block';
       $('rawAiText').textContent = rawText;
@@ -1292,7 +1311,44 @@ async function sendChatMessage() {
       status: 'pending',
     }));
 
-    const result = runAnchorPatches(baseContent, patches, S.activeFile.path);
+    let result = runAnchorPatches(baseContent, patches, S.activeFile.path);
+    let usedContextMode = contextMode;
+
+    // ── Auto-Retry with Full File: only when the FIRST attempt used a partial context
+    // (map/keyword/ai-chunk/manual) and at least one patch came back not_found/ambiguous.
+    // Retried at most once, using the entire file as context, to avoid infinite loops. ──
+    const hasFailure = result.patches.some(p => p.status === 'not_found' || p.status === 'ambiguous');
+    if (contextMode !== 'full' && hasFailure) {
+      addThinkingBubble('প্রথমবার কিছু অংশ খুঁজে পাওয়া যায়নি — সম্পূর্ণ ফাইল দিয়ে আবার নিখুঁতভাবে চেষ্টা করা হচ্ছে...');
+      addActivityLog('⚠️ প্রথম চেষ্টায় ব্যর্থ — সম্পূর্ণ ফাইল দিয়ে auto-retry করা হয়েছে');
+      try {
+        const retryInstruction = 'আগেরবার তোমাকে শুধু ফাইলের একটা আংশিক অংশ দেওয়া হয়েছিল এবং সেখান থেকে কিছু searchAnchor ফাইলে খুঁজে পাওয়া যায়নি বা একাধিকবার মিলেছিল। এখন নিচে সম্পূর্ণ ফাইলের কনটেন্ট দেওয়া হলো — এবার সঠিক ও ইউনিক searchAnchor বেছে নিয়ে ব্যবহারকারীর একই অনুরোধটা আবার সঠিকভাবে সম্পন্ন করো।';
+        const retryRaw = await runOneAiPass(baseContent, 'full-retry', retryInstruction);
+        removeThinkingBubble();
+        const retryRes = parseAiJson(retryRaw);
+        if (retryRes && Array.isArray(retryRes.patches) && retryRes.patches.length) {
+          const retryPatches = retryRes.patches.map(p => ({
+            description: p.description || '',
+            filePath: p.filePath || S.activeFile.path,
+            searchAnchor: p.searchAnchor || '',
+            action: (p.action || '').toUpperCase(),
+            newSnippet: p.newSnippet != null ? p.newSnippet : '',
+            status: 'pending',
+          }));
+          const retryResult = runAnchorPatches(baseContent, retryPatches, S.activeFile.path);
+          // use the retry's outcome instead of the first attempt's
+          result = retryResult;
+          aiRes = retryRes;
+          usedContextMode = 'full-retry';
+        }
+      } catch (retryErr) {
+        removeThinkingBubble();
+        console.error(retryErr);
+        addActivityLog('⚠️ Full-file auto-retry নিজেও ব্যর্থ হয়েছে: ' + retryErr.message);
+        // fall through and use the original (first-attempt) result below
+      }
+    }
+
     S.previewContent = result.content;
     S.patches = result.patches;
 
@@ -1307,13 +1363,13 @@ async function sendChatMessage() {
 
     if (appliedCount > 0) {
       buildPreview();
-      showToast(`✅ ${appliedCount}/${patches.length}টা patch প্রয়োগ হয়েছে — Preview আপডেট হয়েছে`, 'success');
+      showToast(`✅ ${appliedCount}/${result.patches.length}টা patch প্রয়োগ হয়েছে — Preview আপডেট হয়েছে`, 'success');
     } else {
       showToast('⚠️ কোনো patch প্রয়োগ করা যায়নি — নিচে বিস্তারিত দেখুন', 'error');
     }
 
-    const modeLabel = { full: 'পুরো ফাইল', map: '🧠 Project Map ইনডেক্স (AI কল ছাড়াই)', keyword: 'কিওয়ার্ড-ম্যাচড অংশ', 'ai-chunk': 'AI-বাছাইকৃত অংশ', manual: 'ম্যানুয়াল অংশ' }[contextMode] || contextMode;
-    addActivityLog(`✨ Chat turn for "${S.activeFile.label}" (context: ${modeLabel}) — ${appliedCount}/${patches.length} applied — ${(aiRes.summary || '').slice(0, 80)}`);
+    const modeLabel = { full: 'পুরো ফাইল', map: '🧠 Project Map ইনডেক্স (AI কল ছাড়াই)', keyword: 'কিওয়ার্ড-ম্যাচড অংশ', 'ai-chunk': 'AI-বাছাইকৃত অংশ', manual: 'ম্যানুয়াল অংশ', 'full-retry': '♻️ সম্পূর্ণ ফাইল (auto-retry)' }[usedContextMode] || usedContextMode;
+    addActivityLog(`✨ Chat turn for "${S.activeFile.label}" (context: ${modeLabel}) — ${appliedCount}/${result.patches.length} applied — ${(aiRes.summary || '').slice(0, 80)}`);
   } catch (e) {
     console.error(e);
     removeThinkingBubble();
@@ -1337,16 +1393,38 @@ function countOccurrences(haystack, needle) {
 // search. Crucially: it still requires the resolved match to be UNIQUE in the file before
 // treating it as applicable — this is what keeps "fuzzy" from turning into "guess a spot
 // and hope", which would risk corrupting a live file. If it's not unique, it's reported as
-// ambiguous exactly like an exact-match anchor would be, never silently picked.
+// ambiguous exactly like an exact-match anchor would be, never silently picked — instead all
+// match locations (with a short surrounding preview) are collected so the user can choose.
+function buildContextPreview(haystack, idx, len) {
+  const CTX = 80;
+  const before = haystack.slice(Math.max(0, idx - CTX), idx);
+  const matchText = haystack.slice(idx, idx + len);
+  const after = haystack.slice(idx + len, idx + len + CTX);
+  return escHtml(before) + '<span class="hl">' + escHtml(matchText) + '</span>' + escHtml(after);
+}
 function fuzzyFindAnchor(haystack, anchor) {
   const exactCount = countOccurrences(haystack, anchor);
-  if (exactCount >= 1) return { text: anchor, count: exactCount, index: haystack.indexOf(anchor), fuzzy: false };
+  if (exactCount === 1) return { text: anchor, count: 1, index: haystack.indexOf(anchor), fuzzy: false };
+  if (exactCount > 1) {
+    // collect every exact occurrence with a short context preview so the user can pick
+    const allMatches = [];
+    let searchFrom = 0, idx;
+    while ((idx = haystack.indexOf(anchor, searchFrom)) !== -1) {
+      allMatches.push({ index: idx, contextPreview: buildContextPreview(haystack, idx, anchor.length) });
+      searchFrom = idx + anchor.length;
+    }
+    return { text: anchor, count: exactCount, index: allMatches[0].index, fuzzy: false, allMatches };
+  }
   const escaped = anchor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const pattern = escaped.replace(/\s+/g, '\\s+');
   let re;
   try { re = new RegExp(pattern, 'g'); } catch (e) { return { text: null, count: 0, index: -1, fuzzy: false }; }
   const matches = [...haystack.matchAll(re)];
   if (!matches.length) return { text: null, count: 0, index: -1, fuzzy: false };
+  if (matches.length > 1) {
+    const allMatches = matches.map(m => ({ index: m.index, contextPreview: buildContextPreview(haystack, m.index, m[0].length) }));
+    return { text: matches[0][0], count: matches.length, index: matches[0].index, fuzzy: true, allMatches };
+  }
   return { text: matches[0][0], count: matches.length, index: matches[0].index, fuzzy: true };
 }
 function trimEdgeLines(text) {
@@ -1395,7 +1473,11 @@ function runAnchorPatches(baseContent, patchesArr, activeFilePath) {
     }
     const found = fuzzyFindAnchor(working, anchorRaw);
     if (found.count === 0) { p.status = 'not_found'; p.diffHtml = `<span class="diff-line del">searchAnchor ফাইলে খুঁজে পাওয়া যায়নি (exact ও fuzzy দুই চেষ্টাতেই):</span><span class="diff-line ctx">${escHtml(anchorRaw.slice(0, 300))}</span>`; return; }
-    if (found.count > 1) { p.status = 'ambiguous'; p.count = found.count; p.diffHtml = `<span class="diff-line del">এই searchAnchor ফাইলে ${found.count} বার পাওয়া গেছে (unique হতে হবে):</span><span class="diff-line ctx">${escHtml(anchorRaw.slice(0, 300))}</span>`; return; }
+    if (found.count > 1) {
+      p.status = 'ambiguous'; p.count = found.count; p.allMatches = found.allMatches || [];
+      p.diffHtml = `<span class="diff-line del">এই searchAnchor ফাইলে ${found.count} বার পাওয়া গেছে (unique হতে হবে) — নিচে থেকে সঠিক জায়গাটা বেছে নিন:</span><span class="diff-line ctx">${escHtml(anchorRaw.slice(0, 300))}</span>`;
+      return;
+    }
 
     const anchor = found.text; // use the REAL matched substring from the file, not the AI's (possibly slightly-off) version
     const idx = found.index;
@@ -1411,6 +1493,37 @@ function runAnchorPatches(baseContent, patchesArr, activeFilePath) {
     p.status = 'applied';
   });
   return { content: working, patches: patchesArr };
+}
+// ── Resolve one ambiguous patch by applying it at exactly the user-chosen match location.
+// Only this single patch (at this single index) is applied — every other patch in S.patches
+// stays exactly as it is. The system never guesses on its own; this is only ever invoked
+// from the user's explicit click on a candidate location. ──
+function resolveAmbiguousPatch(patchIndex, chosenMatchIndex) {
+  const p = S.patches[patchIndex];
+  if (!p || p.status !== 'ambiguous' || !p.allMatches || !p.allMatches[chosenMatchIndex]) return;
+  const chosen = p.allMatches[chosenMatchIndex];
+  const working = S.previewContent;
+  const anchorLen = (p.searchAnchor || '').length;
+  // re-verify the chosen index still actually contains an equivalent anchor text before touching the file
+  const idx = chosen.index;
+  const actualText = working.slice(idx, idx + anchorLen);
+  p.fuzzy = false;
+  p.diffHtml = buildDiffHtml(working, idx, actualText, p.action, p.newSnippet, false);
+
+  let newWorking;
+  if (p.action === 'INSERT_AFTER') newWorking = working.slice(0, idx + actualText.length) + '\n' + p.newSnippet + working.slice(idx + actualText.length);
+  else if (p.action === 'INSERT_BEFORE') newWorking = working.slice(0, idx) + p.newSnippet + '\n' + working.slice(idx);
+  else newWorking = working.slice(0, idx) + p.newSnippet + working.slice(idx + actualText.length); // REPLACE
+
+  S.previewContent = newWorking;
+  p.status = 'applied';
+  delete p.allMatches;
+
+  renderPatchStats();
+  renderPatchList();
+  buildPreview();
+  showToast('✅ বেছে নেওয়া জায়গায় patch প্রয়োগ হয়েছে', 'success');
+  addActivityLog(`✅ Ambiguous patch resolved manually for "${S.activeFile ? S.activeFile.label : ''}" — "${(p.description || '').slice(0, 80)}"`);
 }
 function renderPatchStats() {
   const applied = S.patches.filter(p => p.status === 'applied').length;
@@ -1440,11 +1553,23 @@ function renderPatchList() {
       <div class="patch-body" id="patchBody${i}">
         <div class="patch-file-path"><i class="ti ti-file-code"></i> ${escHtml(p.filePath || '')}</div>
         <div class="diff-block">${p.diffHtml || ''}</div>
-        ${p.status !== 'applied' ? `<div class="patch-err-note"><i class="ti ti-info-circle"></i> এই patch টা preview-এ প্রয়োগ হয়নি। চাইলে নিচে Preview খুলে "Code" ট্যাবে গিয়ে সরাসরি ম্যানুয়ালি এই পরিবর্তনটা যোগ করে নিতে পারেন।</div>` : ''}
+        ${p.status === 'ambiguous' && p.allMatches && p.allMatches.length ? renderAmbiguousPicker(p, i) : ''}
+        ${p.status !== 'applied' && p.status !== 'ambiguous' ? `<div class="patch-err-note"><i class="ti ti-info-circle"></i> এই patch টা preview-এ প্রয়োগ হয়নি। চাইলে নিচে Preview খুলে "Code" ট্যাবে গিয়ে সরাসরি ম্যানুয়ালি এই পরিবর্তনটা যোগ করে নিতে পারেন।</div>` : ''}
       </div>
     </div>`).join('');
-  // auto-open failed patches so the user notices them immediately
+  // auto-open failed/ambiguous patches so the user notices them immediately
   S.patches.forEach((p, i) => { if (p.status !== 'applied') togglePatchBody(i, true); });
+}
+function renderAmbiguousPicker(p, patchIndex) {
+  return `<div class="ambiguous-wrap">
+    <div class="ambiguous-hint"><i class="ti ti-list-search"></i> ${p.allMatches.length}টা সম্ভাব্য জায়গা পাওয়া গেছে — কোনটায় এই পরিবর্তন করতে চান তা বেছে নিন:</div>
+    ${p.allMatches.map((am, ai) => `
+      <div class="ambiguous-candidate">
+        <div class="ambiguous-candidate-meta"><i class="ti ti-map-pin"></i> সম্ভাব্য জায়গা #${ai + 1}</div>
+        <div class="ambiguous-candidate-preview">${am.contextPreview}</div>
+        <button class="btn btn-primary btn-sm ambiguous-pick-btn" onclick="resolveAmbiguousPatch(${patchIndex},${ai})"><i class="ti ti-check"></i> ✅ এই জায়গাটা বেছে নাও</button>
+      </div>`).join('')}
+  </div>`;
 }
 function togglePatchBody(i, forceOpen) {
   const body = $('patchBody' + i), ico = $('patchToggleIco' + i);
