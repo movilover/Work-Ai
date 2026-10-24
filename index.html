@@ -71,7 +71,7 @@ const cfg={apiKey:"AIzaSyBwMWJ-OMMVR-aeiP9mrwGCqpGzxuranFI",authDomain:"bana-fas
 const ADMIN="banafashiongazipur@gmail.com";
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),tk=n=>'৳'+Math.round(n||0).toLocaleString('en-US');
 const app=initializeApp(cfg),db=getFirestore(app),au=getAuth(app);
-let OF='all',orders=[],prods=[],cats=[],banners=[],visits=[],stats=[],tot={},S={},P={},tab='dash',ucount=0,unsub=[],EP=null,EB=null,SZ=[],IMGS=[],C={},promos=[],T={};
+let OF='all',orders=[],prods=[],cats=[],banners=[],visits=[],stats=[],tot={},S={},P={},tab='dash',ucount=0,unsub=[],EP=null,EB=null,SZ=[],IMGS=[],C={},promos=[],T={},W={},WPV={};
 const NAV=[['dash','fa-chart-pie','ড্যাশবোর্ড'],['orders','fa-bag-shopping','অর্ডার'],['risk','fa-user-shield','কাস্টমার চেক'],['promo','fa-ticket','প্রোমোকোড'],['prods','fa-shirt','প্রোডাক্ট'],['cats','fa-layer-group','ক্যাটাগরি'],['ban','fa-image','ব্যানার'],['vis','fa-eye','ভিজিট'],['pay','fa-wallet','পেমেন্ট'],['set','fa-gear','সেটিংস']];
 const day=(d=new Date())=>d.toLocaleDateString('en-CA'),ts=o=>o.createdAt?.toDate?o.createdAt.toDate():new Date(o.createdAt||0),bn=n=>String(n).replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]);
 window.L=async e=>{e.preventDefault();try{await signInWithEmailAndPassword(au,$('em').value.trim(),$('pw').value)}catch(x){$('le').textContent='ইমেইল বা পাসওয়ার্ড ভুল'}return false};
@@ -94,6 +94,8 @@ async function boot(){const ym=day().slice(0,7);
  unsub.push(onSnapshot(doc(db,'private','courier'),s=>{C=s.data()||{};draw()},()=>{}));
  unsub.push(onSnapshot(doc(db,'settings','payment'),s=>{P=s.data()||{};draw()}));
  unsub.push(onSnapshot(doc(db,'settings','telegram'),s=>{T=s.data()||{};draw()},()=>{}));
+ unsub.push(onSnapshot(doc(db,'settings','whatsapp'),s=>{W=s.data()||{};draw()},()=>{}));
+ unsub.push(onSnapshot(doc(db,'private','whatsapp'),s=>{WPV=s.data()||{};draw()},()=>{}));
  try{ucount=(await getCountFromServer(collection(db,'users'))).data().count;draw()}catch(e){}}
 const VIEWS={promo,risk,dash,orders:ord,prods:prd,cats:cat,ban,vis,pay,set:stg};
 function draw(force){const a=document.activeElement;if(!force&&a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&['prods','cats','ban','pay','set','promo'].includes(tab))return;
@@ -282,6 +284,17 @@ function stg0(){return`<div class="c p-4 grid sm:grid-cols-2 gap-3 max-w-2xl"><d
   <div class="sm:col-span-2"><label class="lb">Webhook Bearer Token (Steadfast পোর্টালের Webhook সেটিংয়ে একই টোকেন দিন)</label><input class="i" id="cwt" type="password" value="${esc(C.webhookToken||'')}" placeholder="একটি লম্বা র‍্যান্ডম টোকেন"></div>
   <div class="sm:col-span-2 text-[11px] text-gray-400 leading-relaxed p-3 rounded-xl bg-black/30">Steadfast Webhook URL: <b class="text-amber-400 break-all">${esc(location.origin)}/api/sf-webhook</b></div>
   <button type="button" class="g sm:col-span-2" onclick="SFT()"><i class="fa-solid fa-plug mr-1"></i>কানেকশন টেস্ট (আগে সেভ করুন)</button>
+ <div class="sm:col-span-2 font-bold mt-2"><i class="fa-brands fa-whatsapp text-emerald-400 mr-2"></i>WhatsApp অর্ডার নোটিফিকেশন ও ইনভয়েস</div>
+ <label class="text-xs sm:col-span-2"><input type="checkbox" id="waOn" ${W.enabled?'checked':''}> নতুন অর্ডার এলে WhatsApp-এ ইনভয়েসসহ অ্যালার্ট পাঠান</label>
+ <div><label class="lb">পাঠানোর পদ্ধতি</label><select class="i" id="waMode"><option value="server" ${(W.mode||'server')==='server'?'selected':''}>সার্ভার (Railway) — নিরাপদ, সুপারিশকৃত</option><option value="direct" ${W.mode==='direct'?'selected':''}>সরাসরি ব্রাউজার থেকে (টোকেন পাবলিক থাকবে)</option></select></div>
+ <div><label class="lb">WhatsApp API সার্ভিস</label><select class="i" id="waProv"><option value="whapi" ${WV('provider')==='whapi'||!WV('provider')?'selected':''}>Whapi.Cloud (গ্রুপ + নম্বর)</option><option value="ultramsg" ${WV('provider')==='ultramsg'?'selected':''}>UltraMsg (গ্রুপ + নম্বর)</option><option value="meta" ${WV('provider')==='meta'?'selected':''}>Meta Cloud API (শুধু নম্বর, শুধু সার্ভার মোড)</option></select></div>
+ <div class="sm:col-span-2"><label class="lb">API Token / Access Token</label><input class="i" id="waTok" type="password" autocomplete="off" value="${WV('token')}" placeholder="সার্ভিসের ড্যাশবোর্ড থেকে টোকেন"></div>
+ <div class="sm:col-span-2"><label class="lb">Instance ID (UltraMsg: instance12345) / Phone Number ID (Meta) — Whapi-তে লাগবে না</label><input class="i" id="waInst" value="${WV('instance')}"></div>
+ <div class="sm:col-span-2"><label class="lb">গ্রুপ Chat ID অথবা নম্বর</label><input class="i" id="waTgt" value="${WV('target')}" placeholder="120363XXXXXXXXXX@g.us  অথবা  01XXXXXXXXX (নির্দিষ্ট নম্বর)"></div>
+ <div class="sm:col-span-2 text-[11px] text-gray-400 leading-relaxed p-3 rounded-xl bg-black/30">① Whapi/UltraMsg-এ অ্যাকাউন্ট খুলে QR স্ক্যান করে আপনার WhatsApp নম্বর কানেক্ট করুন ② সেই নম্বরটিকে আপনার WhatsApp গ্রুপে অ্যাড করুন ③ "গ্রুপ লিস্ট" চাপলে গ্রুপের নামসহ Chat ID চলে আসবে (<b class="text-amber-400">chat.whatsapp.com ইনভাইট লিংক থেকে সরাসরি ID হয় না</b>) ④ ব্যক্তিগত নম্বরে পাঠাতে শুধু নম্বর দিন (যেমন 01XXXXXXXXX) ⑤ প্রথমে সেভ করুন, তারপর "টেস্ট" চাপুন।</div>
+ <button type="button" class="g" id="waGrp" onclick="WAG()"><i class="fa-solid fa-users mr-1"></i>গ্রুপ লিস্ট আনুন</button>
+ <button type="button" class="g" id="waTest" onclick="WAT()"><i class="fa-solid fa-plug mr-1"></i>টেস্ট মেসেজ (আগে সেভ করুন)</button>
+ <button type="button" class="b sm:col-span-2" onclick="SWa()"><i class="fa-solid fa-floppy-disk mr-2"></i>WhatsApp সেভ</button>
  <div class="sm:col-span-2 font-bold mt-2"><i class="fa-brands fa-telegram text-amber-400 mr-2"></i>Telegram অর্ডার নোটিফিকেশন</div>
  <label class="text-xs sm:col-span-2"><input type="checkbox" id="tgOn" ${T.enabled!==false?'checked':''}> নতুন অর্ডার এলে Telegram গ্রুপে ইনভয়েসসহ অ্যালার্ট পাঠান</label>
  <div class="sm:col-span-2"><label class="lb">Telegram Bot Token (@BotFather থেকে)</label><input class="i" id="tgTok" type="password" autocomplete="off" value="${esc(T.token||'')}" placeholder="123456789:AAH..."></div>
@@ -292,6 +305,39 @@ function stg0(){return`<div class="c p-4 grid sm:grid-cols-2 gap-3 max-w-2xl"><d
  <button type="button" class="b" onclick="STg()"><i class="fa-solid fa-floppy-disk mr-2"></i>Telegram সেভ</button>
  <button class="b sm:col-span-2" onclick="SSet()"><i class="fa-solid fa-floppy-disk mr-2"></i>সেভ করুন</button></div>`}
 window.SSet=async()=>{await setDoc(doc(db,'settings','site'),{colsDesktop:Math.min(6,Math.max(2,+$('sd').value||4)),colsMobile:Math.min(2,Math.max(1,+$('sm').value||2)),maxProducts:Math.max(0,+$('sx').value||0),requireAdvance:$('sr').checked,shipDhaka:+$('s1').value||0,shipOutside:+$('s2').value||0,freeShip:+$('s3').value||0,shopAddress:$('sa').value.trim(),helpline:$('sh').value.trim(),whatsapp:$('sw').value.replace(/\D/g,''),waAuto:$('swa').checked,eidOn:$('eo').checked,eidTitle:$('et').value.trim(),eidSub:$('es').value.trim()},{merge:true});await setDoc(doc(db,'private','courier'),{key:$('ck').value.trim(),secret:$('cs2').value.trim(),useFn:$('cfn').checked,webhookToken:$('cwt').value.trim()});alert('সেভ হয়েছে')};
+/* ===== WhatsApp order notification settings (public: settings/whatsapp, secrets in server mode: private/whatsapp) ===== */
+const WV=k=>esc(((W.mode==='direct'?W:WPV)[k])||'');
+const waTarget=raw=>{const s=String(raw||'').trim();if(!s)return null;if(/@(g\.us|c\.us|s\.whatsapp\.net)$/.test(s))return s;if(/^\d{8,15}-\d+$/.test(s)||/^\d{16,}$/.test(s))return s+'@g.us';let d=s.replace(/\D/g,'');if(/^01\d{9}$/.test(d))d='88'+d;return/^\d{10,15}$/.test(d)?d:null};
+const waRead=()=>({enabled:$('waOn').checked,mode:$('waMode').value,provider:$('waProv').value,token:$('waTok').value.trim(),instance:$('waInst').value.trim(),target:$('waTgt').value.trim()});
+const waJson=async r=>{const j=await r.json().catch(()=>({}));if(!r.ok||j.error)throw new Error((j.error&&(j.error.message||j.error))||j.message||('HTTP '+r.status));return j};
+async function waSrv(body){let tok;try{tok=await au.currentUser.getIdToken()}catch(e){throw new Error('লগইন সেশন নেই, আবার লগইন করুন')}
+ let r;try{r=await fetch('/api/wa',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok},body:JSON.stringify(body)})}catch(e){throw new Error('সার্ভারের সাথে যোগাযোগ করা যাচ্ছে না (Railway সার্ভার চালু আছে কি?)')}
+ return waJson(r)}
+async function waDirect(c,to,text,img){
+ if(c.provider==='ultramsg'){const b='https://api.ultramsg.com/'+encodeURIComponent(c.instance)+'/messages/',f=new URLSearchParams({token:c.token,to});
+  if(img){f.set('image',img.split(',')[1]);f.set('caption',text);return waJson(await fetch(b+'image',{method:'POST',body:f}))}
+  f.set('body',text);return waJson(await fetch(b+'chat',{method:'POST',body:f}))}
+ const h={'Content-Type':'application/json',Authorization:'Bearer '+c.token};
+ if(img)return waJson(await fetch('https://gate.whapi.cloud/messages/image',{method:'POST',headers:h,body:JSON.stringify({to,media:img,caption:text})}));
+ return waJson(await fetch('https://gate.whapi.cloud/messages/text',{method:'POST',headers:h,body:JSON.stringify({to,body:text})}))}
+window.WAT=async()=>{const d=waRead(),b=$('waTest'),old=b.innerHTML;b.disabled=true;b.innerHTML='<i class="fa-solid fa-spinner fa-spin mr-1"></i>পাঠানো হচ্ছে...';
+ try{if(d.mode==='server')await waSrv({action:'test'});else{const to=waTarget(d.target);if(!d.token||!to)throw new Error('টোকেন ও গ্রুপ Chat ID/নম্বর দিন');if(d.provider==='meta')throw new Error('Meta শুধু সার্ভার মোডে চলে');if(d.provider==='ultramsg'&&!d.instance)throw new Error('Instance ID দিন');
+  await waDirect(d,to,'✅ *BANA FASHION* — টেস্ট সফল!\nনতুন অর্ডার এলে ইনভয়েসসহ এই চ্যাটে অ্যালার্ট আসবে।')}
+  toast('টেস্ট মেসেজ পাঠানো হয়েছে — WhatsApp চেক করুন')}catch(e){toast('❌ '+e.message,'err')}
+ b.disabled=false;b.innerHTML=old};
+window.WAG=async()=>{const d=waRead();let gs;try{
+  if(d.mode==='server')gs=(await waSrv({action:'groups'})).groups;
+  else if(d.provider==='ultramsg'){const j=await waJson(await fetch('https://api.ultramsg.com/'+encodeURIComponent(d.instance)+'/groups?token='+encodeURIComponent(d.token)));gs=Array.isArray(j)?j:(j.groups||[])}
+  else gs=(await waJson(await fetch('https://gate.whapi.cloud/groups?count=100',{headers:{Authorization:'Bearer '+d.token}}))).groups;
+  gs=(gs||[]).map(g=>({id:g.id,name:g.name||g.subject||g.id}));if(!gs.length)return toast('কোনো গ্রুপ পাওয়া যায়নি — কানেক্ট করা নম্বরটি গ্রুপে আছে কি?','err');
+  const m=document.createElement('div');m.className='fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4';
+  m.innerHTML='<div class="c p-5 max-w-sm w-full pop" style="background:#16161a;max-height:80vh;overflow:auto"><h3 class="font-extrabold mb-3">গ্রুপ সিলেক্ট করুন</h3>'+gs.map((g,i)=>'<button class="g w-full mb-2 text-left" data-i="'+i+'">'+esc(g.name)+'</button>').join('')+'<button class="g w-full" data-x="1">বন্ধ করুন</button></div>';
+  document.body.appendChild(m);m.onclick=e=>{const t=e.target.closest('button');if(t&&t.dataset.i!=null)$('waTgt').value=gs[+t.dataset.i].id;if(e.target===m||t)m.remove()}
+ }catch(e){toast('❌ '+e.message,'err')}};
+window.SWa=async()=>{const d=waRead(),to=d.target?waTarget(d.target):'';if(d.target&&!to)return toast('Chat ID সঠিক নয় — 120363…@g.us বা মোবাইল নম্বর দিন','err');
+ try{if(d.mode==='server'){await setDoc(doc(db,'settings','whatsapp'),{enabled:d.enabled,mode:'server',endpoint:'/api/wa-notify'});await setDoc(doc(db,'private','whatsapp'),{provider:d.provider,token:d.token,instance:d.instance,target:to||''})}
+  else{if(d.provider==='meta')return toast('Meta Cloud API শুধু সার্ভার মোডে ব্যবহার করুন','err');await setDoc(doc(db,'settings','whatsapp'),{enabled:d.enabled,mode:'direct',provider:d.provider,token:d.token,instance:d.instance,target:to||''})}
+  toast('WhatsApp সেটিং সেভ হয়েছে')}catch(e){toast('সেভ হয়নি: '+(e.code||e.message),'err')}};
 /* ===== Telegram order notification settings (read by the shop from settings/telegram) ===== */
 const tgChatId=raw=>{const s=String(raw||'').trim();if(!s)return null;if(/^-?\d{5,}$/.test(s)||/^@[A-Za-z0-9_]{4,}$/.test(s))return s;let m=s.match(/t\.me\/c\/(\d+)/i);if(m)return'-100'+m[1];m=s.match(/t\.me\/([A-Za-z][A-Za-z0-9_]{3,})\/?(?:\?.*)?$/i);return m&&!/^(joinchat|addlist)$/i.test(m[1])?'@'+m[1]:null};
 const tgRead=()=>({enabled:$('tgOn').checked,token:$('tgTok').value.trim(),chatId:$('tgChat').value.trim(),siteUrl:$('tgSite').value.trim().replace(/\/+$/,'')});
