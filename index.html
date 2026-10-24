@@ -66,13 +66,12 @@ details>summary{list-style:none}details>summary::-webkit-details-marker{display:
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import{getFirestore,collection,doc,getDocs,getDoc,writeBatch,setDoc,addDoc,updateDoc,deleteDoc,onSnapshot,query,orderBy,limit,where,documentId,getCountFromServer,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-import{getFunctions,httpsCallable}from"https://www.gstatic.com/firebasejs/10.8.0/firebase-functions.js";
 import{getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut,sendPasswordResetEmail}from"https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 const cfg={apiKey:"AIzaSyBwMWJ-OMMVR-aeiP9mrwGCqpGzxuranFI",authDomain:"bana-fashion.firebaseapp.com",projectId:"bana-fashion",storageBucket:"bana-fashion.firebasestorage.app",messagingSenderId:"143663802409",appId:"1:143663802409:web:fe1ceb33a3dfa33fe0d438"};
 const ADMIN="banafashiongazipur@gmail.com";
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),tk=n=>'৳'+Math.round(n||0).toLocaleString('en-US');
-const app=initializeApp(cfg),db=getFirestore(app),au=getAuth(app),fns=getFunctions(app);
-let OF='all',orders=[],prods=[],cats=[],banners=[],visits=[],stats=[],tot={},S={},P={},tab='dash',ucount=0,unsub=[],EP=null,EB=null,SZ=[],IMGS=[],C={},promos=[];
+const app=initializeApp(cfg),db=getFirestore(app),au=getAuth(app);
+let OF='all',orders=[],prods=[],cats=[],banners=[],visits=[],stats=[],tot={},S={},P={},tab='dash',ucount=0,unsub=[],EP=null,EB=null,SZ=[],IMGS=[],C={},promos=[],T={};
 const NAV=[['dash','fa-chart-pie','ড্যাশবোর্ড'],['orders','fa-bag-shopping','অর্ডার'],['risk','fa-user-shield','কাস্টমার চেক'],['promo','fa-ticket','প্রোমোকোড'],['prods','fa-shirt','প্রোডাক্ট'],['cats','fa-layer-group','ক্যাটাগরি'],['ban','fa-image','ব্যানার'],['vis','fa-eye','ভিজিট'],['pay','fa-wallet','পেমেন্ট'],['set','fa-gear','সেটিংস']];
 const day=(d=new Date())=>d.toLocaleDateString('en-CA'),ts=o=>o.createdAt?.toDate?o.createdAt.toDate():new Date(o.createdAt||0),bn=n=>String(n).replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]);
 window.L=async e=>{e.preventDefault();try{await signInWithEmailAndPassword(au,$('em').value.trim(),$('pw').value)}catch(x){$('le').textContent='ইমেইল বা পাসওয়ার্ড ভুল'}return false};
@@ -92,8 +91,9 @@ async function boot(){const ym=day().slice(0,7);
  ls('stats',s=>stats=s.docs.map(d=>({id:d.id,...d.data()})),query(collection(db,'stats'),where(documentId(),'>=',ym.slice(0,4)+'-01-01'),where(documentId(),'<=',ym.slice(0,4)+'-12-31')));
  unsub.push(onSnapshot(doc(db,'stats','total'),s=>{tot=s.data()||{};draw()}));
  unsub.push(onSnapshot(doc(db,'settings','site'),s=>{S=s.data()||{};window.SHOPX={...(S.shopAddress?{addr:S.shopAddress}:{}),...(S.helpline?{phone:S.helpline}:{})};draw()}));
- unsub.push(onSnapshot(doc(db,'private','courier'),s=>{C=s.data()||{};if(C.key&&!window._sf0){window._sf0=1;setTimeout(()=>window.SFAll&&SFAll(false),6000)}draw()},()=>{}));
+ unsub.push(onSnapshot(doc(db,'private','courier'),s=>{C=s.data()||{};draw()},()=>{}));
  unsub.push(onSnapshot(doc(db,'settings','payment'),s=>{P=s.data()||{};draw()}));
+ unsub.push(onSnapshot(doc(db,'settings','telegram'),s=>{T=s.data()||{};draw()},()=>{}));
  try{ucount=(await getCountFromServer(collection(db,'users'))).data().count;draw()}catch(e){}}
 const VIEWS={promo,risk,dash,orders:ord,prods:prd,cats:cat,ban,vis,pay,set:stg};
 function draw(force){const a=document.activeElement;if(!force&&a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&['prods','cats','ban','pay','set','promo'].includes(tab))return;
@@ -186,8 +186,11 @@ const waLink=o=>'https://wa.me/88'+String(o.phone).replace(/\D/g,'')+'?text='+en
 /* ---- Steadfast transport: Cloud Function proxy (recommended) or direct browser call ---- */
 const SFH=()=>({'Content-Type':'application/json','Api-Key':C.key,'Secret-Key':C.secret});
 async function sf(path,method='GET',body){
- if(C.useFn){try{const r=await httpsCallable(fns,'sfProxy')({path,method,body});return r.data}catch(e){throw new Error('Cloud Function: '+(e.message||e))}}
- let r;try{r=await fetch('https://portal.packzy.com/api/v1/'+path,{method,headers:SFH(),...(body?{body:JSON.stringify(body)}:{})})}catch(e){const x=new Error('ব্রাউজার থেকে Steadfast API ব্লক হয়েছে (CORS)। সেটিংসে Cloud Function প্রক্সি চালু করুন।');x.cors=1;throw x}
+ if(C.useFn!==false){let tok;try{tok=await au.currentUser.getIdToken()}catch(e){throw new Error('লগইন সেশন নেই, আবার লগইন করুন')}
+  let r;try{r=await fetch('/api/sf',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok},body:JSON.stringify({path,method,body})})}catch(e){throw new Error('সার্ভারের সাথে যোগাযোগ করা যাচ্ছে না (Railway সার্ভার চালু আছে কি?)')}
+  let j;try{j=await r.json()}catch(e){throw new Error('সার্ভার থেকে ভুল রেসপন্স (HTTP '+r.status+')')}
+  if(j&&j.error&&!j.consignment)throw new Error(j.error);return j}
+ let r;try{r=await fetch('https://portal.packzy.com/api/v1/'+path,{method,headers:SFH(),...(body?{body:JSON.stringify(body)}:{})})}catch(e){const x=new Error('ব্রাউজার থেকে Steadfast API ব্লক হয়েছে (CORS)। সেটিংসে "সার্ভার প্রক্সি" চালু করুন।');x.cors=1;throw x}
  let j;try{j=await r.json()}catch(e){throw new Error('Steadfast থেকে ভুল রেসপন্স (HTTP '+r.status+')')}
  return j}
 window.SFT=async()=>{try{const j=await sf('get_balance');if(j.current_balance==null)throw new Error(j.message||'কী/সিক্রেট ভুল হতে পারে');toast('কানেকশন ঠিক আছে! Steadfast ব্যালেন্স: ৳'+j.current_balance)}catch(e){toast('ত্রুটি: '+e.message,'err')}};
@@ -210,15 +213,15 @@ window.AB=async(id,btn)=>{const o=orders.find(x=>x._id===id);if(!o||BK.has(id))r
 window.SFSync=async(id,silent,btn)=>{const o=orders.find(x=>x._id===id);if(!o?.courier?.cid){if(!silent)toast('ত্রুটি: Steadfast consignment ID নেই','err');return false}
  const h=btn?.innerHTML;if(btn){btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin mr-1"></i>সিঙ্ক...'}
  try{const j=await sf('status_by_cid/'+o.courier.cid,'GET'),st=j.delivery_status;if(!st)throw new Error(j.message||'স্ট্যাটাস পাওয়া যায়নি');
-  await updateDoc(doc(db,'orders',id),{'courier.live':st,'courier.syncedAt':Date.now()});
-  try{await setDoc(doc(db,'receipts',o.orderId),{live:st},{merge:true})}catch(e){}
+  if(st!==o.courier.live||!silent){await updateDoc(doc(db,'orders',id),{'courier.live':st,'courier.syncedAt':Date.now()});
+  try{await setDoc(doc(db,'receipts',o.orderId),{live:st},{merge:true})}catch(e){}}
   const ns=SFM[st];if(ns&&RK_[ns]>RK_[o.status])await OS(id,ns);
   if(!silent)toast('Steadfast: '+(SFL[st]||st));return true}
  catch(e){if(!silent)toast('ত্রুটি: '+e.message,'err');return false}
  finally{if(btn&&btn.isConnected){btn.disabled=false;btn.innerHTML=h}}};
 window.SFAll=async manual=>{if(SYN)return;const l=orders.filter(o=>o.courier?.cid&&['confirmed','shipped'].includes(o.status));if(!l.length){if(manual)toast('সিঙ্ক করার মতো অর্ডার নেই');return}
  SYN=1;try{let ok=0;for(const o of l.slice(0,40)){const r=await SFSync(o._id,!manual);if(r)ok++;else if(!manual)break;await new Promise(r=>setTimeout(r,250))}if(manual)toast(bn(ok)+'/'+bn(l.length)+' টি অর্ডার সিঙ্ক হয়েছে')}finally{SYN=0}};
-setInterval(()=>{if(!document.hidden&&C.key&&C.secret&&au.currentUser)SFAll(false)},180000);
+
 function img(f,max=640,q=.72){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>{const m=new Image();m.onload=()=>{const k=Math.min(1,max/Math.max(m.width,m.height)),c=document.createElement('canvas');c.width=m.width*k;c.height=m.height*k;c.getContext('2d').drawImage(m,0,0,c.width,c.height);ok(c.toDataURL('image/jpeg',q))};m.onerror=no;m.src=r.result};r.readAsDataURL(f)})}
 const SG=[['অক্ষর সাইজ (শার্ট/টি-শার্ট)',['S','M','L','XL','XXL','3XL']],['নম্বর সাইজ (প্যান্ট/জিন্স)',['28','30','32','34','36','38','40']],['পাঞ্জাবি/ফরমাল শার্ট',['38','40','42','44','46','48']],['অন্যান্য',['Free Size']]];
 window.TS=(s,el)=>{SZ=SZ.includes(s)?SZ.filter(x=>x!==s):[...SZ,s];el.classList.toggle('on')};
@@ -275,12 +278,34 @@ function stg0(){return`<div class="c p-4 grid sm:grid-cols-2 gap-3 max-w-2xl"><d
  <label class="text-xs sm:col-span-2"><input type="checkbox" id="swa" ${S.waAuto!==false?'checked':''}> অর্ডার কনফার্ম হলে অটো হোয়াটসঅ্যাপ খুলবে (অর্ডারের মেসেজসহ)</label>
  <div class="sm:col-span-2 font-bold mt-2"><i class="fa-solid fa-truck-fast text-amber-400 mr-2"></i>Steadfast কুরিয়ার API</div>
  <div><label class="lb">API Key</label><input class="i" id="ck" type="password" value="${esc(C.key||'')}"></div><div><label class="lb">Secret Key</label><input class="i" id="cs2" type="password" value="${esc(C.secret||'')}"></div>
-  <label class="text-xs sm:col-span-2 flex items-start gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20"><input type="checkbox" id="cfn" class="mt-0.5" ${C.useFn?'checked':''}><span><b>Cloud Function প্রক্সি ব্যবহার করুন (সুপারিশকৃত)</b><br><span class="text-gray-400">ব্রাউজারের CORS ব্লক এড়ায়, API Key সুরক্ষিত থাকে এবং Steadfast ওয়েবহুকের মাধ্যমে প্যানেল বন্ধ থাকলেও স্ট্যাটাস অটো সিঙ্ক হয়। (functions ফোল্ডার ডিপ্লয় করা থাকতে হবে)</span></span></label>
+  <label class="text-xs sm:col-span-2 flex items-start gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20"><input type="checkbox" id="cfn" class="mt-0.5" ${C.useFn!==false?'checked':''}><span><b>সার্ভার প্রক্সি ব্যবহার করুন (Railway সার্ভার, সুপারিশকৃত)</b><br><span class="text-gray-400">ব্রাউজারের CORS ব্লক এড়ায়, Steadfast কী ব্রাউজার থেকে যায় না, এবং এডমিন প্যানেল বন্ধ থাকলেও সার্ভার নিজে স্ট্যাটাস সিঙ্ক করে।</span></span></label>
   <div class="sm:col-span-2"><label class="lb">Webhook Bearer Token (Steadfast পোর্টালের Webhook সেটিংয়ে একই টোকেন দিন)</label><input class="i" id="cwt" type="password" value="${esc(C.webhookToken||'')}" placeholder="একটি লম্বা র‍্যান্ডম টোকেন"></div>
-  <div class="sm:col-span-2 text-[11px] text-gray-400 leading-relaxed p-3 rounded-xl bg-black/30">Steadfast Webhook URL: <b class="text-amber-400 break-all">https://us-central1-${esc(cfg.projectId)}.cloudfunctions.net/sfWebhook</b></div>
+  <div class="sm:col-span-2 text-[11px] text-gray-400 leading-relaxed p-3 rounded-xl bg-black/30">Steadfast Webhook URL: <b class="text-amber-400 break-all">${esc(location.origin)}/api/sf-webhook</b></div>
   <button type="button" class="g sm:col-span-2" onclick="SFT()"><i class="fa-solid fa-plug mr-1"></i>কানেকশন টেস্ট (আগে সেভ করুন)</button>
+ <div class="sm:col-span-2 font-bold mt-2"><i class="fa-brands fa-telegram text-amber-400 mr-2"></i>Telegram অর্ডার নোটিফিকেশন</div>
+ <label class="text-xs sm:col-span-2"><input type="checkbox" id="tgOn" ${T.enabled!==false?'checked':''}> নতুন অর্ডার এলে Telegram গ্রুপে ইনভয়েসসহ অ্যালার্ট পাঠান</label>
+ <div class="sm:col-span-2"><label class="lb">Telegram Bot Token (@BotFather থেকে)</label><input class="i" id="tgTok" type="password" autocomplete="off" value="${esc(T.token||'')}" placeholder="123456789:AAH..."></div>
+ <div class="sm:col-span-2"><label class="lb">গ্রুপ Chat ID / গ্রুপ লিংক</label><input class="i" id="tgChat" value="${esc(T.chatId||'')}" placeholder="-1001234567890  অথবা  @groupname  অথবা  https://t.me/groupname"></div>
+ <div class="sm:col-span-2"><label class="lb">ওয়েবসাইটের লিংক ("Call Customer" বাটনের জন্য, https দরকার)</label><input class="i" id="tgSite" value="${esc(T.siteUrl||'')}" placeholder="https://www.yoursite.com"></div>
+ <div class="sm:col-span-2 text-[11px] text-gray-400 leading-relaxed p-3 rounded-xl bg-black/30">① @BotFather-এ বট বানিয়ে টোকেন নিন ② বটকে গ্রুপে অ্যাড করে এডমিন/মেম্বার বানান ③ প্রাইভেট গ্রুপে সংখ্যার Chat ID (-100…) দিতে হবে — <b class="text-amber-400">t.me/+... ইনভাইট লিংক থেকে ID বের করা যায় না</b>। পাবলিক গ্রুপে @username বা t.me/username চলবে। ④ প্রথমে "টেস্ট" চাপুন, তারপর সেভ করুন।</div>
+ <button type="button" class="g" id="tgTest" onclick="TGT()"><i class="fa-solid fa-plug mr-1"></i>Test Connection</button>
+ <button type="button" class="b" onclick="STg()"><i class="fa-solid fa-floppy-disk mr-2"></i>Telegram সেভ</button>
  <button class="b sm:col-span-2" onclick="SSet()"><i class="fa-solid fa-floppy-disk mr-2"></i>সেভ করুন</button></div>`}
 window.SSet=async()=>{await setDoc(doc(db,'settings','site'),{colsDesktop:Math.min(6,Math.max(2,+$('sd').value||4)),colsMobile:Math.min(2,Math.max(1,+$('sm').value||2)),maxProducts:Math.max(0,+$('sx').value||0),requireAdvance:$('sr').checked,shipDhaka:+$('s1').value||0,shipOutside:+$('s2').value||0,freeShip:+$('s3').value||0,shopAddress:$('sa').value.trim(),helpline:$('sh').value.trim(),whatsapp:$('sw').value.replace(/\D/g,''),waAuto:$('swa').checked,eidOn:$('eo').checked,eidTitle:$('et').value.trim(),eidSub:$('es').value.trim()},{merge:true});await setDoc(doc(db,'private','courier'),{key:$('ck').value.trim(),secret:$('cs2').value.trim(),useFn:$('cfn').checked,webhookToken:$('cwt').value.trim()});alert('সেভ হয়েছে')};
+/* ===== Telegram order notification settings (read by the shop from settings/telegram) ===== */
+const tgChatId=raw=>{const s=String(raw||'').trim();if(!s)return null;if(/^-?\d{5,}$/.test(s)||/^@[A-Za-z0-9_]{4,}$/.test(s))return s;let m=s.match(/t\.me\/c\/(\d+)/i);if(m)return'-100'+m[1];m=s.match(/t\.me\/([A-Za-z][A-Za-z0-9_]{3,})\/?(?:\?.*)?$/i);return m&&!/^(joinchat|addlist)$/i.test(m[1])?'@'+m[1]:null};
+const tgRead=()=>({enabled:$('tgOn').checked,token:$('tgTok').value.trim(),chatId:$('tgChat').value.trim(),siteUrl:$('tgSite').value.trim().replace(/\/+$/,'')});
+const tgx=async(tok,m,o)=>{const f=new FormData();Object.entries(o||{}).forEach(([k,v])=>f.append(k,v));const r=await fetch('https://api.telegram.org/bot'+encodeURIComponent(tok)+'/'+m,{method:'POST',body:f});const j=await r.json().catch(()=>({}));if(!j.ok)throw new Error(j.description||('HTTP '+r.status));return j.result};
+const tgWhy=m=>/unauthorized|not found: method/i.test(m)?'বট টোকেন ভুল':/chat not found/i.test(m)?'Chat ID ভুল, অথবা বটকে গ্রুপে অ্যাড করা হয়নি':/kicked|not a member|forbidden/i.test(m)?'বট গ্রুপে নেই বা মেসেজ পাঠানোর অনুমতি নেই':m;
+window.TGT=async()=>{const d=tgRead(),b=$('tgTest');if(!d.token||!d.chatId)return toast('বট টোকেন ও গ্রুপ Chat ID দিন','err');const chat=tgChatId(d.chatId);if(!chat)return toast('ইনভাইট লিংক থেকে Chat ID পাওয়া যায় না — সংখ্যার ID (-100…) বা @username দিন','err');
+ const old=b.innerHTML;b.disabled=true;b.innerHTML='<i class="fa-solid fa-spinner fa-spin mr-1"></i>চেক করা হচ্ছে...';
+ try{const me=await tgx(d.token,'getMe');const ch=await tgx(d.token,'getChat',{chat_id:chat});
+  const wa=String(S.whatsapp||'8801000000000').replace(/\D/g,'');const kb=[];if(/^https:\/\//i.test(d.siteUrl||location.origin))kb.push({text:'📞 Call Customer',url:(d.siteUrl||location.origin)+'/?call=01000000000'});kb.push({text:'💬 WhatsApp Customer',url:'https://wa.me/'+wa});
+  await tgx(d.token,'sendMessage',{chat_id:chat,text:'✅ <b>BANA FASHION</b> — টেস্ট সফল!\nনতুন অর্ডার এলে ইনভয়েসসহ এই গ্রুপে অ্যালার্ট আসবে।',parse_mode:'HTML',reply_markup:JSON.stringify({inline_keyboard:[kb]})});
+  toast('সংযোগ ঠিক আছে! @'+me.username+' → '+(ch.title||ch.username||chat))}catch(e){toast('❌ '+tgWhy(e.message),'err')}
+ b.disabled=false;b.innerHTML=old};
+window.STg=async()=>{const d=tgRead();if(d.chatId&&!tgChatId(d.chatId))return toast('Chat ID সঠিক নয় — সংখ্যার ID (-100…) বা @username দিন','err');if(d.siteUrl&&!/^https:\/\//i.test(d.siteUrl))return toast('ওয়েবসাইট লিংক https:// দিয়ে শুরু হতে হবে','err');
+ try{await setDoc(doc(db,'settings','telegram'),d);try{localStorage.setItem('bana_tg',JSON.stringify(d))}catch(e){}toast('Telegram সেটিং সেভ হয়েছে')}catch(e){toast('সেভ হয়নি: '+(e.code||e.message),'err')}};
 const gone=(id,fn)=>{const e=$(id);e&&e.classList.add('gone');setTimeout(()=>{fn();toast('ডিলিট হয়েছে')},300)};
 window.CD=(msg,fn)=>{const m=document.createElement('div');m.className='fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4';
  m.innerHTML=`<div class="c p-6 max-w-sm w-full pop" style="background:#16161a"><div class="flex items-center gap-3 pb-3 border-b border-white/10"><div class="w-11 h-11 rounded-full bg-red-500/15 text-red-400 flex items-center justify-center text-xl shake"><i class="fa-solid fa-triangle-exclamation"></i></div><h3 class="font-extrabold">ডিলিট নিশ্চিতকরণ</h3></div><p class="text-sm text-gray-300 mt-4 break-words">${msg}</p><p class="text-[11px] text-gray-500 mt-1">এটা আর ফেরত আনা যাবে না</p><div class="flex justify-end gap-2 mt-5"><button class="g" id="cx">বাতিল</button><button class="b" style="background:#dc2626;color:#fff;box-shadow:none" id="cy"><i class="fa-solid fa-trash mr-1"></i>ডিলিট করুন</button></div></div>`;
