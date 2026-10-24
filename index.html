@@ -44,6 +44,12 @@
 .mv{width:28px;height:24px;border-radius:8px;background:rgba(255,255,255,.07);font-size:11px;display:flex;align-items:center;justify-content:center}.mv:disabled{opacity:.25}
 .sw{position:relative;display:inline-flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;flex:none;padding:0 4px}.sw input{position:absolute;opacity:0;width:0;height:0}.sw span.t{width:34px;height:19px;border-radius:99px;background:rgba(255,255,255,.14);position:relative;transition:background .15s}.sw span.t::after{content:'';position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;background:#fff;transition:transform .15s}.sw input:checked+span.t{background:#F59E0B}.sw input:checked+span.t::after{transform:translateX(15px)}.sw small{font-size:9px;font-weight:700;color:#9ca3af}.sw input:checked~small{color:#FBBF24}
 .ed{position:fixed;z-index:91;left:0;right:0;top:4vh;margin:0 auto;width:min(94vw,760px);max-height:92vh;overflow-y:auto;background:#121216}#v>.ed{animation:none}
+.sf{background:linear-gradient(135deg,#34d399,#059669);color:#04130c;font-weight:800;border-radius:12px;padding:10px 16px;font-size:13px;box-shadow:0 8px 22px -10px rgba(16,185,129,.7);position:relative;overflow:hidden}.sf:active{transform:scale(.97)}.sf:disabled,.b:disabled,.g:disabled{opacity:.6;pointer-events:none}
+.odm-card{background:#121216;border:1px solid rgba(255,255,255,.1);width:100%;max-width:660px;border-radius:22px 22px 0 0;display:flex;flex-direction:column;max-height:94vh;box-shadow:0 30px 80px -20px #000}@media(min-width:640px){.odm-card{border-radius:22px}}
+.odb{overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.sec{font-size:11px;font-weight:800;color:#FBBF24;letter-spacing:.03em;margin:16px 0 7px}.lbl{font-size:10px;color:#6b7280;font-weight:700;margin-bottom:2px}
+.kv{display:flex;justify-content:space-between;gap:12px;font-size:12px;padding:7px 0;border-bottom:1px dashed rgba(255,255,255,.08)}.kv span{color:#9ca3af}
+details>summary{list-style:none}details>summary::-webkit-details-marker{display:none}
 </style></head>
 <body>
 <div id="setup" class="hidden p-8 text-center">firebaseConfig বসান</div>
@@ -60,11 +66,12 @@
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import{getFirestore,collection,doc,getDocs,getDoc,writeBatch,setDoc,addDoc,updateDoc,deleteDoc,onSnapshot,query,orderBy,limit,where,documentId,getCountFromServer,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import{getFunctions,httpsCallable}from"https://www.gstatic.com/firebasejs/10.8.0/firebase-functions.js";
 import{getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut,sendPasswordResetEmail}from"https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 const cfg={apiKey:"AIzaSyBwMWJ-OMMVR-aeiP9mrwGCqpGzxuranFI",authDomain:"bana-fashion.firebaseapp.com",projectId:"bana-fashion",storageBucket:"bana-fashion.firebasestorage.app",messagingSenderId:"143663802409",appId:"1:143663802409:web:fe1ceb33a3dfa33fe0d438"};
 const ADMIN="banafashiongazipur@gmail.com";
 const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])),tk=n=>'৳'+Math.round(n||0).toLocaleString('en-US');
-const app=initializeApp(cfg),db=getFirestore(app),au=getAuth(app);
+const app=initializeApp(cfg),db=getFirestore(app),au=getAuth(app),fns=getFunctions(app);
 let OF='all',orders=[],prods=[],cats=[],banners=[],visits=[],stats=[],tot={},S={},P={},tab='dash',ucount=0,unsub=[],EP=null,EB=null,SZ=[],IMGS=[],C={},promos=[];
 const NAV=[['dash','fa-chart-pie','ড্যাশবোর্ড'],['orders','fa-bag-shopping','অর্ডার'],['risk','fa-user-shield','কাস্টমার চেক'],['promo','fa-ticket','প্রোমোকোড'],['prods','fa-shirt','প্রোডাক্ট'],['cats','fa-layer-group','ক্যাটাগরি'],['ban','fa-image','ব্যানার'],['vis','fa-eye','ভিজিট'],['pay','fa-wallet','পেমেন্ট'],['set','fa-gear','সেটিংস']];
 const day=(d=new Date())=>d.toLocaleDateString('en-CA'),ts=o=>o.createdAt?.toDate?o.createdAt.toDate():new Date(o.createdAt||0),bn=n=>String(n).replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]);
@@ -85,14 +92,14 @@ async function boot(){const ym=day().slice(0,7);
  ls('stats',s=>stats=s.docs.map(d=>({id:d.id,...d.data()})),query(collection(db,'stats'),where(documentId(),'>=',ym.slice(0,4)+'-01-01'),where(documentId(),'<=',ym.slice(0,4)+'-12-31')));
  unsub.push(onSnapshot(doc(db,'stats','total'),s=>{tot=s.data()||{};draw()}));
  unsub.push(onSnapshot(doc(db,'settings','site'),s=>{S=s.data()||{};window.SHOPX={...(S.shopAddress?{addr:S.shopAddress}:{}),...(S.helpline?{phone:S.helpline}:{})};draw()}));
- unsub.push(onSnapshot(doc(db,'private','courier'),s=>{C=s.data()||{};draw()},()=>{}));
+ unsub.push(onSnapshot(doc(db,'private','courier'),s=>{C=s.data()||{};if(C.key&&!window._sf0){window._sf0=1;setTimeout(()=>window.SFAll&&SFAll(false),6000)}draw()},()=>{}));
  unsub.push(onSnapshot(doc(db,'settings','payment'),s=>{P=s.data()||{};draw()}));
  try{ucount=(await getCountFromServer(collection(db,'users'))).data().count;draw()}catch(e){}}
 const VIEWS={promo,risk,dash,orders:ord,prods:prd,cats:cat,ban,vis,pay,set:stg};
 function draw(force){const a=document.activeElement;if(!force&&a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName)&&['prods','cats','ban','pay','set','promo'].includes(tab))return;
  const n=NAV.map(([k,i,l])=>`<button class="nv ${tab===k?'on':''}" onclick="T('${k}')"><span class="ic" style="--ic:${NC[k]}"><i class="fa-solid ${i}"></i></span>${l}${k==='orders'&&orders.filter(o=>o.status==='pending').length?`<span class="ml-auto bg-red-500 text-white text-[10px] px-2 rounded-full">${orders.filter(o=>o.status==='pending').length}</span>`:''}</button>`).join('');
  const _s=$('bn').scrollLeft,_t=$('nav').scrollTop;$('nav').innerHTML=n;$('bn').innerHTML=NAV.map(([k,i,l])=>`<button onclick="T('${k}')" class="shrink-0 w-[76px] py-2.5 text-[10px] font-bold ${tab===k?'text-amber-400':'text-gray-500'}"><span class="ic mx-auto mb-1" style="--ic:${NC[k]}"><i class="fa-solid ${i}"></i></span>${l}</button>`).join('');
- $('bn').scrollLeft=_s;$('nav').scrollTop=_t;$('ttl').textContent=NAV.find(x=>x[0]===tab)[2];$('v').innerHTML=VIEWS[tab]()}
+ $('bn').scrollLeft=_s;$('nav').scrollTop=_t;$('ttl').textContent=NAV.find(x=>x[0]===tab)[2];$('v').innerHTML=VIEWS[tab]();window.ODR&&window.ODR()}
 window.T=k=>{tab=k;EP=EB=null;SZ=[];IMGS=[];draw();scrollTo(0,0)};
 const stat=(i,c,l,v,s)=>`<div class="c p-4 relative overflow-hidden"><div class="absolute -right-4 -top-4 w-20 h-20 rounded-full opacity-20 blur-xl" style="background:${c}"></div><span class="ic big mb-3" style="--ic:${c}"><i class="fa-solid ${i}"></i></span><div class="text-[11px] text-gray-400 font-bold">${l}</div><div class="text-2xl font-extrabold mt-0.5">${v}</div>${s?`<div class="text-[11px] text-gray-500 mt-1">${s}</div>`:''}</div>`;
 function dash0(){const td=day(),ym=td.slice(0,7),st=stats.find(x=>x.id===td)||{},mo=stats.filter(x=>x.id.startsWith(ym)),sum=(k)=>mo.reduce((a,x)=>a+(x[k]||0),0),
@@ -108,17 +115,110 @@ function dash0(){const td=day(),ym=td.slice(0,7),st=stats.find(x=>x.id===td)||{}
  <div class="c p-4"><div class="font-bold text-sm mb-3"><i class="fa-solid fa-clock-rotate-left text-amber-400 mr-2"></i>সর্বশেষ অর্ডার</div>${orders.slice(0,5).map(o=>`<div class="flex justify-between text-xs py-2 border-b border-white/5"><span>${esc(o.customerName)}<br><span class="text-gray-500">${esc(o.orderId)}</span></span><span class="text-right"><b>${tk(o.total)}</b><br><span class="text-amber-400">${esc(o.status)}</span></span></div>`).join('')||'<p class="text-xs text-gray-500">এখনো অর্ডার নেই</p>'}</div></div>`}
 const SS=['pending','confirmed','shipped','delivered','cancelled','returned'],BL={pending:'পেন্ডিং',confirmed:'কনফার্ম',shipped:'শিপড',delivered:'ডেলিভারড',cancelled:'বাতিল',returned:'রিটার্ন/রিজেক্ট'},SC_={pending:'#eab308',confirmed:'#3b82f6',shipped:'#8b5cf6',delivered:'#10b981',cancelled:'#ef4444',returned:'#f97316'};
 window.OFl=k=>{OF=k;draw()};
-function ord(){const lst=orders.filter(o=>OF==='all'||o.status===OF);return`<div class="ots">${['all',...SS].map(k=>`<button class="ot ${OF===k?'on':''}" style="--ic:${k==='all'?'#F59E0B':SC_[k]}" onclick="OFl('${k}')"><i class="fa-solid ${OI[k]}"></i><span>${k==='all'?'সব':BL[k]}</span><b>${bn(k==='all'?orders.length:orders.filter(o=>o.status===k).length)}</b></button>`).join('')}</div><div class="space-y-3">${lst.map(o=>`<div class="c p-4 text-sm"><div class="flex flex-wrap justify-between gap-2 items-center"><b>${esc(o.orderId)} <span class="text-[10px] px-2 py-0.5 rounded-full text-black ml-1" style="background:${SC_[o.status]}">${BL[o.status]}</span></b><span class="text-gray-500 text-xs">${ts(o).toLocaleString('bn-BD')}</span></div>
- <div class="mt-2"><i class="fa-solid fa-user text-gray-500 mr-1"></i>${esc(o.customerName)} · <a class="text-amber-400" href="tel:${esc(o.phone)}"><i class="fa-solid fa-phone mr-1"></i>${esc(o.phone)}</a> ${riskChip(o)}</div><div class="text-xs text-gray-400 mt-1"><i class="fa-solid fa-location-dot mr-1"></i>${esc(o.address)}, ${esc(o.upazila||'')}, ${esc(o.district||'')} (${o.area==='dhaka'?'ঢাকার ভিতরে':'ঢাকার বাইরে'}) ${o.note?'| '+esc(o.note):''} ${o.geo?`<a class="text-sky-400 font-bold" target="_blank" href="https://www.google.com/maps?q=${o.geo.lat},${o.geo.lng}"><i class="fa-solid fa-location-dot"></i> ম্যাপে দেখুন</a>`:''}</div>
- <div class="mt-2 space-y-1">${(o.items||[]).map(i=>`<div class="text-xs bg-white/5 rounded-lg px-3 py-1.5 flex justify-between"><span>${esc(i.title)} · সাইজ ${esc(i.size)} × ${bn(i.qty)}</span><b>${tk(i.price*i.qty)}</b></div>`).join('')}</div>
- <div class="mt-2 flex justify-between"><span class="text-gray-400">ডেলিভারি ${tk(o.delivery)}${o.discount?` · প্রোমো ${esc(o.promo?.code||'')} -${tk(o.discount)}`:''}</span><b class="text-amber-400 text-base">মোট ${tk(o.total)}</b></div>
- <div class="mt-2 p-3 rounded-xl bg-black/40 text-xs">${o.pay?.trxId?`<i class="fa-solid fa-wallet text-amber-400 mr-1"></i>${esc(o.pay.method).toUpperCase()} · সেন্ডার ${esc(o.pay.sender)} · TrxID <b>${esc(o.pay.trxId)}</b>`:'<i class="fa-solid fa-money-bill-wave text-emerald-400 mr-1"></i>ক্যাশ অন ডেলিভারি'}
- ${o.deliveryPaid?'<span class="text-emerald-400 font-bold ml-2"><i class="fa-solid fa-circle-check"></i> ডেলিভারি চার্জ পেইড</span><button class="g ml-2" onclick="PD(\''+o._id+'\',false)">বাতিল</button>':(o.pay?.trxId?`<button class="b !py-1 !px-3 ml-2" onclick="PD('${o._id}',true)">পেমেন্ট ভেরিফাই</button>`:'')}</div>
- <div class="mt-3 flex flex-wrap gap-2"><button class="g" onclick="INV('${o._id}')"><i class="fa-solid fa-file-invoice mr-1"></i>ইনভয়েস দেখুন</button><a class="g" target="_blank" href="${waLink(o)}"><i class="fa-brands fa-whatsapp text-emerald-400 mr-1"></i>হোয়াটসঅ্যাপ</a>${o.courier?.tracking?`<button class="g" onclick="SFS('${o._id}')"><i class="fa-solid fa-satellite-dish mr-1"></i>লাইভ স্ট্যাটাস</button>`:`<button class="g" onclick="SFB('${o._id}')"><i class="fa-solid fa-truck-fast mr-1"></i>Steadfast বুক</button>`}${SS.map(k=>`<button class="${o.status===k?'b':'g'}" onclick="OS('${o._id}','${k}')">${BL[k]}</button>`).join('')}</div>
- <div class="mt-2 grid sm:grid-cols-3 gap-2"><input class="i" id="cn${o._id}" placeholder="কুরিয়ার" value="${esc(o.courier?.name||'Steadfast')}"><input class="i" id="ct${o._id}" placeholder="ট্র্যাকিং / কনসাইনমেন্ট ID" value="${esc(o.courier?.tracking||'')}"><button class="g" onclick="CS('${o._id}')"><i class="fa-solid fa-floppy-disk mr-1"></i>কুরিয়ার সেভ</button></div></div>`).join('')||'<p class="text-gray-500">কোনো অর্ডার নেই</p>'}</div>`}
+/* ===== ORDERS: CLEAN LIST + DETAILS MODAL + STEADFAST ===== */
+let OV=null,SYN=0;const BK=new Set();
+const COD=o=>(o.pay&&o.deliveryPaid)?(o.subtotal-(o.discount||0)):o.total;
+const fullAddr=o=>[o.address,o.upazila,o.district,o.division].filter(Boolean).join(', ');
+const stChip=o=>`<span class="text-[10px] px-2 py-0.5 rounded-full text-black font-extrabold" style="background:${SC_[o.status]||'#777'}">${esc(BL[o.status]||o.status)}</span>`;
+const SFL={pending:'অপেক্ষমান',in_review:'রিভিউ চলছে',hold:'হোল্ডে আছে',delivered:'ডেলিভারড',partial_delivered:'আংশিক ডেলিভারড',cancelled:'বাতিল / রিটার্ন',delivered_approval_pending:'ডেলিভারড (অনুমোদন বাকি)',partial_delivered_approval_pending:'আংশিক ডেলিভারড (অনুমোদন বাকি)',cancelled_approval_pending:'বাতিল (অনুমোদন বাকি)',unknown_approval_pending:'অজানা (অনুমোদন বাকি)',unknown:'অজানা'};
+const SFM={pending:'confirmed',in_review:'confirmed',hold:'shipped',delivered:'delivered',partial_delivered:'delivered',cancelled:'returned',delivered_approval_pending:'shipped',partial_delivered_approval_pending:'shipped',cancelled_approval_pending:'shipped',unknown_approval_pending:'shipped'};
+const RK_={pending:0,confirmed:1,shipped:2,delivered:3,returned:3,cancelled:3};
+const bookable=o=>!(o.courier?.cid||o.courier?.tracking)&&!['cancelled','returned','delivered'].includes(o.status);
+const liveChip=o=>o.courier?.live?`<span class="text-[10px] px-2 py-0.5 rounded-full bg-violet-500/20 text-violet-300 font-bold"><i class="fa-solid fa-satellite-dish mr-1"></i>${esc(SFL[o.courier.live]||o.courier.live)}</span>`:'';
+
+function ord(){const lst=orders.filter(o=>OF==='all'||o.status===OF);
+return`<div class="ots">${['all',...SS].map(k=>`<button class="ot ${OF===k?'on':''}" style="--ic:${k==='all'?'#F59E0B':SC_[k]}" onclick="OFl('${k}')"><i class="fa-solid ${OI[k]}"></i><span>${k==='all'?'সব':BL[k]}</span><b>${bn(k==='all'?orders.length:orders.filter(o=>o.status===k).length)}</b></button>`).join('')}</div>
+<div class="flex justify-between items-center mb-2 gap-2"><span class="text-[11px] text-gray-500">${bn(lst.length)} টি অর্ডার</span><button class="g" onclick="SFAll(true)"><i class="fa-solid fa-rotate mr-1"></i>Steadfast স্ট্যাটাস সিঙ্ক</button></div>
+<div class="space-y-2">${lst.map(o=>`<div class="c p-3 sm:p-4">
+ <div class="flex items-start gap-3"><div class="min-w-0 flex-1">
+  <div class="flex flex-wrap items-center gap-1.5"><b class="font-mono text-[13px]">${esc(o.orderId)}</b>${stChip(o)}${liveChip(o)}</div>
+  <div class="mt-1 text-sm truncate"><b>${esc(o.customerName)}</b> · <a class="text-amber-400" href="tel:${esc(o.phone)}">${esc(o.phone)}</a></div>
+  <div class="text-[11px] text-gray-500 mt-0.5">${ts(o).toLocaleString('bn-BD')}</div></div>
+  <div class="text-right flex-none"><div class="text-amber-400 font-extrabold text-base">${tk(o.total)}</div><div class="text-[10px] text-gray-500">${o.pay?.trxId?'অগ্রিম চার্জ':'ক্যাশ অন ডেলিভারি'}</div></div></div>
+ <div class="mt-3 flex flex-wrap gap-2 items-center"><button class="b !py-2 !px-4" onclick="VD('${o._id}')"><i class="fa-solid fa-eye mr-1.5"></i>View Details</button>
+  ${bookable(o)?`<button class="sf !py-2 !px-3" onclick="AB('${o._id}',this)"><i class="fa-solid fa-truck-fast mr-1.5"></i>Accept &amp; Book via Steadfast</button>`:(o.courier?.tracking?`<span class="text-[11px] text-gray-400"><i class="fa-solid fa-barcode mr-1"></i>${esc(o.courier.name||'Courier')}: <b class="text-white font-mono">${esc(o.courier.tracking)}</b></span>`:'')}</div></div>`).join('')||'<p class="text-gray-500">কোনো অর্ডার নেই</p>'}</div>`}
+
+const odHTML=o=>{const id=o._id,addr=fullAddr(o),cp=o.courier||{},can=bookable(o),cod=COD(o);
+return`<div class="odm-card pop" style="animation-duration:.25s" role="dialog" aria-modal="true">
+<div class="flex items-start justify-between gap-3 p-4 border-b border-white/10"><div><div class="text-[11px] text-gray-400">অর্ডার আইডি</div><div class="font-mono font-extrabold text-lg">${esc(o.orderId)}</div><div class="mt-1 flex flex-wrap gap-1.5 items-center">${stChip(o)}<span class="text-[11px] text-gray-500">${ts(o).toLocaleString('bn-BD')}</span></div></div><button class="g" onclick="CVD()" aria-label="বন্ধ করুন"><i class="fa-solid fa-xmark"></i></button></div>
+<div class="odb p-4 pt-1 text-sm">
+<div class="sec"><i class="fa-solid fa-user mr-1"></i>কাস্টমারের তথ্য</div>
+<div class="rounded-xl bg-white/5 p-3 space-y-3">
+ <div class="flex justify-between items-start gap-2"><div><div class="lbl">পূর্ণ নাম</div><b class="text-base">${esc(o.customerName)}</b></div><div>${riskChip(o)}</div></div>
+ <div class="flex justify-between items-center gap-2"><div><div class="lbl">ফোন নম্বর</div><a class="font-bold text-amber-400" href="tel:${esc(o.phone)}">${esc(o.phone)}</a></div><button class="g" onclick="CPF('${id}','phone',this)"><i class="fa-regular fa-copy mr-1"></i>কপি</button></div>
+ <div class="flex justify-between items-start gap-2"><div class="min-w-0"><div class="lbl">সম্পূর্ণ ডেলিভারি ঠিকানা · ${o.area==='dhaka'?'ঢাকার ভিতরে':'ঢাকার বাইরে'}</div><div class="font-semibold leading-relaxed break-words">${esc(addr)}</div>${o.note?`<div class="text-xs text-gray-400 mt-1"><i class="fa-solid fa-note-sticky mr-1"></i>নোট: ${esc(o.note)}</div>`:''}${o.geo?`<a class="text-sky-400 font-bold text-xs inline-block mt-1" target="_blank" rel="noopener" href="https://www.google.com/maps?q=${o.geo.lat},${o.geo.lng}"><i class="fa-solid fa-location-dot mr-1"></i>ম্যাপে দেখুন</a>`:''}</div><button class="g flex-none" onclick="CPF('${id}','addr',this)"><i class="fa-regular fa-copy mr-1"></i>কপি</button></div>
+</div>
+<div class="sec"><i class="fa-solid fa-shirt mr-1"></i>অর্ডারকৃত প্রোডাক্ট</div>
+<div class="space-y-1.5">${(o.items||[]).map((i,n)=>`<div class="rounded-xl bg-white/5 p-3 flex justify-between gap-3"><div class="min-w-0"><div class="font-semibold">${bn(n+1)}. ${esc(i.title)}</div><div class="text-[11px] text-gray-400 mt-0.5">সাইজ: <b class="text-white">${esc(i.size||'-')}</b> · পরিমাণ: <b class="text-white">${bn(i.qty)}</b> · একক: ${tk(i.price)}</div></div><b class="flex-none">${tk(i.price*i.qty)}</b></div>`).join('')}</div>
+<div class="sec"><i class="fa-solid fa-receipt mr-1"></i>হিসাব ও পেমেন্ট</div>
+<div class="rounded-xl bg-white/5 px-3 py-1"><div class="kv"><span>সাবটোটাল</span><b>${tk(o.subtotal)}</b></div><div class="kv"><span>ডেলিভারি চার্জ</span><b>${o.delivery?tk(o.delivery):'ফ্রি'}</b></div>${o.discount?`<div class="kv"><span>প্রোমো ${esc(o.promo?.code||'')}</span><b class="text-emerald-400">-${tk(o.discount)}</b></div>`:''}<div class="kv"><span>সর্বমোট</span><b class="text-amber-400 text-base">${tk(o.total)}</b></div><div class="kv" style="border:0"><span>কুরিয়ারে COD (ক্যাশ কালেকশন)</span><b>${tk(cod)}</b></div></div>
+<div class="mt-2 p-3 rounded-xl bg-black/40 text-xs">${o.pay?.trxId?`<i class="fa-solid fa-wallet text-amber-400 mr-1"></i>${esc(o.pay.method).toUpperCase()} · সেন্ডার ${esc(o.pay.sender)} · TrxID <b>${esc(o.pay.trxId)}</b>`:'<i class="fa-solid fa-money-bill-wave text-emerald-400 mr-1"></i>ক্যাশ অন ডেলিভারি'}
+${o.deliveryPaid?`<span class="text-emerald-400 font-bold ml-2"><i class="fa-solid fa-circle-check"></i> ডেলিভারি চার্জ পেইড</span><button class="g ml-2" onclick="PD('${id}',false)">বাতিল</button>`:(o.pay?.trxId?`<button class="b !py-1 !px-3 ml-2" onclick="PD('${id}',true)">পেমেন্ট ভেরিফাই</button>`:'')}</div>
+<div class="sec"><i class="fa-solid fa-truck-fast mr-1"></i>Steadfast কুরিয়ার</div>
+<div class="rounded-xl bg-white/5 p-3 space-y-2">
+${cp.tracking||cp.cid?`<div class="kv"><span>ট্র্যাকিং কোড</span><b class="font-mono">${esc(cp.tracking||'-')}</b></div>${cp.cid?`<div class="kv"><span>কনসাইনমেন্ট ID</span><b class="font-mono">${esc(cp.cid)}</b></div>`:''}<div class="kv"><span>কুরিয়ার স্ট্যাটাস</span><b>${cp.live?esc(SFL[cp.live]||cp.live):'—'}</b></div>${cp.msg?`<div class="kv"><span>আপডেট</span><b class="text-right">${esc(cp.msg)}</b></div>`:''}${cp.syncedAt?`<div class="text-[10px] text-gray-500">সর্বশেষ সিঙ্ক: ${new Date(cp.syncedAt).toLocaleString('bn-BD')}</div>`:''}
+<div class="flex flex-wrap gap-2 pt-1">${cp.cid?`<button class="g" onclick="SFSync('${id}',false,this)"><i class="fa-solid fa-rotate mr-1"></i>এখনই সিঙ্ক</button>`:''}${cp.tracking?`<a class="g" target="_blank" rel="noopener" href="https://steadfast.com.bd/t/${encodeURIComponent(cp.tracking)}"><i class="fa-solid fa-up-right-from-square mr-1"></i>ট্র্যাকিং পেজ</a>`:''}</div>`
+:`<p class="text-xs text-gray-400">এখনো কুরিয়ারে বুক করা হয়নি। কনফার্ম করে নিচের বাটনে ক্লিক করলে অটো বুকিং হবে।</p>${can?`<button class="sf w-full" onclick="AB('${id}',this)"><i class="fa-solid fa-truck-fast mr-2"></i>Accept &amp; Book via Steadfast</button>`:''}`}
+<details class="pt-1"><summary class="text-[11px] text-gray-500 cursor-pointer">হাতে ট্র্যাকিং কোড বসান (ম্যানুয়াল)</summary><div class="mt-2 grid sm:grid-cols-3 gap-2"><input class="i" id="cn${id}" placeholder="কুরিয়ার" value="${esc(cp.name||'Steadfast')}"><input class="i" id="ct${id}" placeholder="ট্র্যাকিং কোড" value="${esc(cp.tracking||'')}"><button class="g" onclick="CS('${id}')"><i class="fa-solid fa-floppy-disk mr-1"></i>সেভ</button></div></details></div>
+<div class="sec"><i class="fa-solid fa-list-check mr-1"></i>স্ট্যাটাস পরিবর্তন</div>
+<div class="flex flex-wrap gap-2">${SS.map(k=>`<button class="${o.status===k?'b':'g'}" onclick="OS('${id}','${k}')">${BL[k]}</button>`).join('')}</div>
+</div>
+<div class="p-3 border-t border-white/10 flex flex-wrap gap-2 bg-black/30" style="border-radius:0 0 22px 22px"><button class="b flex-1 min-w-[210px]" onclick="CPO('${id}',this)"><i class="fa-regular fa-copy mr-2"></i>Copy Address &amp; Details</button>${can?`<button class="sf flex-1 min-w-[210px]" onclick="AB('${id}',this)"><i class="fa-solid fa-truck-fast mr-2"></i>Accept &amp; Book via Steadfast</button>`:''}<button class="g" onclick="INV('${id}')"><i class="fa-solid fa-file-invoice mr-1"></i>ইনভয়েস</button><a class="g" target="_blank" rel="noopener" href="${waLink(o)}"><i class="fa-brands fa-whatsapp text-emerald-400 mr-1"></i>হোয়াটসঅ্যাপ</a></div></div>`};
+
+window.VD=id=>{OV=id;let w=$('odm');if(!w){w=document.createElement('div');w.id='odm';w.className='fixed inset-0 z-[95] bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center sm:p-4';w.onclick=e=>{if(e.target===w)CVD()};document.body.appendChild(w);document.body.style.overflow='hidden'}ODR(true)};
+window.CVD=()=>{OV=null;const w=$('odm');if(w)w.remove();document.body.style.overflow=''};
+window.ODR=force=>{if(!OV)return;const w=$('odm');if(!w)return;const o=orders.find(x=>x._id===OV);if(!o){CVD();return}const a=document.activeElement;if(!force&&w.contains(a)&&/INPUT|TEXTAREA/.test(a.tagName))return;const d=w.querySelector('details'),open=d&&d.open,sc=w.querySelector('.odb')?.scrollTop||0;w.innerHTML=odHTML(o);const b=w.querySelector('.odb');if(b)b.scrollTop=sc;const d2=w.querySelector('details');if(d2&&open)d2.open=true};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('odm')&&!$('invWrap'))CVD()});
+
+/* ---- one-click copy ---- */
+const copyTxt=o=>[`অর্ডার আইডি: ${o.orderId}`,`নাম: ${o.customerName||''}`,`ফোন: ${o.phone||''}`,`ঠিকানা: ${fullAddr(o)} (${o.area==='dhaka'?'ঢাকার ভিতরে':'ঢাকার বাইরে'})`,o.note?`নোট: ${o.note}`:'','প্রোডাক্ট:',...(o.items||[]).map((i,n)=>`${n+1}. ${i.title} | সাইজ: ${i.size||'-'} | পরিমাণ: ${i.qty} | ৳${Math.round(i.price*i.qty)}`),`মোট: ৳${Math.round(o.total||0)}`,`COD (ক্যাশ কালেকশন): ৳${Math.round(COD(o)||0)}`].filter(x=>x!=='').join('\n');
+window.CPY=async(t,b)=>{let ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(e){const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0;top:0';document.body.appendChild(a);a.select();try{ok=document.execCommand('copy')}catch(x){}a.remove()}
+ if(ok){toast('কপি হয়েছে ✔');if(b){const h=b.innerHTML;b.innerHTML='<i class="fa-solid fa-check mr-1"></i>কপি হয়েছে';setTimeout(()=>{b.innerHTML=h},1600)}}else toast('ত্রুটি: কপি করা যায়নি','err')};
+window.CPO=(id,b)=>{const o=orders.find(x=>x._id===id);if(o)CPY(copyTxt(o),b)};
+window.CPF=(id,f,b)=>{const o=orders.find(x=>x._id===id);if(o)CPY(f==='phone'?String(o.phone||''):fullAddr(o),b)};
+
+/* ---- order actions ---- */
 window.PD=(id,v)=>updateDoc(doc(db,'orders',id),{deliveryPaid:v,'pay.status':v?'verified':'pending'});
 window.OS=async(id,s)=>{await updateDoc(doc(db,'orders',id),{status:s});const o=orders.find(x=>x._id===id);if(o)try{await setDoc(doc(db,'receipts',o.orderId),{status:s},{merge:true})}catch(e){}};
-window.CS=id=>updateDoc(doc(db,'orders',id),{courier:{name:$('cn'+id).value.trim(),tracking:$('ct'+id).value.trim()}}).then(()=>alert('সেভ হয়েছে'));
+window.CS=id=>{const o=orders.find(x=>x._id===id),t=$('ct'+id).value.trim(),n=$('cn'+id).value.trim();return updateDoc(doc(db,'orders',id),{'courier.name':n,'courier.tracking':t}).then(async()=>{if(o)try{await setDoc(doc(db,'receipts',o.orderId),{courier:n,tracking:t},{merge:true})}catch(e){}alert('সেভ হয়েছে')})};
+const waLink=o=>'https://wa.me/88'+String(o.phone).replace(/\D/g,'')+'?text='+encodeURIComponent(`আসসালামু আলাইকুম ${o.customerName}, BANA FASHION থেকে আপনার অর্ডার ${o.orderId} (মোট ${tk(o.total)}) পেয়েছি। ${o.courier?.tracking?'কুরিয়ার ট্র্যাকিং: '+o.courier.tracking+'। ':''}ধন্যবাদ!`);
+
+/* ---- Steadfast transport: Cloud Function proxy (recommended) or direct browser call ---- */
+const SFH=()=>({'Content-Type':'application/json','Api-Key':C.key,'Secret-Key':C.secret});
+async function sf(path,method='GET',body){
+ if(C.useFn){try{const r=await httpsCallable(fns,'sfProxy')({path,method,body});return r.data}catch(e){throw new Error('Cloud Function: '+(e.message||e))}}
+ let r;try{r=await fetch('https://portal.packzy.com/api/v1/'+path,{method,headers:SFH(),...(body?{body:JSON.stringify(body)}:{})})}catch(e){const x=new Error('ব্রাউজার থেকে Steadfast API ব্লক হয়েছে (CORS)। সেটিংসে Cloud Function প্রক্সি চালু করুন।');x.cors=1;throw x}
+ let j;try{j=await r.json()}catch(e){throw new Error('Steadfast থেকে ভুল রেসপন্স (HTTP '+r.status+')')}
+ return j}
+window.SFT=async()=>{try{const j=await sf('get_balance');if(j.current_balance==null)throw new Error(j.message||'কী/সিক্রেট ভুল হতে পারে');toast('কানেকশন ঠিক আছে! Steadfast ব্যালেন্স: ৳'+j.current_balance)}catch(e){toast('ত্রুটি: '+e.message,'err')}};
+
+/* ---- Accept & Book ---- */
+window.AB=async(id,btn)=>{const o=orders.find(x=>x._id===id);if(!o||BK.has(id))return;
+ if(o.courier?.cid||o.courier?.tracking){toast('এই অর্ডার ইতিমধ্যে বুক করা হয়েছে','err');return}
+ if(!C.key||!C.secret){toast('ত্রুটি: আগে সেটিংসে Steadfast API Key ও Secret Key দিন','err');return}
+ if(!confirm(`${o.orderId} (${o.customerName}) কনফার্ম করে Steadfast কুরিয়ারে বুক করবেন?\nCOD: ৳${Math.round(COD(o))}`))return;
+ BK.add(id);const h=btn?.innerHTML;if(btn){btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin mr-2"></i>বুকিং হচ্ছে...'}
+ try{const j=await sf('create_order','POST',{invoice:o.orderId,recipient_name:o.customerName,recipient_phone:norm(o.phone),recipient_address:fullAddr(o),cod_amount:Math.round(COD(o)),note:o.note||''});
+  const c=j.consignment;if(!c||!c.tracking_code)throw new Error(j.message||(j.errors?JSON.stringify(j.errors):'বুকিং ব্যর্থ'));
+  await updateDoc(doc(db,'orders',id),{courier:{name:'Steadfast',tracking:c.tracking_code,cid:c.consignment_id,live:c.status||'in_review',bookedAt:Date.now(),syncedAt:Date.now()}});
+  try{await setDoc(doc(db,'receipts',o.orderId),{courier:'Steadfast',tracking:c.tracking_code,live:c.status||'in_review'},{merge:true})}catch(e){}
+  await OS(id,'confirmed');toast('বুকিং সফল! ট্র্যাকিং: '+c.tracking_code);SND.ok()}
+ catch(e){toast('ত্রুটি: '+(e.message||e),'err')}
+ finally{BK.delete(id);if(btn&&btn.isConnected){btn.disabled=false;btn.innerHTML=h}}};
+
+/* ---- status sync (manual / every 3 min while panel is open; webhook handles it when panel is closed) ---- */
+window.SFSync=async(id,silent,btn)=>{const o=orders.find(x=>x._id===id);if(!o?.courier?.cid){if(!silent)toast('ত্রুটি: Steadfast consignment ID নেই','err');return false}
+ const h=btn?.innerHTML;if(btn){btn.disabled=true;btn.innerHTML='<i class="fa-solid fa-spinner fa-spin mr-1"></i>সিঙ্ক...'}
+ try{const j=await sf('status_by_cid/'+o.courier.cid,'GET'),st=j.delivery_status;if(!st)throw new Error(j.message||'স্ট্যাটাস পাওয়া যায়নি');
+  await updateDoc(doc(db,'orders',id),{'courier.live':st,'courier.syncedAt':Date.now()});
+  try{await setDoc(doc(db,'receipts',o.orderId),{live:st},{merge:true})}catch(e){}
+  const ns=SFM[st];if(ns&&RK_[ns]>RK_[o.status])await OS(id,ns);
+  if(!silent)toast('Steadfast: '+(SFL[st]||st));return true}
+ catch(e){if(!silent)toast('ত্রুটি: '+e.message,'err');return false}
+ finally{if(btn&&btn.isConnected){btn.disabled=false;btn.innerHTML=h}}};
+window.SFAll=async manual=>{if(SYN)return;const l=orders.filter(o=>o.courier?.cid&&['confirmed','shipped'].includes(o.status));if(!l.length){if(manual)toast('সিঙ্ক করার মতো অর্ডার নেই');return}
+ SYN=1;try{let ok=0;for(const o of l.slice(0,40)){const r=await SFSync(o._id,!manual);if(r)ok++;else if(!manual)break;await new Promise(r=>setTimeout(r,250))}if(manual)toast(bn(ok)+'/'+bn(l.length)+' টি অর্ডার সিঙ্ক হয়েছে')}finally{SYN=0}};
+setInterval(()=>{if(!document.hidden&&C.key&&C.secret&&au.currentUser)SFAll(false)},180000);
 function img(f,max=640,q=.72){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>{const m=new Image();m.onload=()=>{const k=Math.min(1,max/Math.max(m.width,m.height)),c=document.createElement('canvas');c.width=m.width*k;c.height=m.height*k;c.getContext('2d').drawImage(m,0,0,c.width,c.height);ok(c.toDataURL('image/jpeg',q))};m.onerror=no;m.src=r.result};r.readAsDataURL(f)})}
 const SG=[['অক্ষর সাইজ (শার্ট/টি-শার্ট)',['S','M','L','XL','XXL','3XL']],['নম্বর সাইজ (প্যান্ট/জিন্স)',['28','30','32','34','36','38','40']],['পাঞ্জাবি/ফরমাল শার্ট',['38','40','42','44','46','48']],['অন্যান্য',['Free Size']]];
 window.TS=(s,el)=>{SZ=SZ.includes(s)?SZ.filter(x=>x!==s):[...SZ,s];el.classList.toggle('on')};
@@ -175,8 +275,12 @@ function stg0(){return`<div class="c p-4 grid sm:grid-cols-2 gap-3 max-w-2xl"><d
  <label class="text-xs sm:col-span-2"><input type="checkbox" id="swa" ${S.waAuto!==false?'checked':''}> অর্ডার কনফার্ম হলে অটো হোয়াটসঅ্যাপ খুলবে (অর্ডারের মেসেজসহ)</label>
  <div class="sm:col-span-2 font-bold mt-2"><i class="fa-solid fa-truck-fast text-amber-400 mr-2"></i>Steadfast কুরিয়ার API</div>
  <div><label class="lb">API Key</label><input class="i" id="ck" type="password" value="${esc(C.key||'')}"></div><div><label class="lb">Secret Key</label><input class="i" id="cs2" type="password" value="${esc(C.secret||'')}"></div>
+  <label class="text-xs sm:col-span-2 flex items-start gap-2 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20"><input type="checkbox" id="cfn" class="mt-0.5" ${C.useFn?'checked':''}><span><b>Cloud Function প্রক্সি ব্যবহার করুন (সুপারিশকৃত)</b><br><span class="text-gray-400">ব্রাউজারের CORS ব্লক এড়ায়, API Key সুরক্ষিত থাকে এবং Steadfast ওয়েবহুকের মাধ্যমে প্যানেল বন্ধ থাকলেও স্ট্যাটাস অটো সিঙ্ক হয়। (functions ফোল্ডার ডিপ্লয় করা থাকতে হবে)</span></span></label>
+  <div class="sm:col-span-2"><label class="lb">Webhook Bearer Token (Steadfast পোর্টালের Webhook সেটিংয়ে একই টোকেন দিন)</label><input class="i" id="cwt" type="password" value="${esc(C.webhookToken||'')}" placeholder="একটি লম্বা র‍্যান্ডম টোকেন"></div>
+  <div class="sm:col-span-2 text-[11px] text-gray-400 leading-relaxed p-3 rounded-xl bg-black/30">Steadfast Webhook URL: <b class="text-amber-400 break-all">https://us-central1-${esc(cfg.projectId)}.cloudfunctions.net/sfWebhook</b></div>
+  <button type="button" class="g sm:col-span-2" onclick="SFT()"><i class="fa-solid fa-plug mr-1"></i>কানেকশন টেস্ট (আগে সেভ করুন)</button>
  <button class="b sm:col-span-2" onclick="SSet()"><i class="fa-solid fa-floppy-disk mr-2"></i>সেভ করুন</button></div>`}
-window.SSet=async()=>{await setDoc(doc(db,'settings','site'),{colsDesktop:Math.min(6,Math.max(2,+$('sd').value||4)),colsMobile:Math.min(2,Math.max(1,+$('sm').value||2)),maxProducts:Math.max(0,+$('sx').value||0),requireAdvance:$('sr').checked,shipDhaka:+$('s1').value||0,shipOutside:+$('s2').value||0,freeShip:+$('s3').value||0,shopAddress:$('sa').value.trim(),helpline:$('sh').value.trim(),whatsapp:$('sw').value.replace(/\D/g,''),waAuto:$('swa').checked,eidOn:$('eo').checked,eidTitle:$('et').value.trim(),eidSub:$('es').value.trim()},{merge:true});await setDoc(doc(db,'private','courier'),{key:$('ck').value.trim(),secret:$('cs2').value.trim()});alert('সেভ হয়েছে')};
+window.SSet=async()=>{await setDoc(doc(db,'settings','site'),{colsDesktop:Math.min(6,Math.max(2,+$('sd').value||4)),colsMobile:Math.min(2,Math.max(1,+$('sm').value||2)),maxProducts:Math.max(0,+$('sx').value||0),requireAdvance:$('sr').checked,shipDhaka:+$('s1').value||0,shipOutside:+$('s2').value||0,freeShip:+$('s3').value||0,shopAddress:$('sa').value.trim(),helpline:$('sh').value.trim(),whatsapp:$('sw').value.replace(/\D/g,''),waAuto:$('swa').checked,eidOn:$('eo').checked,eidTitle:$('et').value.trim(),eidSub:$('es').value.trim()},{merge:true});await setDoc(doc(db,'private','courier'),{key:$('ck').value.trim(),secret:$('cs2').value.trim(),useFn:$('cfn').checked,webhookToken:$('cwt').value.trim()});alert('সেভ হয়েছে')};
 const gone=(id,fn)=>{const e=$(id);e&&e.classList.add('gone');setTimeout(()=>{fn();toast('ডিলিট হয়েছে')},300)};
 window.CD=(msg,fn)=>{const m=document.createElement('div');m.className='fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4';
  m.innerHTML=`<div class="c p-6 max-w-sm w-full pop" style="background:#16161a"><div class="flex items-center gap-3 pb-3 border-b border-white/10"><div class="w-11 h-11 rounded-full bg-red-500/15 text-red-400 flex items-center justify-center text-xl shake"><i class="fa-solid fa-triangle-exclamation"></i></div><h3 class="font-extrabold">ডিলিট নিশ্চিতকরণ</h3></div><p class="text-sm text-gray-300 mt-4 break-words">${msg}</p><p class="text-[11px] text-gray-500 mt-1">এটা আর ফেরত আনা যাবে না</p><div class="flex justify-end gap-2 mt-5"><button class="g" id="cx">বাতিল</button><button class="b" style="background:#dc2626;color:#fff;box-shadow:none" id="cy"><i class="fa-solid fa-trash mr-1"></i>ডিলিট করুন</button></div></div>`;
@@ -274,17 +378,6 @@ window.SPm=async e=>{e.preventDefault();const code=$('mc').value.trim().toUpperC
 window.TPm=id=>{const p=promos.find(x=>x.id===id);updateDoc(doc(db,'promos',id),{active:p.active===false})};
 window.DPm=id=>CD('আপনি কি নিশ্চিত যে <b class="text-amber-400">"'+esc(id)+'"</b> প্রোমোকোড ডিলিট করতে চান?',()=>gone('pm-'+id,()=>deleteDoc(doc(db,'promos',id))));
 
-const waLink=o=>'https://wa.me/88'+String(o.phone).replace(/\D/g,'')+'?text='+encodeURIComponent(`আসসালামু আলাইকুম ${o.customerName}, BANA FASHION থেকে আপনার অর্ডার ${o.orderId} (মোট ${tk(o.total)}) পেয়েছি। ${o.status==='shipped'&&o.courier?.tracking?'কুরিয়ার ট্র্যাকিং: '+o.courier.tracking+'। ':''}ধন্যবাদ!`);
-const SFH=()=>({'Content-Type':'application/json','Api-Key':C.key,'Secret-Key':C.secret});
-const sfErr=()=>alert('ব্রাউজার থেকে Steadfast API ব্লক হয়েছে (CORS) অথবা নেটওয়ার্ক সমস্যা। এ ক্ষেত্রে Steadfast পোর্টালে বুক করে ট্র্যাকিং কোড হাতে বসান। সরাসরি অটো বুকিংয়ের জন্য সার্ভার ফাংশন (Blaze Plan) লাগবে।');
-window.SFB=async id=>{const o=orders.find(x=>x._id===id);if(!C.key||!C.secret){alert('আগে Settings এ Steadfast API Key ও Secret Key দিন');return}
- if(!confirm(o.orderId+' অর্ডারটি Steadfast কুরিয়ারে বুক করবেন?'))return;
- try{const r=await fetch('https://portal.packzy.com/api/v1/create_order',{method:'POST',headers:SFH(),body:JSON.stringify({invoice:o.orderId,recipient_name:o.customerName,recipient_phone:o.phone,recipient_address:`${o.address}, ${o.upazila||''}, ${o.district||''}`,cod_amount:(o.pay&&o.deliveryPaid)?(o.subtotal-(o.discount||0)):o.total,note:o.note||''})});const j=await r.json();
-  if(j.consignment){await updateDoc(doc(db,'orders',id),{courier:{name:'Steadfast',tracking:j.consignment.tracking_code,cid:j.consignment.consignment_id},status:'shipped'});await OS(id,'shipped');alert('বুকিং সফল! ট্র্যাকিং: '+j.consignment.tracking_code)}else alert('Steadfast: '+(j.message||JSON.stringify(j)))}catch(e){sfErr()}};
-window.SFS=async id=>{const o=orders.find(x=>x._id===id);if(!C.key||!o.courier?.cid){alert('Steadfast consignment ID নেই (হাতে বসানো হলে লাইভ চেক হবে না)');return}
- try{const r=await fetch('https://portal.packzy.com/api/v1/status_by_cid/'+o.courier.cid,{headers:SFH()});const j=await r.json(),st=j.delivery_status;
-  if(!st){alert('Steadfast: '+JSON.stringify(j));return}
-  await updateDoc(doc(db,'orders',id),{'courier.live':st});if(st==='delivered'){await OS(id,'delivered')}alert('Steadfast লাইভ স্ট্যাটাস: '+st)}catch(e){sfErr()}};
 
 
 /* ===== PREMIUM UPGRADE ===== */
