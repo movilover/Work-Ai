@@ -465,4 +465,64 @@ window.CE=id=>{const c=cats.find(x=>x.id===id);if(!c)return;let nu=null;const m=
  q('#ef').onchange=async e=>{const f=e.target.files[0];if(f){nu=await img(f,600);q('#epv').src=nu}};
  q('#eu').onclick=async()=>{const l=q('#el').value.trim();if(!l){toast('ত্রুটি: ক্যাটাগরির নাম লিখুন','err');return}
   try{await updateDoc(doc(db,'categories',id),{label:l,...(nu?{image:nu}:{})});cl();toast('ক্যাটাগরি আপডেট হয়েছে')}catch(e){toast('ত্রুটি: '+e.message,'err')}}};
+
+/* ================= হ্যাঙ্গার ট্যাব (settings/rail_1 … rail_6) ================= */
+NAV.push(['rail','fa-grip-lines','হ্যাঙ্গার']);NC.rail='#14b8a6';
+let RL={},RLsub=0,RLerr='',RD=null;
+const RLN=6;
+function rlSub(){if(RLsub)return;RLsub=1;for(let n=1;n<=RLN;n++)onSnapshot(doc(db,'settings','rail_'+n),s=>{RL[n]=s.exists()?s.data():null;if(tab==='rail'&&!RD)draw(true)},e=>{RLerr=e.message;RL[n]=null;if(tab==='rail')draw(true)})}
+const rlOk=d=>d&&!d.removed&&d.active!==false&&Array.isArray(d.designs)&&d.designs.length;
+function rimg(f,max=560){return new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>{const m=new Image();m.onload=()=>{const k=Math.min(1,max/Math.max(m.width,m.height)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(m.width*k));c.height=Math.max(1,Math.round(m.height*k));const x=c.getContext('2d');x.drawImage(m,0,0,c.width,c.height);
+ let alpha=false;try{const t=document.createElement('canvas');t.width=t.height=48;const tx=t.getContext('2d');tx.drawImage(m,0,0,48,48);const a=tx.getImageData(0,0,48,48).data;for(let i=3;i<a.length;i+=4)if(a[i]<245){alpha=true;break}}catch(e){}
+ if(alpha){let u=c.toDataURL('image/webp',.82);if(!u.startsWith('data:image/webp'))u=c.toDataURL('image/png');ok(u)}else ok(c.toDataURL('image/jpeg',.8))};m.onerror=no;m.src=r.result};r.readAsDataURL(f)})}
+function rail(){rlSub();
+ const loaded=Object.keys(RL).length>=RLN,anyDoc=Object.values(RL).some(Boolean);
+ const card=n=>{const d=RL[n];if(!rlOk(d))return`<div class="c p-4 flex flex-col items-center justify-center text-center gap-2" style="min-height:230px;border-style:dashed"><div class="text-[11px] text-gray-500 font-bold">স্লট ${bn(n)}</div><div class="text-gray-500 text-xs">খালি</div><button class="b" onclick="RLE(${n})"><i class="fa-solid fa-plus mr-1"></i>প্রোডাক্ট যোগ করুন</button></div>`;
+  const a=d.designs[0];return`<div class="c p-3 flex flex-col gap-2"><div class="flex items-center justify-between text-[10px] text-gray-500 font-bold"><span>স্লট ${bn(n)}</span><span class="flex gap-1"><button class="g" style="padding:3px 8px" onclick="RLM(${n},-1)" ${n===1?'disabled':''} title="বামে সরান"><i class="fa-solid fa-chevron-left"></i></button><button class="g" style="padding:3px 8px" onclick="RLM(${n},1)" ${n===RLN?'disabled':''} title="ডানে সরান"><i class="fa-solid fa-chevron-right"></i></button></span></div>
+  <div class="rounded-xl overflow-hidden" style="background:#eceae4;aspect-ratio:4/5"><img src="${a.front}" class="w-full h-full" style="object-fit:contain"></div>
+  <div class="font-bold text-sm truncate">${esc(d.title)}</div><div class="text-xs text-amber-400 font-bold">${tk(d.price)}${d.oldPrice?` <s class="text-gray-500 font-normal">${tk(d.oldPrice)}</s>`:''}</div>
+  <div class="flex items-center gap-1">${d.designs.map(x=>`<span class="w-4 h-4 rounded-full border border-white/30" style="background:${esc(x.hex||'#ccc')}" title="${esc(x.name)}"></span>`).join('')}<span class="text-[10px] text-gray-500 ml-1">${bn(d.designs.length)} টি ডিজাইন</span></div>
+  <div class="flex gap-2"><button class="g flex-1" onclick="RLE(${n})"><i class="fa-solid fa-pen mr-1"></i>এডিট</button><button class="g" style="color:#f87171" onclick="RLX(${n})"><i class="fa-solid fa-trash"></i></button></div></div>`};
+ return`<div class="c p-4 mb-3"><div class="font-bold"><i class="fa-solid fa-grip-lines text-amber-400 mr-2"></i>হ্যাঙ্গার কালেকশন (হোমপেজ)</div>
+ <div class="text-[11px] text-gray-400 mt-1 leading-relaxed">সাইটের প্রোডাক্ট সেকশনের ঠিক উপরে রশিতে হ্যাঙ্গারে ঝুলিয়ে সর্বোচ্চ ${bn(RLN)}টি প্রোডাক্ট দেখাবে। প্রতিটি প্রোডাক্টে একাধিক ডিজাইন/কালার দিতে পারবেন, আর প্রতিটির সামনের ও পিছনের ছবি দিলে সাইটে নিজে নিজে ঘুরে দুই পাশ দেখাবে। কাস্টমার ক্লিক করলে সব কালার আসবে এবং আগের মতোই অর্ডার করতে পারবে।</div></div>
+ ${RLerr?`<div class="c p-3 mb-3 text-xs text-red-300" style="border-color:#7f1d1d">⚠ ডাটাবেস পারমিশন সমস্যা: ${esc(RLerr)} — Firestore Rules-এ <b>settings</b> কালেকশনের rail_ ডকুমেন্টগুলো পড়া (public) ও লেখা (অ্যাডমিন) অনুমোদন করুন।</div>`:''}
+ ${loaded&&!anyDoc?`<div class="c p-3 mb-3 text-xs text-amber-300" style="border-color:rgba(245,158,11,.4)"><i class="fa-solid fa-circle-info mr-1"></i>এখনও কিছু আপলোড করেননি, তাই সাইটে ডেমো প্রোডাক্ট দেখানো হচ্ছে। যেকোনো স্লটে আপলোড করলেই ডেমো সরে গিয়ে আপনার প্রোডাক্ট দেখাবে।</div>`:''}
+ <div class="grid grid-cols-2 lg:grid-cols-3 gap-3">${Array.from({length:RLN},(_,i)=>card(i+1)).join('')}</div>
+ ${anyDoc?`<div class="mt-3 text-right"><button class="g" onclick="RLR()"><i class="fa-solid fa-rotate-left mr-1"></i>সব মুছে ডেমো ফিরিয়ে আনুন</button></div>`:''}`}
+VIEWS.rail=rail;
+window.RLX=async n=>{if(!confirm('স্লট '+bn(n)+' এর প্রোডাক্ট ডিলিট করবেন?'))return;try{await setDoc(doc(db,'settings','rail_'+n),{removed:true,updatedAt:serverTimestamp()});toast('ডিলিট হয়েছে')}catch(e){toast('ত্রুটি: '+e.message,'err')}};
+window.RLR=async()=>{if(!confirm('সব হ্যাঙ্গার প্রোডাক্ট মুছে সাইটে আবার ডেমো দেখাবেন?'))return;try{const b=writeBatch(db);for(let n=1;n<=RLN;n++)b.delete(doc(db,'settings','rail_'+n));await b.commit();toast('ডেমো ফিরেছে')}catch(e){toast('ত্রুটি: '+e.message,'err')}};
+window.RLM=async(n,d)=>{const m=n+d;if(m<1||m>RLN)return;const a=RL[n],b=RL[m],W=x=>x&&!x.removed?x:{removed:true,updatedAt:serverTimestamp()};try{const bt=writeBatch(db);bt.set(doc(db,'settings','rail_'+n),W(b));bt.set(doc(db,'settings','rail_'+m),W(a));await bt.commit()}catch(e){toast('ত্রুটি: '+e.message,'err')}};
+/* ---- editor ---- */
+window.RLE=n=>{const d=RL[n],ok=rlOk(d);RD={n,title:ok?d.title:'',price:ok?d.price:'',oldPrice:ok&&d.oldPrice?d.oldPrice:'',stock:ok&&d.stock!=null?d.stock:'',desc:ok?(d.description||''):'',sizes:ok?[...(d.sizes||[])]:['M','L','XL','XXL'],designs:ok?d.designs.map(x=>({name:x.name||'',hex:x.hex||'#cccccc',front:x.front||'',back:x.back||''})):[{name:'',hex:'#111111',front:'',back:''}]};rlDraw()};
+window.RLC=()=>{RD=null;const m=$('rlm');if(m)m.remove()};
+function rlDraw(){if(!RD)return;let m=$('rlm');if(!m){m=document.createElement('div');m.id='rlm';m.className='fixed inset-0 z-[95] bg-black/80 backdrop-blur-sm overflow-y-auto p-3';document.body.appendChild(m)}
+ const SGL=[['অক্ষর সাইজ',['S','M','L','XL','XXL','3XL']],['নম্বর সাইজ',['28','30','32','34','36','38','40']],['অন্যান্য',['Free Size']]];
+ const chipS=s=>`<button type="button" class="ch ${RD.sizes.includes(s)?'on':''}" onclick="RLZ(this.dataset.s)" data-s="${esc(s)}">${esc(s)}</button>`;
+ const custom=RD.sizes.filter(s=>!SGL.some(g=>g[1].includes(s)));
+ const up=(i,k,lab,req)=>{const u=RD.designs[i][k];return`<div><label class="lb">${lab}${req?' <span class="text-red-400">*</span>':' (ঐচ্ছিক)'}</label><label class="flex items-center justify-center rounded-xl border border-dashed border-amber-500/40 cursor-pointer overflow-hidden text-amber-400 text-[11px] font-bold hover:bg-amber-500/5" style="aspect-ratio:4/5;background:#0b0b0e">${u?`<img src="${u}" class="w-full h-full" style="object-fit:contain">`:'<span class="text-center px-2"><i class="fa-solid fa-cloud-arrow-up text-lg block mb-1"></i>ছবি আপলোড</span>'}<input type="file" accept="image/*" class="hidden" onchange="RLF(${i},'${k}',this)"></label>${u&&!req?`<button type="button" class="text-[10px] text-red-400 mt-1" onclick="RD.designs[${i}].back='';rlDraw()">পিছনের ছবি মুছুন</button>`:''}</div>`};
+ m.innerHTML=`<div class="c max-w-3xl mx-auto my-3 p-4 sm:p-5" style="background:#111114"><div class="flex justify-between items-center mb-3"><div class="font-bold"><i class="fa-solid fa-grip-lines text-amber-400 mr-2"></i>স্লট ${bn(RD.n)} — প্রোডাক্ট ${rlOk(RL[RD.n])?'এডিট':'যোগ'}</div><button class="g" onclick="RLC()"><i class="fa-solid fa-xmark"></i></button></div>
+ <div class="grid sm:grid-cols-3 gap-3"><div class="sm:col-span-3"><label class="lb">প্রোডাক্টের নাম</label><input class="i" value="${esc(RD.title)}" oninput="RD.title=this.value"></div>
+ <div><label class="lb">দাম (৳)</label><input class="i" type="number" value="${esc(RD.price)}" oninput="RD.price=this.value"></div><div><label class="lb">আগের দাম (৳)</label><input class="i" type="number" value="${esc(RD.oldPrice)}" oninput="RD.oldPrice=this.value"></div><div><label class="lb">স্টক (ঐচ্ছিক)</label><input class="i" type="number" min="0" value="${esc(RD.stock)}" oninput="RD.stock=this.value"></div></div>
+ <div class="mt-4"><div class="flex items-center justify-between mb-2"><label class="lb" style="margin:0">ডিজাইন / কালার (সর্বোচ্চ ৬টি)</label>${RD.designs.length<6?'<button type="button" class="g" onclick="RLA()"><i class="fa-solid fa-plus mr-1"></i>আরেকটি ডিজাইন</button>':''}</div>
+ <div class="grid gap-3">${RD.designs.map((x,i)=>`<div class="c p-3"><div class="flex items-center gap-2 mb-2"><span class="w-6 h-6 rounded-full border border-white/30 shrink-0" style="background:${esc(x.hex)}"></span><input class="i" placeholder="কালারের নাম (যেমন Black)" maxlength="24" value="${esc(x.name)}" oninput="RD.designs[${i}].name=this.value"><input type="color" value="${esc(x.hex)}" class="shrink-0" style="width:42px;height:38px;background:none;border:0" oninput="RD.designs[${i}].hex=this.value;this.parentNode.firstChild.style.background=this.value">${RD.designs.length>1?`<button type="button" class="g" style="color:#f87171" onclick="RLD(${i})"><i class="fa-solid fa-trash"></i></button>`:''}</div>
+ <div class="flex flex-wrap gap-1.5 mb-2">${CLR.map(([n,h])=>`<button type="button" class="sw" title="${n}" style="background:${h}" onclick="RLK(${i},'${n}','${h}')"></button>`).join('')}</div>
+ <div class="grid grid-cols-2 gap-3" style="max-width:360px">${up(i,'front','সামনের ছবি',1)}${up(i,'back','পিছনের ছবি',0)}</div></div>`).join('')}</div></div>
+ <div class="mt-4"><label class="lb">সাইজ</label>${SGL.map(([n,a])=>`<div class="mb-2"><div class="text-[10px] text-gray-500 mb-1">${n}</div><div class="flex flex-wrap gap-2">${a.map(chipS).join('')}</div></div>`).join('')}${custom.length?`<div class="flex flex-wrap gap-2 mb-2">${custom.map(chipS).join('')}</div>`:''}<div class="flex gap-2 max-w-xs"><input id="rlcs" class="i" placeholder="অন্য সাইজ লিখুন"><button type="button" class="g" onclick="RLS2()">যোগ</button></div></div>
+ <div class="mt-4"><label class="lb">বিবরণ (ঐচ্ছিক)</label><textarea class="i" rows="3" oninput="RD.desc=this.value">${esc(RD.desc)}</textarea></div>
+ <div class="text-[10px] text-gray-500 mt-3 leading-relaxed">টিপস: কাপড়ের ছবি সাদা/স্বচ্ছ (PNG) ব্যাকগ্রাউন্ডে দিলে সবচেয়ে সুন্দর দেখাবে, যেন সত্যিই হ্যাঙ্গারে ঝুলছে। ছবি অটো ছোট করে সেভ হবে।</div>
+ <div class="flex gap-2 mt-4"><button class="b" id="rlsv" onclick="RLSV()"><i class="fa-solid fa-cloud-arrow-up mr-2"></i>সেভ করুন</button><button class="g" onclick="RLC()">বাতিল</button></div></div>`}
+window.RLA=()=>{if(RD.designs.length<6){RD.designs.push({name:'',hex:'#111111',front:'',back:''});rlDraw()}};
+window.RLD=i=>{RD.designs.splice(i,1);rlDraw()};
+window.RLK=(i,n,h)=>{RD.designs[i].name=n;RD.designs[i].hex=h;rlDraw()};
+window.RLZ=s=>{RD.sizes=RD.sizes.includes(s)?RD.sizes.filter(x=>x!==s):[...RD.sizes,s];rlDraw()};
+window.RLS2=()=>{const e=$('rlcs'),v=(e.value||'').trim().replace(/[^\w\s.-]/g,'');if(v&&!RD.sizes.includes(v)){RD.sizes.push(v);rlDraw()}};
+window.RLF=async(i,k,el)=>{const f=el.files[0];if(!f)return;try{RD.designs[i][k]=await rimg(f);rlDraw()}catch(e){toast('ছবি পড়া যায়নি','err')}};
+window.RLSV=async()=>{if(!RD)return;const t=RD.title.trim();if(!t){alert('প্রোডাক্টের নাম লিখুন');return}if(!(+RD.price>0)){alert('দাম লিখুন');return}
+ const ds=RD.designs.filter(x=>x.front);if(!ds.length){alert('কমপক্ষে একটি ডিজাইনের সামনের ছবি দিন');return}if(!RD.sizes.length){alert('অন্তত একটি সাইজ বাছাই করুন');return}
+ const data={title:t,price:+RD.price,description:RD.desc.trim(),sizes:RD.sizes,designs:ds.map((x,i)=>({name:(x.name||'').trim()||('Design '+(i+1)),hex:x.hex||'#cccccc',front:x.front,back:x.back||''})),active:true,removed:false,updatedAt:serverTimestamp()};
+ if(+RD.oldPrice>0)data.oldPrice=+RD.oldPrice;if(RD.stock!==''&&!isNaN(+RD.stock))data.stock=+RD.stock;
+ if(JSON.stringify(data.designs).length>900000){alert('ছবিগুলোর সাইজ অনেক বড় হয়ে গেছে (১ MB সীমা)। ডিজাইন বা পিছনের ছবি কমান।');return}
+ const bt=$('rlsv');bt.disabled=true;bt.textContent='সেভ হচ্ছে...';
+ try{await setDoc(doc(db,'settings','rail_'+RD.n),data);toast('হ্যাঙ্গারে সেভ হয়েছে');RLC();draw(true)}catch(e){bt.disabled=false;bt.textContent='সেভ করুন';toast('ত্রুটি: '+e.message,'err');alert('সেভ হয়নি: '+e.message)}};
 </script></body></html>
