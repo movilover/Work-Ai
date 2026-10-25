@@ -1,5 +1,22 @@
 <!DOCTYPE html>
-<html lang="bn"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="bn"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0c"><meta name="color-scheme" content="dark">
+<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"><meta name="apple-mobile-web-app-title" content="BANA Admin">
+<link rel="manifest" href="manifest.json"><link rel="icon" type="image/png" href="favicon.png"><link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style id="app-polish">
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%;background:#0a0a0c}
+body{overscroll-behavior-y:contain;-webkit-tap-highlight-color:transparent;touch-action:manipulation;-webkit-touch-callout:none}
+body *:not(input):not(textarea):not([contenteditable]){-webkit-user-select:none;user-select:none}
+input,textarea,.select-text,#invSheet{-webkit-user-select:text;user-select:text}
+button,a,[onclick],label,select{touch-action:manipulation;cursor:pointer}
+@media(max-width:1023px){input,textarea,select{font-size:16px!important}}
+header.sticky{padding-top:calc(.75rem + env(safe-area-inset-top,0px))}
+#bn{padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+::-webkit-scrollbar{width:6px;height:6px}::-webkit-scrollbar-thumb{background:#2a2a30;border-radius:9px}
+@media print{html{background:#fff}}
+</style>
+
 <meta name="robots" content="noindex,nofollow"><title>BANA FASHION | অ্যাডমিন প্যানেল</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -558,4 +575,5 @@ window.RLSV=async()=>{if(!RD)return;const t=RD.title.trim();if(!t){alert('প্
  if(JSON.stringify(data.designs).length>900000){alert('ছবিগুলোর সাইজ অনেক বড় হয়ে গেছে (১ MB সীমা)। ডিজাইন বা পিছনের ছবি কমান।');return}
  const bt=$('rlsv');bt.disabled=true;bt.textContent='সেভ হচ্ছে...';
  try{await setDoc(doc(db,'settings','rail_'+RD.n),data);toast('হ্যাঙ্গারে সেভ হয়েছে');RLC();draw(true)}catch(e){bt.disabled=false;bt.textContent='সেভ করুন';toast('ত্রুটি: '+e.message,'err');alert('সেভ হয়নি: '+e.message)}};
-</script></body></html>
+</script><script src="app-shell.js"></script>
+</body></html>
