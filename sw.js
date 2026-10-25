@@ -1,11 +1,11 @@
 /* BANA FASHION Admin — Service Worker
    অ্যাপ শেল ক্যাশ হয়; Firebase/ডাটাবেস রিকোয়েস্ট কখনও ক্যাশ হয় না (সবসময় লাইভ ডাটা)। */
-const VER = 'bana-admin-v1';
-const SHELL = ['./admin.html','./app-shell.js','./manifest.json','./icons/icon-192.png','./icons/icon-512.png','./icons/favicon.png'];
+const VER = 'bana-admin-v2';
+const SHELL = ['./admin.html','./app-shell.js','./manifest.json','./icon-192.png','./icon-512.png','./favicon.png'];
 const CDN = ['cdn.tailwindcss.com','cdnjs.cloudflare.com','www.gstatic.com','fonts.googleapis.com','fonts.gstatic.com'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VER).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(VER).then(c => Promise.all(SHELL.map(u => c.add(u).catch(() => {})))).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VER).map(k => caches.delete(k)))).then(() => self.clients.claim()));
