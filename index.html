@@ -119,8 +119,27 @@ button.sw{display:inline-block;padding:0;flex:none}
 .sbox.has .sx{display:flex}
 .pno{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;font-weight:800;padding:1px 6px;border-radius:6px;background:rgba(245,158,11,.15);color:#FBBF24;border:1px solid rgba(245,158,11,.3);flex:none;white-space:nowrap}
 </style>
+<style id="splashcss">
+.flex:not(.flex-col)>.b,.flex:not(.flex-col)>.sf{min-width:max-content}
+.flex>input.i{min-width:0}
+#splash{position:fixed;inset:0;z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:radial-gradient(circle at 80% -10%,#2a1c06 0,#0a0a0c 55%);transition:opacity .45s ease,visibility .45s}
+#splash.out{opacity:0;visibility:hidden;pointer-events:none}
+.spl-logo{width:84px;height:84px;border-radius:24px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#FBBF24,#D97706);color:#000;font-size:34px;box-shadow:0 20px 50px -14px rgba(245,158,11,.7);animation:splp 1.6s ease-in-out infinite;overflow:hidden}
+.spl-logo img{width:100%;height:100%;object-fit:contain;background:#000}
+@keyframes splp{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+.spl-t{font-weight:800;font-size:22px;letter-spacing:.04em;color:#fff}.spl-t b{color:#FBBF24}
+.spl-bar{width:150px;height:4px;border-radius:9px;background:rgba(255,255,255,.1);overflow:hidden}
+.spl-bar i{display:block;height:100%;width:40%;border-radius:9px;background:linear-gradient(90deg,#FBBF24,#D97706);animation:spls 1.1s ease-in-out infinite}
+@keyframes spls{0%{transform:translateX(-110%)}100%{transform:translateX(300%)}}
+.spl-s{font-size:12px;color:#9ca3af}
+body.enter #nav>.nv,body.enter #bn>button{animation:up .45s both;animation-delay:calc(var(--n,0)*50ms + .1s)}
+body.enter #v>*{animation:up .4s both;animation-delay:.12s}
+#nav>.nv:nth-child(1){--n:0}#bn>button:nth-child(1){--n:0}#nav>.nv:nth-child(2){--n:1}#bn>button:nth-child(2){--n:1}#nav>.nv:nth-child(3){--n:2}#bn>button:nth-child(3){--n:2}#nav>.nv:nth-child(4){--n:3}#bn>button:nth-child(4){--n:3}#nav>.nv:nth-child(5){--n:4}#bn>button:nth-child(5){--n:4}#nav>.nv:nth-child(6){--n:5}#bn>button:nth-child(6){--n:5}#nav>.nv:nth-child(7){--n:6}#bn>button:nth-child(7){--n:6}#nav>.nv:nth-child(8){--n:7}#bn>button:nth-child(8){--n:7}#nav>.nv:nth-child(9){--n:8}#bn>button:nth-child(9){--n:8}#nav>.nv:nth-child(10){--n:9}#bn>button:nth-child(10){--n:9}#nav>.nv:nth-child(11){--n:10}#bn>button:nth-child(11){--n:10}#nav>.nv:nth-child(12){--n:11}#bn>button:nth-child(12){--n:11}#nav>.nv:nth-child(13){--n:12}#bn>button:nth-child(13){--n:12}
+</style>
 </head>
 <body>
+<div id="splash" role="status" aria-live="polite"><div class="spl-logo"><img src="logo.png" alt="" onerror="this.replaceWith(Object.assign(document.createElement('i'),{className:'fa-solid fa-crown'}))"></div><div class="spl-t">BANA <b>FASHION</b></div><div class="spl-bar"><i></i></div><div class="spl-s">অ্যাডমিন প্যানেল লোড হচ্ছে…</div></div>
+<script>window.__t0=Date.now();window.splHide=function(){var e=document.getElementById('splash');if(!e||e.getAttribute('data-h'))return;e.setAttribute('data-h','1');var m=Math.max(0,800-(Date.now()-window.__t0));setTimeout(function(){document.body.classList.add('enter');e.classList.add('out');setTimeout(function(){e.remove()},600);setTimeout(function(){document.body.classList.remove('enter')},1300)},m)};setTimeout(window.splHide,9000);</script>
 <div id="setup" class="hidden p-8 text-center">firebaseConfig বসান</div>
 <div id="login" class="min-h-screen flex items-center justify-center p-4"><form onsubmit="return L(event)" class="c p-8 w-full max-w-sm space-y-4">
 <div class="text-center"><div class="w-16 h-16 mx-auto rounded-2xl b flex items-center justify-center text-2xl"><i class="fa-solid fa-crown"></i></div><h1 class="text-2xl font-extrabold mt-3">BANA <span class="text-amber-400">FASHION</span></h1><p class="text-xs text-gray-400 mt-1">অ্যাডমিন প্যানেলে লগইন করুন</p></div>
@@ -151,9 +170,10 @@ const day=(d=new Date())=>d.toLocaleDateString('en-CA'),ts=o=>o.createdAt?.toDat
 window.L=async e=>{e.preventDefault();try{await signInWithEmailAndPassword(au,$('em').value.trim(),$('pw').value)}catch(x){$('le').textContent='ইমেইল বা পাসওয়ার্ড ভুল'}return false};
 window.LO=()=>signOut(au);
 onAuthStateChanged(au,u=>{unsub.forEach(f=>f());unsub=[];
- if(u&&u.email===ADMIN){$('login').classList.add('hidden');$('app').classList.remove('hidden');boot()}
- else{if(u){signOut(au);$('le').textContent='এই একাউন্টে অ্যাডমিন অনুমতি নেই'}$('app').classList.add('hidden');$('login').classList.remove('hidden')}});
-const ls=(c,f,q)=>unsub.push(onSnapshot(q||collection(db,c),s=>{f(s);dr(c)}));
+ if(u&&u.email===ADMIN){$('login').classList.add('hidden');$('app').classList.remove('hidden');boot();setTimeout(()=>window.splHide&&window.splHide(),4000)}
+ else{if(u){signOut(au);$('le').textContent='এই একাউন্টে অ্যাডমিন অনুমতি নেই'}$('app').classList.add('hidden');$('login').classList.remove('hidden');window.splHide&&window.splHide()}});
+const _got=new Set();
+const ls=(c,f,q)=>unsub.push(onSnapshot(q||collection(db,c),s=>{f(s);_got.add(c);if(_got.has('orders')&&_got.has('products')&&window.splHide)window.splHide();dr(c)}));
 async function boot(){const ym=day().slice(0,7);
  try{const[ps,ss]=await Promise.all([getDocs(query(collection(db,'products'),limit(1))),getDoc(doc(db,'settings','site'))]);if(ps.empty&&!ss.data()?.seeded)await seed()}catch(e){}
  ls('orders',s=>{const n=s.docs.map(d=>({_id:d.id,...d.data()}));NO(n);orders=n},query(collection(db,'orders'),orderBy('createdAt','desc'),limit(500)));
@@ -529,7 +549,7 @@ window.RS=async()=>{const p=norm($('rp').value);if(!p)return;RK={p,list:null,bus
 function risk(){const r=RK.list,k=r?stats3(r):{t:0,d:0,r:0,rate:0},lv=!r?null:!k.t?'new':k.rate>30?'high':'safe',
  RB={safe:['#10b981','fa-shield-halved','নিরাপদ কাস্টমার (Safe)'],high:['#ef4444','fa-triangle-exclamation','উচ্চ ঝুঁকি (High Risk)'],new:['#3b82f6','fa-user-plus','নতুন কাস্টমার']},
  RT={safe:'কাস্টমারের সফল ডেলিভারির রেকর্ড ভালো। নিরাপদে অর্ডার কনফার্ম করতে পারেন।',high:`এই কাস্টমারের রিটার্ন হার ${bn(k.rate.toFixed(1))}%! অগ্রিম ডেলিভারি চার্জ ছাড়া প্রোডাক্ট পাঠানো ঝুঁকিপূর্ণ।`,new:'এই নম্বরে আগে কোনো অর্ডার নেই। অগ্রিম ডেলিভারি চার্জ নিশ্চিত করে অর্ডার কনফার্ম করুন।'};
- return`<div class="c p-4"><div class="font-bold text-sm mb-1"><i class="fa-solid fa-user-shield text-amber-400 mr-2"></i>কাস্টমার ব্যাকগ্রাউন্ড ও রিটার্ন রেকর্ড যাচাই</div><p class="text-xs text-gray-400 mb-3">অর্ডার কনফার্ম করার আগে মোবাইল নম্বর দিয়ে পূর্বের ডেলিভারি ও রিটার্ন ইতিহাস দেখুন</p><div class="flex gap-2"><input id="rp" class="i" inputmode="tel" placeholder="01XXXXXXXXX" value="${esc(RK.p)}" onkeydown="if(event.key==='Enter')RS()"><button class="b whitespace-nowrap" onclick="RS()"><i class="fa-solid fa-magnifying-glass mr-1"></i>রিপোর্ট দেখুন</button></div></div>
+ return`<div class="c p-4"><div class="font-bold text-sm mb-1"><i class="fa-solid fa-user-shield text-amber-400 mr-2"></i>কাস্টমার ব্যাকগ্রাউন্ড ও রিটার্ন রেকর্ড যাচাই</div><p class="text-xs text-gray-400 mb-3">অর্ডার কনফার্ম করার আগে মোবাইল নম্বর দিয়ে পূর্বের ডেলিভারি ও রিটার্ন ইতিহাস দেখুন</p><div class="flex gap-2"><input id="rp" class="i min-w-0 flex-1" inputmode="tel" autocomplete="off" placeholder="01XXXXXXXXX" value="${esc(RK.p)}" onkeydown="if(event.key==='Enter')RS()"><button class="b whitespace-nowrap flex-none" onclick="RS()"><i class="fa-solid fa-magnifying-glass mr-1"></i>রিপোর্ট দেখুন</button></div></div>
  ${RK.busy?'<p class="text-center text-gray-400 mt-6">খোঁজা হচ্ছে...</p>':r?`<div class="grid lg:grid-cols-3 gap-3 mt-3"><div class="c p-4 space-y-3"><div class="flex justify-between items-center border-b border-white/10 pb-3"><div><b>${esc(r[0]?.customerName||'নতুন গ্রাহক')}</b><div class="text-xs text-gray-400 font-mono">${esc(RK.p)}</div></div><span class="text-[11px] font-bold px-3 py-1 rounded-full" style="color:${RB[lv][0]};background:${RB[lv][0]}22;border:1px solid ${RB[lv][0]}55"><i class="fa-solid ${RB[lv][1]} mr-1"></i>${RB[lv][2]}</span></div>
  <div class="grid grid-cols-2 gap-2 text-center">${[['মোট অর্ডার',k.t,'#fff'],['সফল ডেলিভারি',k.d,'#34d399'],['রিটার্ন / রিজেক্ট',k.r,'#f87171'],['রিটার্ন হার',bn(k.rate.toFixed(1))+'%','#FBBF24']].map(([l,v,c])=>`<div class="bg-black/40 rounded-xl p-3"><div class="text-[11px] text-gray-400">${l}</div><div class="text-xl font-extrabold mt-1" style="color:${c}">${typeof v==='number'?bn(v)+' টি':v}</div></div>`).join('')}</div>
  <div class="rounded-xl p-3 text-xs" style="color:${RB[lv][0]};background:${RB[lv][0]}18;border:1px solid ${RB[lv][0]}40"><b>পরামর্শ:</b> ${RT[lv]}</div></div>
