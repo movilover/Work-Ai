@@ -71,21 +71,34 @@
   }
 
   /* ---------- ব্যাক বাটন সিস্টেম ---------- */
-  var armed = false, armTimer, leaving = false;
+  var armed = false, armTimer;
   function guard() { if (!history.state || history.state.bf !== 1) history.pushState({ bf: 1 }, ''); }
+  function disarm() { if (!armed) return; armed = false; clearTimeout(armTimer); guard(); }
   try { history.replaceState({ bf: 0 }, ''); history.pushState({ bf: 1 }, ''); } catch (e) {}
 
   window.addEventListener('popstate', function () {
-    if (leaving) return;
-    if (closeTop()) { guard(); return; }                       // ১) পপআপ বন্ধ
-    if (stack.length) { goBackTo(stack.pop()); guard(); return; } // ২) আগের পেজে
-    if (cur !== 'dash') { goBackTo('dash'); guard(); return; }    // ৩) ড্যাশবোর্ডে
-    if (armed) { leaving = true; history.back(); return; }        // ৪) দ্বিতীয়বার ব্যাক = বের হও
+    if (closeTop()) { guard(); return; }                          // ১) পপআপ বন্ধ
+    if (stack.length) { goBackTo(stack.pop()); guard(); return; }    // ২) আগের পেজে
+    if (cur !== 'dash') { goBackTo('dash'); guard(); return; }       // ৩) ড্যাশবোর্ডে
+    if (armed) return;                                               // ৪) দ্বিতীয় ব্যাক = সিস্টেম নিজেই বের করে দেবে
     armed = true; clearTimeout(armTimer);
-    armTimer = setTimeout(function () { armed = false; }, 2200);
-    hint('বের হতে আবার ব্যাক চাপুন');
-    guard();
+    armTimer = setTimeout(disarm, 2200);
+    hint('বের হতে আবার ব্যাক চাপুন');                                // (এখানে ইচ্ছে করেই guard দিইনি)
   });
+  // ২ সেকেন্ডের মধ্যে স্ক্রিনে টাচ করলে বা সময় শেষ হলে আবার নিরাপদ মোডে ফেরে
+  document.addEventListener('pointerdown', disarm, true);
+
+  /* ---------- অ্যান্ড্রয়েড APK (Capacitor) এর ব্যাক বাটন ---------- */
+  function nativeBack() {
+    var A = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App;
+    if (!A || !A.addListener || nativeBack.done) return !!nativeBack.done;
+    nativeBack.done = true;
+    A.addListener('backButton', function (ev) {
+      if (ev && ev.canGoBack) history.back(); else if (A.exitApp) A.exitApp();
+    });
+    return true;
+  }
+  var nb = 0, nbt = setInterval(function () { if (nativeBack() || ++nb > 40) clearInterval(nbt); }, 250);
 
   /* ---------- ইনস্টল বাটন ---------- */
   var dp = null;
