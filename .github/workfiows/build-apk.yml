@@ -67,14 +67,14 @@ jobs:
           sizes = {'mdpi': (48, 108), 'hdpi': (72, 162), 'xhdpi': (96, 216), 'xxhdpi': (144, 324), 'xxxhdpi': (192, 432)}
           for d, (l, f) in sizes.items():
               p = f'{res}/mipmap-{d}/'
-              sq = Image.new('RGBA', (l, l), (10, 10, 12, 255)); sq.alpha_composite(fit(im, l, 0.78))
+              sq = Image.new('RGBA', (l, l), (0, 0, 0, 255)); sq.alpha_composite(fit(im, l, 0.78))
               sq.convert('RGB').save(p + 'ic_launcher.png')
               m = Image.new('L', (l * 4, l * 4), 0); ImageDraw.Draw(m).ellipse([0, 0, l * 4 - 1, l * 4 - 1], fill=255)
               m = m.resize((l, l), Image.LANCZOS)
               rd = Image.new('RGBA', (l, l), (0, 0, 0, 0)); rd.paste(sq, (0, 0), m)
               rd.save(p + 'ic_launcher_round.png')
               fit(im, f, 0.58).save(p + 'ic_launcher_foreground.png')
-          open(f'{res}/values/ic_launcher_background.xml', 'w').write('<?xml version="1.0" encoding="utf-8"?><resources><color name="ic_launcher_background">#0A0A0C</color></resources>')
+          open(f'{res}/values/ic_launcher_background.xml', 'w').write('<?xml version="1.0" encoding="utf-8"?><resources><color name="ic_launcher_background">#000000</color></resources>')
           PY
 
       - name: APK বিল্ড
